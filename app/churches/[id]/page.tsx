@@ -59,7 +59,7 @@ export default function ChurchDetailsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
+      <div className="absolute top-15 lg:top-4 left-4 right-4 z-10 flex justify-between items-center">
         <Button variant="secondary" onClick={() => router.push("/churches")} className="shadow-lg">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Churches
