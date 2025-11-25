@@ -15,6 +15,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const transformedPastor = {
       ...pastor,
       id: pastor._id.toString(),
+      church: pastor.church.toString(),
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
     };
 
@@ -41,6 +42,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const transformedPastor = {
       ...pastor,
       id: pastor._id.toString(),
+      church: pastor.church.toString(),
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
     };
 

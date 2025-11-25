@@ -87,8 +87,8 @@ export default function ClergyPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col items-center mb-12">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold mb-4">Clergy Directory</h1>
-            <p className="text-muted-foreground text-lg">Browse our directory of {pastors.length} clergy members</p>
+            <h1 className="text-4xl font-bold mb-4">Pastors' Directory</h1>
+            <p className="text-muted-foreground text-lg">Browse our directory of {pastors.length} pastors</p>
           </div>
           <PastorFormDialog onSuccess={fetchPastors} />
         </div>
@@ -107,13 +107,13 @@ export default function ClergyPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clergy-type">Clergy Type</Label>
+              <Label htmlFor="clergy-type">Pastor Title</Label>
               <Select value={clergyTypeFilter} onValueChange={setClergyTypeFilter}>
                 <SelectTrigger id="clergy-type" className="w-full">
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder="All Titles" />
                 </SelectTrigger>
                 <SelectContent className="w-full">
-                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="all">All Titles</SelectItem>
                   {clergyTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -151,7 +151,7 @@ export default function ClergyPage() {
 
         {filteredPastors.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">No clergy members found matching your search.</p>
+            <p className="text-muted-foreground text-lg">No pastor found matching your search.</p>
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">

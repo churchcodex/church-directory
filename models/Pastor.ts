@@ -1,8 +1,9 @@
 import mongoose, { Schema, model, models, Document } from "mongoose";
 import { Pastor, ClergyType, MaritalStatus } from "@/types/entities";
 
-interface PastorDocument extends Omit<Pastor, "id" | "date_of_birth">, Document {
+interface PastorDocument extends Omit<Pastor, "id" | "date_of_birth" | "church">, Document {
   date_of_birth: Date;
+  church: mongoose.Types.ObjectId;
 }
 
 const PastorSchema = new Schema<PastorDocument>(
@@ -27,8 +28,8 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     clergy_type: {
       type: String,
-      enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Basonta Leader", "Governor"],
-      required: [true, "Please provide a clergy type"],
+      enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor"],
+      required: [true, "Please provide a pastor title"],
     },
     marital_status: {
       type: String,
@@ -36,8 +37,27 @@ const PastorSchema = new Schema<PastorDocument>(
       required: [true, "Please provide a marital status"],
     },
     church: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Church",
       required: [true, "Please provide a church reference"],
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female"],
+      required: [true, "Please provide a gender"],
+    },
+    council: {
+      type: String,
+      enum: ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Area 1", "Area 3", "Area 4"],
+      required: [true, "Please provide a council"],
+    },
+    occupation: {
+      type: String,
+      required: [true, "Please provide an occupation"],
+    },
+    country: {
+      type: String,
+      required: [true, "Please provide a country"],
     },
   },
   {

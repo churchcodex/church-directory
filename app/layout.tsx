@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Church Directory - Manage Churches & Clergy",
-  description: "Church directory management system for tracking churches, clergy members, and more",
+  description: "Church directory management system for tracking churches, pastors, and more",
 };
 
 export default function RootLayout({
@@ -49,7 +49,7 @@ export default function RootLayout({
                   className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
                 >
                   <Users className="h-4 w-4" />
-                  Clergy
+                  Pastors
                 </Link>
               </div>
             </div>

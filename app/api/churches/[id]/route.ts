@@ -6,13 +6,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     await dbConnect();
     const { id } = await params;
-    const church = await Church.findById(id);
+    const church: any = await Church.findById(id).lean();
 
     if (!church) {
       return NextResponse.json({ success: false, error: "Church not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: church });
+    const transformedChurch = {
+      ...church,
+      id: church._id.toString(),
+    };
+
+    return NextResponse.json({ success: true, data: transformedChurch });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to fetch church" }, { status: 400 });
   }
@@ -23,16 +28,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
-    const church = await Church.findByIdAndUpdate(id, body, {
+    const church: any = await Church.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
-    });
+    }).lean();
 
     if (!church) {
       return NextResponse.json({ success: false, error: "Church not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: church });
+    const transformedChurch = {
+      ...church,
+      id: church._id.toString(),
+    };
+
+    return NextResponse.json({ success: true, data: transformedChurch });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }

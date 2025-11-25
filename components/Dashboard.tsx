@@ -36,20 +36,20 @@ export default function Dashboard() {
         const churchesData = await churchesRes.json();
         const clergyData = await clergyRes.json();
 
-        // Ensure we have arrays
-        const churches: ChurchType[] = Array.isArray(churchesData) ? churchesData : [];
-        const clergy: Pastor[] = Array.isArray(clergyData) ? clergyData : [];
+        // Extract data from the success response structure
+        const churches: ChurchType[] = churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
+        const clergy: Pastor[] = clergyData.success && Array.isArray(clergyData.data) ? clergyData.data : [];
 
-        const totalMembers = churches.reduce((sum, church) => sum + church.members, 0);
-        const totalIncome = churches.reduce((sum, church) => sum + church.income, 0);
+        const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
+        const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
 
         setStats({
           totalChurches: churches.length,
           totalClergy: clergy.length,
           totalMembers,
           totalIncome,
-          recentChurches: churches.slice(0, 5),
-          recentClergy: clergy.slice(0, 5),
+          recentChurches: churches.slice(-5).reverse(),
+          recentClergy: clergy.slice(-5).reverse(),
         });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -176,7 +176,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-500" />
-              Recent Clergy
+              Recent Pastors
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -199,7 +199,7 @@ export default function Dashboard() {
                 </Link>
               ))}
               {stats.recentClergy.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">No clergy yet</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No pastors added yet</p>
               )}
             </div>
           </CardContent>

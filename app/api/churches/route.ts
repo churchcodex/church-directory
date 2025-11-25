@@ -5,10 +5,21 @@ import Church from "@/models/Church";
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    const churches = await Church.find({});
-    return NextResponse.json({ success: true, data: churches });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to fetch churches" }, { status: 400 });
+    const churches = await Church.find({}).lean();
+    const transformedChurches = churches.map((church: any) => ({
+      ...church,
+      id: church._id.toString(),
+    }));
+    return NextResponse.json({ success: true, data: transformedChurches });
+  } catch (error: any) {
+    console.error("Error fetching churches:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to fetch churches",
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -16,9 +27,20 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const body = await request.json();
-    const church = await Church.create(body);
-    return NextResponse.json({ success: true, data: church }, { status: 201 });
+    const church: any = await Church.create(body);
+    const transformedChurch = {
+      ...church.toObject(),
+      id: church._id.toString(),
+    };
+    return NextResponse.json({ success: true, data: transformedChurch }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    console.error("Error creating church:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to create church",
+      },
+      { status: 400 }
+    );
   }
 }

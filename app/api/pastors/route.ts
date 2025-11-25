@@ -9,11 +9,19 @@ export async function GET(request: NextRequest) {
     const transformedPastors = pastors.map((pastor: any) => ({
       ...pastor,
       id: pastor._id.toString(),
+      church: pastor.church.toString(),
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
     }));
     return NextResponse.json({ success: true, data: transformedPastors });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to fetch pastors" }, { status: 400 });
+  } catch (error: any) {
+    console.error("Error fetching pastors:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to fetch pastors",
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -25,10 +33,18 @@ export async function POST(request: NextRequest) {
     const transformedPastor = {
       ...pastor.toObject(),
       id: pastor._id.toString(),
+      church: pastor.church.toString(),
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
     };
     return NextResponse.json({ success: true, data: transformedPastor }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    console.error("Error creating pastor:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to create pastor",
+      },
+      { status: 400 }
+    );
   }
 }

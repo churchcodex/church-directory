@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import DeleteButton from "@/components/DeleteButton";
-import { Heart, Briefcase, ArrowLeft, Calendar, Church } from "lucide-react";
+import { Heart, Briefcase, ArrowLeft, Calendar, Church, User, Globe, Users, Award } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
 
@@ -59,7 +59,7 @@ export default function ClergyDetailsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading clergy details...</div>
+        <div className="text-xl">Loading pastor's details...</div>
       </div>
     );
   }
@@ -68,7 +68,7 @@ export default function ClergyDetailsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Clergy member not found</h2>
+          <h2 className="text-2xl font-bold mb-4">Pastor not found</h2>
           <Button onClick={() => router.push("/clergy")}>Back to Clergy</Button>
         </div>
       </div>
@@ -77,11 +77,11 @@ export default function ClergyDetailsPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto">
         <div className="flex justify-between items-center mb-6">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Clergy
+            Back to Pastors
           </Button>
           {pastor && (
             <div className="flex gap-2">
@@ -93,9 +93,9 @@ export default function ClergyDetailsPage() {
 
         <Card className="overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/3">
-              <div className="relative h-96 w-full">
-                <Image src={pastor.profile_image} alt={pastor.name} fill className="object-cover" />
+            <div className="md:w-1/3 h-full">
+              <div className="relative h-105 w-full">
+                <Image src={pastor.profile_image} alt={pastor.name} fill className="object-cover object-top h-full" />
               </div>
             </div>
 
@@ -109,7 +109,7 @@ export default function ClergyDetailsPage() {
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Briefcase className="h-5 w-5" />
-                    Clergy Type
+                    Pastor Title
                   </span>
                   <Badge variant="secondary" className="text-base">
                     {pastor.clergy_type}
@@ -126,12 +126,48 @@ export default function ClergyDetailsPage() {
 
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <span className="flex items-center gap-2 text-sm font-medium">
+                    <User className="h-5 w-5" />
+                    Gender
+                  </span>
+                  <Badge variant="outline" className="text-base">
+                    {pastor.gender}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <span className="flex items-center gap-2 text-sm font-medium">
                     <Heart className="h-5 w-5" />
                     Marital Status
                   </span>
                   <Badge variant="outline" className="text-base">
                     {pastor.marital_status}
                   </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Briefcase className="h-5 w-5" />
+                    Occupation
+                  </span>
+                  <span className="text-base font-semibold">{pastor.occupation}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Users className="h-5 w-5" />
+                    Council
+                  </span>
+                  <Badge variant="secondary" className="text-base">
+                    {pastor.council}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-5 w-5" />
+                    Country
+                  </span>
+                  <span className="text-base font-semibold">{pastor.country}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
