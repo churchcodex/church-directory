@@ -2,16 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Pastor } from "@/types/entities";
-import PastorCard from "@/components/PastorCard";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { calculateAge } from "@/lib/utils";
 
 export default function ClergyPage() {
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [clergyTypeFilter, setClergyTypeFilter] = useState<string>("all");
+  const [minAge, setMinAge] = useState<string>("");
+  const [maxAge, setMaxAge] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,18 +24,35 @@ export default function ClergyPage() {
   }, []);
 
   useEffect(() => {
+    let filtered = pastors;
+
+    // Filter by search query
     if (searchQuery) {
-      const filtered = pastors.filter(
+      filtered = filtered.filter(
         (pastor) =>
           pastor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           pastor.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
           pastor.clergy_type.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      setFilteredPastors(filtered);
-    } else {
-      setFilteredPastors(pastors);
     }
-  }, [searchQuery, pastors]);
+
+    // Filter by clergy type
+    if (clergyTypeFilter !== "all") {
+      filtered = filtered.filter((pastor) => pastor.clergy_type === clergyTypeFilter);
+    }
+
+    // Filter by age range
+    if (minAge || maxAge) {
+      filtered = filtered.filter((pastor) => {
+        const age = calculateAge(pastor.date_of_birth);
+        const min = minAge ? parseInt(minAge) : 0;
+        const max = maxAge ? parseInt(maxAge) : Infinity;
+        return age >= min && age <= max;
+      });
+    }
+
+    setFilteredPastors(filtered);
+  }, [searchQuery, clergyTypeFilter, minAge, maxAge, pastors]);
 
   const fetchPastors = async () => {
     try {
@@ -57,6 +79,9 @@ export default function ClergyPage() {
 
   console.log("filtered pastors: ", filteredPastors);
 
+  // Get unique clergy types for filter dropdown
+  const clergyTypes = Array.from(new Set(pastors.map((p) => p.clergy_type)));
+
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -68,7 +93,7 @@ export default function ClergyPage() {
           <PastorFormDialog onSuccess={fetchPastors} />
         </div>
 
-        <div className="mb-8 max-w-md mx-auto">
+        <div className="mb-8 max-w-4xl mx-auto space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
@@ -78,6 +103,49 @@ export default function ClergyPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-12"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="clergy-type">Clergy Type</Label>
+              <Select value={clergyTypeFilter} onValueChange={setClergyTypeFilter}>
+                <SelectTrigger id="clergy-type" className="w-full">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent className="w-full">
+                  <SelectItem value="all">All Types</SelectItem>
+                  {clergyTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="min-age">Min Age</Label>
+              <Input
+                id="min-age"
+                type="number"
+                placeholder="Min age"
+                value={minAge}
+                onChange={(e) => setMinAge(e.target.value)}
+                min="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="max-age">Max Age</Label>
+              <Input
+                id="max-age"
+                type="number"
+                placeholder="Max age"
+                value={maxAge}
+                onChange={(e) => setMaxAge(e.target.value)}
+                min="0"
+              />
+            </div>
           </div>
         </div>
 
