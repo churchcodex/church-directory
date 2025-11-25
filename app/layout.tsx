@@ -33,7 +33,7 @@ export default function RootLayout({
               <div className="flex items-center">
                 <Link href="/" className="flex items-center space-x-2">
                   <Church className="h-6 w-6" />
-                  <span className="font-bold text-xl">Church Directory</span>
+                  {/* <span className="font-bold text-xl">Church Directory</span> */}
                 </Link>
               </div>
               <div className="flex items-center space-x-4">
