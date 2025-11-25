@@ -90,7 +90,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
   const fetchCountries = async () => {
     try {
       setLoadingCountries(true);
-      const response = await fetch("https://restcountries.com/v3.1/all");
+      const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
       const data = await response.json();
       const countryNames = data
         .map((country: any) => country.name.common)
@@ -98,7 +98,17 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       setCountries(countryNames);
     } catch (error) {
       console.error("Failed to fetch countries:", error);
-      setCountries([]);
+      // Fallback to a basic list if API fails
+      setCountries([
+        "Ghana",
+        "Nigeria",
+        "United States",
+        "United Kingdom",
+        "Canada",
+        "South Africa",
+        "Kenya",
+        "Uganda",
+      ]);
     } finally {
       setLoadingCountries(false);
     }

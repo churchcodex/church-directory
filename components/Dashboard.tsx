@@ -37,7 +37,8 @@ export default function Dashboard() {
         const clergyData = await clergyRes.json();
 
         // Extract data from the success response structure
-        const churches: ChurchType[] = churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
+        const churches: ChurchType[] =
+          churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
         const clergy: Pastor[] = clergyData.success && Array.isArray(clergyData.data) ? clergyData.data : [];
 
         const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
