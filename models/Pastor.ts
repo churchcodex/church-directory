@@ -8,64 +8,74 @@ interface PastorDocument extends Omit<Pastor, "id" | "date_of_birth" | "church">
 
 const PastorSchema = new Schema<PastorDocument>(
   {
-    name: {
+    first_name: {
       type: String,
-      required: [true, "Please provide a name"],
-      maxlength: [100, "Name cannot be more than 100 characters"],
+      required: [true, "Please provide a first name"],
+      maxlength: [50, "First name cannot be more than 50 characters"],
+    },
+    middle_name: {
+      type: String,
+      required: false,
+      maxlength: [50, "Middle name cannot be more than 50 characters"],
+    },
+    last_name: {
+      type: String,
+      required: [true, "Please provide a last name"],
+      maxlength: [50, "Last name cannot be more than 50 characters"],
     },
     date_of_birth: {
       type: Date,
-      required: [true, "Please provide a date of birth"],
+      required: false,
     },
     position: {
       type: String,
-      required: [true, "Please provide a position"],
+      required: false,
       maxlength: [100, "Position cannot be more than 100 characters"],
     },
     profile_image: {
       type: String,
-      required: [true, "Please provide a profile image"],
+      required: false,
     },
     clergy_type: {
       type: String,
       enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor"],
-      required: [true, "Please provide a pastor title"],
+      required: false,
     },
     marital_status: {
       type: String,
       enum: ["Single", "Married", "Divorced", "Widowed"],
-      required: [true, "Please provide a marital status"],
+      required: false,
     },
     church: {
       type: Schema.Types.ObjectId,
       ref: "Church",
-      required: [true, "Please provide a church reference"],
+      required: false,
     },
     gender: {
       type: String,
       enum: ["Male", "Female"],
-      required: [true, "Please provide a gender"],
+      required: false,
     },
     council: {
       type: String,
       enum: ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Area 1", "Area 3", "Area 4"],
-      required: [true, "Please provide a council"],
+      required: false,
     },
     occupation: {
       type: String,
-      required: [true, "Please provide an occupation"],
+      required: false,
     },
     country: {
       type: String,
-      required: [true, "Please provide a country"],
+      required: false,
     },
     phone_number: {
       type: String,
-      required: [true, "Please provide a phone number"],
+      required: false,
     },
     whatsapp_number: {
       type: String,
-      required: [true, "Please provide a WhatsApp number"],
+      required: false,
     },
   },
   {

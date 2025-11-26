@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,66 +14,55 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Trash2, Loader2 } from "lucide-react";
 
 interface DeleteButtonProps {
   id: string;
-  type: "church" | "pastor";
+  type: "pastor" | "church";
   name: string;
-  onSuccess?: () => void;
 }
 
-export default function DeleteButton({ id, type, name, onSuccess }: DeleteButtonProps) {
+export default function DeleteButton({ id, type, name }: DeleteButtonProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
-
     try {
-      const endpoint = type === "church" ? `/api/churches/${id}` : `/api/pastors/${id}`;
-      const response = await fetch(endpoint, { method: "DELETE" });
+      const response = await fetch(`/api/${type}s/${id}`, {
+        method: "DELETE",
+      });
 
       if (response.ok) {
-        setOpen(false);
-        router.push(type === "church" ? "/churches" : "/clergy");
+        router.push(`/${type === "pastor" ? "clergy" : "churches"}`);
         router.refresh();
-        if (onSuccess) onSuccess();
       } else {
-        const data = await response.json();
-        alert(`Error: ${data.error}`);
+        alert("Failed to delete");
       }
     } catch (error) {
-      alert(`Failed to delete ${type}`);
+      alert("Failed to delete");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm" className="gap-2">
+        <Button variant="destructive" size="sm">
           <Trash2 className="h-4 w-4" />
-          Delete
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete <strong>{name}</strong>. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={loading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
+          <AlertDialogAction onClick={handleDelete} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Delete
           </AlertDialogAction>

@@ -41,7 +41,9 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
   const [countries, setCountries] = useState<string[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(true);
   const [formData, setFormData] = useState({
-    name: pastor?.name || "",
+    first_name: pastor?.first_name || "",
+    middle_name: pastor?.middle_name || "",
+    last_name: pastor?.last_name || "",
     date_of_birth: pastor?.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
     position: pastor?.position || "",
     profile_image: pastor?.profile_image || "",
@@ -121,10 +123,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     if (open && pastor) {
       const isStandardOccupation = occupations.includes(pastor.occupation as Occupation);
       setOccupationType(isStandardOccupation ? (pastor.occupation as Occupation) : "Other");
-      setCustomOccupation(isStandardOccupation ? "" : pastor.occupation);
+      setCustomOccupation(isStandardOccupation ? "" : pastor.occupation || "");
 
       setFormData({
-        name: pastor.name || "",
+        first_name: pastor.first_name || "",
+        middle_name: pastor.middle_name || "",
+        last_name: pastor.last_name || "",
         date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
         position: pastor.position || "",
         profile_image: pastor.profile_image || "",
@@ -167,7 +171,9 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         // Reset form for create mode
         if (!pastor) {
           setFormData({
-            name: "",
+            first_name: "",
+            middle_name: "",
+            last_name: "",
             date_of_birth: "",
             position: "",
             profile_image: "",
@@ -222,24 +228,46 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="John MacArthur"
-              />
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name *</Label>
+                <Input
+                  id="first_name"
+                  required
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="John"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="middle_name">Middle Name</Label>
+                <Input
+                  id="middle_name"
+                  value={formData.middle_name}
+                  onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })}
+                  placeholder="Paul"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name *</Label>
+                <Input
+                  id="last_name"
+                  required
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="MacArthur"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="date_of_birth">Date of Birth *</Label>
+                <Label htmlFor="date_of_birth">Date of Birth</Label>
                 <Input
                   id="date_of_birth"
                   type="date"
-                  required
                   value={formData.date_of_birth}
                   onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
                   max={new Date().toISOString().split("T")[0]}
@@ -247,7 +275,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender *</Label>
+                <Label htmlFor="gender">Gender</Label>
                 <SearchableSelect
                   options={genders.map((g) => ({ value: g, label: g }))}
                   value={formData.gender}
@@ -259,10 +287,9 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="position">Position *</Label>
+                <Label htmlFor="position">Position</Label>
                 <Input
                   id="position"
-                  required
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                   placeholder="Senior Pastor"
@@ -270,7 +297,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="occupation">Occupation *</Label>
+                <Label htmlFor="occupation">Occupation</Label>
                 <SearchableSelect
                   options={occupations.map((o) => ({ value: o, label: o }))}
                   value={occupationType}
@@ -288,10 +315,9 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             {occupationType === "Other" && (
               <div className="space-y-2">
-                <Label htmlFor="custom_occupation">Specify Occupation *</Label>
+                <Label htmlFor="custom_occupation">Specify Occupation</Label>
                 <Input
                   id="custom_occupation"
-                  required
                   value={customOccupation}
                   onChange={(e) => {
                     setCustomOccupation(e.target.value);
@@ -311,7 +337,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="clergy_type">Pastor Title *</Label>
+                <Label htmlFor="clergy_type">Pastor Title</Label>
                 <SearchableSelect
                   options={clergyTypes.map((t) => ({ value: t, label: t }))}
                   value={formData.clergy_type}
@@ -321,7 +347,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="marital_status">Marital Status *</Label>
+                <Label htmlFor="marital_status">Marital Status</Label>
                 <SearchableSelect
                   options={maritalStatuses.map((s) => ({ value: s, label: s }))}
                   value={formData.marital_status}
@@ -333,7 +359,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="council">Council *</Label>
+                <Label htmlFor="council">Council</Label>
                 <SearchableSelect
                   options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
@@ -343,7 +369,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="country">Country *</Label>
+                <Label htmlFor="country">Country</Label>
                 {loadingCountries ? (
                   <div className="flex items-center justify-center h-10 border rounded-md">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -361,11 +387,10 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone_number">Phone Number *</Label>
+                <Label htmlFor="phone_number">Phone Number</Label>
                 <Input
                   id="phone_number"
                   type="tel"
-                  required
                   value={formData.phone_number}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                   placeholder="+233 123 456 789"
@@ -373,11 +398,10 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="whatsapp_number">WhatsApp Number *</Label>
+                <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
                 <Input
                   id="whatsapp_number"
                   type="tel"
-                  required
                   value={formData.whatsapp_number}
                   onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
                   placeholder="+233 123 456 789"
@@ -386,7 +410,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="church">Church *</Label>
+              <Label htmlFor="church">Church</Label>
               {loadingChurches ? (
                 <div className="flex items-center justify-center h-10 border rounded-md">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -427,7 +451,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || churches.length === 0 || !formData.country}>
+            <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {pastor ? "Update" : "Create"}
             </Button>

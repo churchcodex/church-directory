@@ -190,7 +190,9 @@ export default function Dashboard() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold">{pastor.name}</h3>
+                      <h3 className="font-semibold">
+                        {pastor.first_name} {pastor.middle_name} {pastor.last_name}
+                      </h3>
                       <p className="text-sm text-muted-foreground">{pastor.position}</p>
                     </div>
                     <Badge variant="outline" className="text-xs">

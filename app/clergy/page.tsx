@@ -53,12 +53,14 @@ export default function ClergyPage() {
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(
-        (pastor) =>
-          pastor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          pastor.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          pastor.clergy_type.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      filtered = filtered.filter((pastor) => {
+        const fullName = [pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ");
+        return (
+          fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          pastor.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          pastor.clergy_type?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
     }
 
     // Apply filters
@@ -89,7 +91,7 @@ export default function ClergyPage() {
     // Filter by age range
     if (filters.minAge || filters.maxAge) {
       filtered = filtered.filter((pastor) => {
-        const age = calculateAge(pastor.date_of_birth);
+        const age = calculateAge(pastor.date_of_birth || "");
         const min = filters.minAge ? parseInt(filters.minAge) : 0;
         const max = filters.maxAge ? parseInt(filters.maxAge) : Infinity;
         return age >= min && age <= max;
@@ -108,10 +110,18 @@ export default function ClergyPage() {
   }
 
   // Get unique values for filters
-  const clergyTypes = Array.from(new Set(pastors.map((p) => p.clergy_type)));
-  const councils = Array.from(new Set(pastors.map((p) => p.council)));
-  const countries = Array.from(new Set(pastors.map((p) => p.country))).sort();
-  const occupations = Array.from(new Set(pastors.map((p) => p.occupation))).sort();
+  const clergyTypes = Array.from(new Set(pastors.map((p) => p.clergy_type))).filter(
+    (type): type is NonNullable<typeof type> => type !== undefined
+  );
+  const councils = Array.from(new Set(pastors.map((p) => p.council))).filter(
+    (council): council is NonNullable<typeof council> => council !== undefined
+  );
+  const countries = Array.from(new Set(pastors.map((p) => p.country)))
+    .filter((country): country is NonNullable<typeof country> => country !== undefined)
+    .sort();
+  const occupations = Array.from(new Set(pastors.map((p) => p.occupation)))
+    .filter((occupation): occupation is NonNullable<typeof occupation> => occupation !== undefined)
+    .sort();
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
@@ -160,14 +170,20 @@ export default function ClergyPage() {
               >
                 <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-105">
                   {pastor.profile_image ? (
-                    <img src={pastor.profile_image} alt={pastor.name} className="w-full h-full object-cover" />
+                    <img
+                      src={pastor.profile_image}
+                      alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-purple-500 to-blue-600">
-                      <span className="text-white text-2xl font-bold">{pastor.name.charAt(0)}</span>
+                      <span className="text-white text-2xl font-bold">{pastor.first_name.charAt(0)}</span>
                     </div>
                   )}
                 </div>
-                <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">{pastor.name}</p>
+                <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">
+                  {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                </p>
               </Link>
             ))}
           </div>

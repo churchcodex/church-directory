@@ -17,6 +17,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       id: pastor._id.toString(),
       church: pastor.church.toString(),
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
+      first_name: pastor.first_name || "",
+      middle_name: pastor.middle_name || "",
+      last_name: pastor.last_name || "",
     };
 
     return NextResponse.json({ success: true, data: transformedPastor });
@@ -44,6 +47,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       id: pastor._id.toString(),
       church: pastor.church.toString(),
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
+      first_name: pastor.first_name || "",
+      middle_name: pastor.middle_name || "",
+      last_name: pastor.last_name || "",
     };
 
     return NextResponse.json({ success: true, data: transformedPastor });

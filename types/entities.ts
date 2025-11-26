@@ -31,17 +31,19 @@ export type Occupation = "Medical Doctor" | "Lawyer" | "Engineer" | "Accountant"
 
 export interface Pastor {
   id: string;
-  name: string;
-  date_of_birth: string; // ISO date string
-  position: string;
-  profile_image: string;
-  clergy_type: ClergyType;
-  marital_status: MaritalStatus;
-  church: string; // Church ID reference
-  gender: Gender;
-  council: Council;
-  occupation: string;
-  country: string;
-  phone_number: string;
-  whatsapp_number: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  date_of_birth?: string;
+  position?: string;
+  profile_image?: string;
+  clergy_type?: ClergyType;
+  marital_status?: MaritalStatus;
+  church?: string;
+  gender?: Gender;
+  council?: Council;
+  occupation?: string;
+  country?: string;
+  phone_number?: string;
+  whatsapp_number?: string;
 }

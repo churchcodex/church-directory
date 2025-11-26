@@ -89,7 +89,11 @@ export default function ClergyDetailsPage() {
           {pastor && (
             <div className="flex gap-2">
               <PastorFormDialog pastor={pastor} onSuccess={() => fetchPastor(params.id as string)} />
-              <DeleteButton id={pastor.id} type="pastor" name={pastor.name} />
+              <DeleteButton
+                id={pastor.id}
+                type="pastor"
+                name={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+              />
             </div>
           )}
         </div>
@@ -99,8 +103,8 @@ export default function ClergyDetailsPage() {
             <div className="md:w-1/3">
               <div className="relative h-96 md:h-full w-full">
                 <Image
-                  src={pastor.profile_image}
-                  alt={pastor.name}
+                  src={pastor.profile_image || ""}
+                  alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                   fill
                   className="object-cover object-top rounded-3xl"
                 />
@@ -109,7 +113,9 @@ export default function ClergyDetailsPage() {
 
             <div className="p-8 md:w-2/3 space-y-6">
               <div className="text-center">
-                <h1 className="text-3xl font-bold mb-2">{pastor.name}</h1>
+                <h1 className="text-3xl font-bold mb-2">
+                  {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                </h1>
                 <p className="text-xl text-muted-foreground">{pastor.position}</p>
               </div>
 
@@ -127,7 +133,7 @@ export default function ClergyDetailsPage() {
                     <Calendar className="h-5 w-5" />
                     Age
                   </span>
-                  <span className="text-xl font-bold">{calculateAge(pastor.date_of_birth)} years</span>
+                  <span className="text-xl font-bold">{calculateAge(pastor.date_of_birth || "")} years</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
