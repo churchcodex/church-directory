@@ -49,7 +49,7 @@ export default function ChurchesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading churches...</div>
+        <div className="text-xl">Loading campuses...</div>
       </div>
     );
   }

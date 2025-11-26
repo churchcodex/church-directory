@@ -79,14 +79,14 @@ export default function Dashboard() {
 
   const statCards = [
     {
-      title: "Total Churches",
+      title: "Total Campuses",
       value: formatNumber(stats.totalChurches),
       icon: Church,
       gradient: "from-purple-500 to-purple-700",
       href: "/churches",
     },
     {
-      title: "Total Clergy",
+      title: "Total Pastors",
       value: formatNumber(stats.totalClergy),
       icon: Users,
       gradient: "from-blue-500 to-blue-700",
@@ -138,12 +138,12 @@ export default function Dashboard() {
 
       {/* Recent Activity */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent Churches */}
+        {/* Recent Campuses */}
         <Card className="border-muted">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Church className="h-5 w-5 text-purple-500" />
-              Recent Churches
+              Recent Campuses
             </CardTitle>
           </CardHeader>
           <CardContent>

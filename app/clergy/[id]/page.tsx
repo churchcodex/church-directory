@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import DeleteButton from "@/components/DeleteButton";
-import { Heart, Briefcase, ArrowLeft, Calendar, Church, User, Globe, Users, Award } from "lucide-react";
+import { Heart, Briefcase, ArrowLeft, Calendar, Church, User, Globe, Users, Award, Phone } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
 
@@ -20,6 +20,9 @@ export default function ClergyDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Smooth scroll to top when page loads
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     if (params.id) {
       fetchPastor(params.id as string);
     }
@@ -173,6 +176,22 @@ export default function ClergyDetailsPage() {
                     Church
                   </span>
                   <span className="text-xl font-bold">{churchName || "Loading..."}</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Phone className="h-5 w-5" />
+                    Phone Number
+                  </span>
+                  <span className="text-xl font-bold">{pastor.phone_number}</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Phone className="h-5 w-5" />
+                    WhatsApp Number
+                  </span>
+                  <span className="text-xl font-bold">{pastor.whatsapp_number}</span>
                 </div>
               </div>
             </div>

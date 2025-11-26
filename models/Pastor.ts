@@ -59,6 +59,14 @@ const PastorSchema = new Schema<PastorDocument>(
       type: String,
       required: [true, "Please provide a country"],
     },
+    phone_number: {
+      type: String,
+      required: [true, "Please provide a phone number"],
+    },
+    whatsapp_number: {
+      type: String,
+      required: [true, "Please provide a WhatsApp number"],
+    },
   },
   {
     timestamps: true,

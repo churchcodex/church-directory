@@ -21,7 +21,7 @@ import { Church } from "@/types/entities";
 
 interface ChurchFormDialogProps {
   church?: Church;
-  onSuccess?: () => void;
+  onSuccess?: (churchId?: string) => void;
   children?: React.ReactNode;
 }
 
@@ -40,6 +40,7 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setLoading(true);
 
     try {
@@ -59,7 +60,20 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
       if (response.ok) {
         setOpen(false);
         router.refresh();
-        if (onSuccess) onSuccess();
+        const responseData = await response.json();
+        const createdChurchId = responseData.data?._id || responseData.data?.id;
+        if (onSuccess) onSuccess(createdChurchId);
+        // Reset form for create mode
+        if (!church) {
+          setFormData({
+            name: "",
+            location: "",
+            head_pastor: "",
+            members: 0,
+            income: 0,
+            images: [],
+          });
+        }
       } else {
         const data = await response.json();
         alert(`Error: ${data.error}`);
@@ -166,13 +180,7 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
+            <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {church ? "Update" : "Create"}
             </Button>

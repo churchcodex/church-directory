@@ -18,6 +18,9 @@ export default function ChurchDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Smooth scroll to top when page loads
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     if (params.id) {
       fetchChurch(params.id as string);
     }

@@ -52,6 +52,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     council: pastor?.council || "Philippians",
     occupation: pastor?.occupation || "Medical Doctor",
     country: pastor?.country || "",
+    phone_number: pastor?.phone_number || "",
+    whatsapp_number: pastor?.whatsapp_number || "",
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
     pastor?.occupation && occupations.includes(pastor.occupation as Occupation)
@@ -133,6 +135,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         council: pastor.council || "Philippians",
         occupation: pastor.occupation || "Medical Doctor",
         country: pastor.country || "",
+        phone_number: pastor.phone_number || "",
+        whatsapp_number: pastor.whatsapp_number || "",
       });
     }
   }, [open, pastor]);
@@ -174,6 +178,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             council: "Philippians",
             occupation: "Medical Doctor",
             country: "",
+            phone_number: "",
+            whatsapp_number: "",
           });
           setOccupationType("Medical Doctor");
           setCustomOccupation("");
@@ -189,6 +195,13 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     }
   };
 
+  const handleChurchCreated = async (churchId?: string) => {
+    await fetchChurches();
+    if (churchId) {
+      setFormData({ ...formData, church: churchId });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -199,7 +212,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         ) : (
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
-            Add Pastor
           </Button>
         )}
       </DialogTrigger>
@@ -347,6 +359,32 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone_number">Phone Number *</Label>
+                <Input
+                  id="phone_number"
+                  type="tel"
+                  required
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  placeholder="+233 123 456 789"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp_number">WhatsApp Number *</Label>
+                <Input
+                  id="whatsapp_number"
+                  type="tel"
+                  required
+                  value={formData.whatsapp_number}
+                  onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                  placeholder="+233 123 456 789"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="church">Church *</Label>
               {loadingChurches ? (
@@ -356,7 +394,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               ) : churches.length === 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">No churches available. Please add a church first.</p>
-                  <ChurchFormDialog onSuccess={fetchChurches}>
+                  <ChurchFormDialog onSuccess={handleChurchCreated}>
                     <Button type="button" variant="outline" className="w-full gap-2">
                       <Building2 className="h-4 w-4" />
                       Add Church
@@ -375,7 +413,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                     placeholder="Select a church"
                     className="flex-1"
                   />
-                  <ChurchFormDialog onSuccess={fetchChurches}>
+                  <ChurchFormDialog onSuccess={handleChurchCreated}>
                     <Button type="button" variant="outline" size="icon">
                       <Plus className="h-4 w-4" />
                     </Button>

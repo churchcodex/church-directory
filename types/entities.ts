@@ -42,4 +42,6 @@ export interface Pastor {
   council: Council;
   occupation: string;
   country: string;
+  phone_number: string;
+  whatsapp_number: string;
 }
