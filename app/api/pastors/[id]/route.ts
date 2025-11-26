@@ -33,6 +33,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
+
+    // Check for duplicate pastor (excluding the current pastor being updated)
+    const existingPastor = await Pastor.findOne({
+      _id: { $ne: id },
+      first_name: body.first_name,
+      last_name: body.last_name,
+      ...(body.date_of_birth && { date_of_birth: new Date(body.date_of_birth) }),
+    });
+
+    if (existingPastor) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "A pastor with the same first name, last name, and date of birth already exists",
+        },
+        { status: 409 }
+      );
+    }
+
     const pastor: any = await Pastor.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
@@ -45,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const transformedPastor = {
       ...pastor,
       id: pastor._id.toString(),
-      church: pastor.church.toString(),
+      church: pastor.church?.toString() || "",
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",

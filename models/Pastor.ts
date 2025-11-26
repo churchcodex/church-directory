@@ -83,4 +83,7 @@ const PastorSchema = new Schema<PastorDocument>(
   }
 );
 
+// Add compound index for duplicate checking
+PastorSchema.index({ first_name: 1, last_name: 1, date_of_birth: 1 });
+
 export default models.Pastor || model<PastorDocument>("Pastor", PastorSchema);
