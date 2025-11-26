@@ -72,12 +72,10 @@ export default function ClergyPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading clergy...</div>
+        <div className="text-xl">Fetching Pastors...</div>
       </div>
     );
   }
-
-  console.log("filtered pastors: ", filteredPastors);
 
   // Get unique clergy types for filter dropdown
   const clergyTypes = Array.from(new Set(pastors.map((p) => p.clergy_type)));

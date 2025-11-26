@@ -81,7 +81,7 @@ export default function ClergyDetailsPage() {
         <div className="flex justify-between items-center mb-6">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Pastors
+            Back
           </Button>
           {pastor && (
             <div className="flex gap-2">
@@ -93,30 +93,33 @@ export default function ClergyDetailsPage() {
 
         <Card className="overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/3 h-full">
-              <div className="relative h-105 w-full">
-                <Image src={pastor.profile_image} alt={pastor.name} fill className="object-cover object-top h-full" />
+            <div className="md:w-1/3">
+              <div className="relative h-96 md:h-full w-full">
+                <Image
+                  src={pastor.profile_image}
+                  alt={pastor.name}
+                  fill
+                  className="object-cover object-top rounded-3xl"
+                />
               </div>
             </div>
 
             <div className="p-8 md:w-2/3 space-y-6">
-              <div>
+              <div className="text-center">
                 <h1 className="text-3xl font-bold mb-2">{pastor.name}</h1>
                 <p className="text-xl text-muted-foreground">{pastor.position}</p>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Briefcase className="h-5 w-5" />
                     Pastor Title
                   </span>
-                  <Badge variant="secondary" className="text-base">
-                    {pastor.clergy_type}
-                  </Badge>
+                  <span className="text-xl font-bold">{pastor.clergy_type}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Calendar className="h-5 w-5" />
                     Age
@@ -124,58 +127,52 @@ export default function ClergyDetailsPage() {
                   <span className="text-xl font-bold">{calculateAge(pastor.date_of_birth)} years</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <User className="h-5 w-5" />
                     Gender
                   </span>
-                  <Badge variant="outline" className="text-base">
-                    {pastor.gender}
-                  </Badge>
+                  <span className="text-xl font-bold">{pastor.gender}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Heart className="h-5 w-5" />
                     Marital Status
                   </span>
-                  <Badge variant="outline" className="text-base">
-                    {pastor.marital_status}
-                  </Badge>
+                  <span className="text-xl font-bold">{pastor.marital_status}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Briefcase className="h-5 w-5" />
                     Occupation
                   </span>
-                  <span className="text-base font-semibold">{pastor.occupation}</span>
+                  <span className="text-xl font-bold">{pastor.occupation}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Users className="h-5 w-5" />
                     Council
                   </span>
-                  <Badge variant="secondary" className="text-base">
-                    {pastor.council}
-                  </Badge>
+                  <span className="text-xl font-bold">{pastor.council}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Globe className="h-5 w-5" />
                     Country
                   </span>
-                  <span className="text-base font-semibold">{pastor.country}</span>
+                  <span className="text-xl font-bold">{pastor.country}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Church className="h-5 w-5" />
                     Church
                   </span>
-                  <span className="text-base font-semibold">{churchName || "Loading..."}</span>
+                  <span className="text-xl font-bold">{churchName || "Loading..."}</span>
                 </div>
               </div>
             </div>

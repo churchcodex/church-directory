@@ -57,12 +57,12 @@ export default function ChurchDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col md:px-6">
       {/* Header */}
-      <div className="absolute top-15 lg:top-4 left-4 right-4 z-10 flex justify-between items-center">
-        <Button variant="secondary" onClick={() => router.push("/churches")} className="shadow-lg">
+      <div className="my-4 px-4 flex justify-between items-center w-full mx-auto">
+        <Button variant="ghost" onClick={() => router.push("/churches")} className="shadow-lg">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Churches
+          Back
         </Button>
         <div className="flex gap-2">
           <ChurchFormDialog church={church} onSuccess={() => fetchChurch(params.id as string)} />
@@ -73,8 +73,8 @@ export default function ChurchDetailsPage() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col md:flex-row">
         {/* Left Side - Image */}
-        <div className="relative w-full md:w-1/2 h-[50vh] md:h-screen flex items-center justify-center bg-muted/20 p-8">
-          <div className="relative w-full max-w-md aspect-square rounded-full overflow-hidden shadow-2xl">
+        <div className="relative w-full md:w-2/3 h-[50vh] md:h-screen flex items-center justify-center bg-muted/20 p-8">
+          <div className="relative w-full max-w-2xl aspect-square rounded-2xl overflow-hidden shadow-2xl">
             <Image
               src={church.images[0] || "/placeholder-church.jpg"}
               alt={church.name}
@@ -89,7 +89,7 @@ export default function ChurchDetailsPage() {
                 {church.images.slice(1, 5).map((image, index) => (
                   <div
                     key={index}
-                    className="relative h-16 w-16 shrink-0 rounded-full overflow-hidden border-2 border-white shadow-lg"
+                    className="relative h-25 w-25 shrink-0 rounded-xl overflow-hidden border-2 border-white shadow-lg"
                   >
                     <Image src={image} alt={`${church.name} - Image ${index + 2}`} fill className="object-cover" />
                   </div>
@@ -100,7 +100,7 @@ export default function ChurchDetailsPage() {
         </div>
 
         {/* Right Side - Details */}
-        <div className="w-full md:w-1/2 bg-background overflow-y-auto">
+        <div className="w-full md:w-1/3 bg-background overflow-y-auto">
           <div className="p-8 md:p-12 space-y-8">
             {/* Church Name and Location */}
             <div className="space-y-4 pt-12 md:pt-0">
@@ -112,11 +112,7 @@ export default function ChurchDetailsPage() {
             </div>
 
             {/* Head Pastor */}
-            <div className="p-6 bg-muted rounded-xl">
-              <div className="flex items-center gap-3 mb-2">
-                <User className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">Head Pastor</span>
-              </div>
+            <div className="p-6 rounded-xl flex items-center justify-center">
               <Badge variant="default" className="text-lg px-4 py-2">
                 {church.head_pastor}
               </Badge>
@@ -124,30 +120,28 @@ export default function ChurchDetailsPage() {
 
             {/* Statistics */}
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold mb-4">Church Statistics</h2>
-
-              <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-xl border border-blue-500/20">
+              <div className="p-6 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-xl border border-blue-500/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-blue-500 rounded-lg">
                       <Users className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Members</p>
+                      <p className="text-sm text-muted-foreground">Average Attendance</p>
                       <p className="text-3xl font-bold">{formatNumber(church.members)}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 bg-gradient-to-br from-green-500/10 to-green-600/10 rounded-xl border border-green-500/20">
+              <div className="p-6 bg-linear-to-br from-green-500/10 to-green-600/10 rounded-xl border border-green-500/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-green-500 rounded-lg">
                       <DollarSign className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Annual Income</p>
+                      <p className="text-sm text-muted-foreground">Average Income</p>
                       <p className="text-3xl font-bold">{formatCurrency(church.income)}</p>
                     </div>
                   </div>

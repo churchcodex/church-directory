@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ImageUpload from "@/components/ImageUpload";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SearchableSelect from "@/components/ui/searchable-select";
 import {
   Dialog,
   DialogContent,
@@ -236,21 +236,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender *</Label>
-                <Select
+                <SearchableSelect
+                  options={genders.map((g) => ({ value: g, label: g }))}
                   value={formData.gender}
                   onValueChange={(value) => setFormData({ ...formData, gender: value as Gender })}
-                >
-                  <SelectTrigger id="gender" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {genders.map((gender) => (
-                      <SelectItem key={gender} value={gender}>
-                        {gender}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select gender"
+                />
               </div>
             </div>
 
@@ -268,7 +259,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
               <div className="space-y-2">
                 <Label htmlFor="occupation">Occupation *</Label>
-                <Select
+                <SearchableSelect
+                  options={occupations.map((o) => ({ value: o, label: o }))}
                   value={occupationType}
                   onValueChange={(value) => {
                     setOccupationType(value as Occupation);
@@ -277,18 +269,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                       setCustomOccupation("");
                     }
                   }}
-                >
-                  <SelectTrigger id="occupation" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {occupations.map((occupation) => (
-                      <SelectItem key={occupation} value={occupation}>
-                        {occupation}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select occupation"
+                />
               </div>
             </div>
 
@@ -318,61 +300,34 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="clergy_type">Pastor Title *</Label>
-                <Select
+                <SearchableSelect
+                  options={clergyTypes.map((t) => ({ value: t, label: t }))}
                   value={formData.clergy_type}
                   onValueChange={(value) => setFormData({ ...formData, clergy_type: value as ClergyType })}
-                >
-                  <SelectTrigger id="clergy_type" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {clergyTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select title"
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="marital_status">Marital Status *</Label>
-                <Select
+                <SearchableSelect
+                  options={maritalStatuses.map((s) => ({ value: s, label: s }))}
                   value={formData.marital_status}
                   onValueChange={(value) => setFormData({ ...formData, marital_status: value as MaritalStatus })}
-                >
-                  <SelectTrigger id="marital_status" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {maritalStatuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select status"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="council">Council *</Label>
-                <Select
+                <SearchableSelect
+                  options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
                   onValueChange={(value) => setFormData({ ...formData, council: value as Council })}
-                >
-                  <SelectTrigger id="council" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {councils.map((council) => (
-                      <SelectItem key={council} value={council}>
-                        {council}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select council"
+                />
               </div>
 
               <div className="space-y-2">
@@ -382,21 +337,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                     <Loader2 className="h-4 w-4 animate-spin" />
                   </div>
                 ) : (
-                  <Select
+                  <SearchableSelect
+                    options={countries.map((c) => ({ value: c, label: c }))}
                     value={formData.country}
                     onValueChange={(value) => setFormData({ ...formData, country: value })}
-                  >
-                    <SelectTrigger id="country" className="w-full">
-                      <SelectValue placeholder="Select a country" />
-                    </SelectTrigger>
-                    <SelectContent className="w-full max-h-[200px]">
-                      {countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select a country"
+                  />
                 )}
               </div>
             </div>
@@ -419,21 +365,16 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Select
+                  <SearchableSelect
+                    options={churches.map((church) => ({
+                      value: church._id,
+                      label: `${church.name} - ${church.location}`,
+                    }))}
                     value={formData.church}
                     onValueChange={(value) => setFormData({ ...formData, church: value })}
-                  >
-                    <SelectTrigger id="church" className="w-full">
-                      <SelectValue placeholder="Select a church" />
-                    </SelectTrigger>
-                    <SelectContent className="w-full">
-                      {churches.map((church) => (
-                        <SelectItem key={church._id} value={church._id}>
-                          {church.name} - {church.location}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select a church"
+                    className="flex-1"
+                  />
                   <ChurchFormDialog onSuccess={fetchChurches}>
                     <Button type="button" variant="outline" size="icon">
                       <Plus className="h-4 w-4" />

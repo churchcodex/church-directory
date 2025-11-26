@@ -28,7 +28,7 @@ export default function ChurchCard({ church }: ChurchCardProps) {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Head Pastor</span>
+            <span className="text-sm text-muted-foreground">Pastor</span>
             <Badge variant="secondary">{church.head_pastor}</Badge>
           </div>
           <div className="flex items-center justify-between">

@@ -59,8 +59,7 @@ export default function ChurchesPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col items-center mb-12">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold mb-4">Church Directory</h1>
-            <p className="text-muted-foreground text-lg">Browse our directory of {churches.length} churches</p>
+            <h1 className="text-4xl lg:text-7xl font-bold mb-4">First Love Church</h1>
           </div>
           <ChurchFormDialog onSuccess={fetchChurches} />
         </div>
