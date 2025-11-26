@@ -57,23 +57,25 @@ export default function ChurchesPage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col items-center mb-12">
-          <div className="text-center mb-6">
-            <h1 className="text-4xl lg:text-7xl font-bold mb-4">First Love Church</h1>
+        <div className="flex flex-col items-center">
+          <div className="text-center">
+            <h1 className="text-4xl lg:text-7xl font-bold mb-6">First Love Campuses</h1>
           </div>
-          <ChurchFormDialog onSuccess={fetchChurches} />
         </div>
 
-        <div className="mb-8 max-w-md mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <Input
-              type="text"
-              placeholder="Search by name, location, or pastor..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12"
-            />
+        <div className="mb-8 max-w-md w-full mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center w-full gap-4">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <Input
+                type="text"
+                placeholder="Search by name, location, or pastor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-12"
+              />
+            </div>
+            <ChurchFormDialog onSuccess={fetchChurches} />
           </div>
         </div>
 

@@ -96,7 +96,6 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
           ) : (
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Add Church
             </Button>
           ))}
       </DialogTrigger>
