@@ -18,36 +18,40 @@ import { Trash2, Loader2 } from "lucide-react";
 
 interface DeleteButtonProps {
   id: string;
-  type: "pastor" | "church";
   name: string;
+  onSuccess?: () => void;
 }
 
-export default function DeleteButton({ id, type, name }: DeleteButtonProps) {
+export default function DeleteButton({ id, name, onSuccess }: DeleteButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/${type}s/${id}`, {
+      const response = await fetch(`/api/pastors/${id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        router.push(`/${type === "pastor" ? "clergy" : "churches"}`);
+        setOpen(false);
+        router.push("/clergy");
         router.refresh();
+        if (onSuccess) onSuccess();
       } else {
-        alert("Failed to delete");
+        const data = await response.json();
+        alert(`Error: ${data.error}`);
       }
     } catch (error) {
-      alert("Failed to delete");
+      alert("Failed to delete pastor");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
           <Trash2 className="h-4 w-4" />
@@ -55,14 +59,19 @@ export default function DeleteButton({ id, type, name }: DeleteButtonProps) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete <strong>{name}</strong>. This action cannot be undone.
+            This will permanently delete <span className="font-semibold">{name}</span> from the database. This action
+            cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={loading}>
+          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={loading}
+            className="bg-destructive hover:bg-destructive/90"
+          >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Delete
           </AlertDialogAction>
