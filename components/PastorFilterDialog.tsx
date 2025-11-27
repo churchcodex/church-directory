@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/searchable-select";
+import MultiSelect from "@/components/ui/multi-select";
 import {
   Dialog,
   DialogContent,
@@ -29,14 +30,14 @@ interface PastorFilterDialogProps {
 }
 
 export interface FilterState {
-  clergyType: string;
-  maritalStatus: string;
+  clergyType: string[];
+  maritalStatus: string[];
   gender: string;
-  council: string;
-  area: string;
-  ministry: string;
-  country: string;
-  occupation: string;
+  council: string[];
+  area: string[];
+  ministry: string[];
+  country: string[];
+  occupation: string[];
   status: string;
   minAge: string;
   maxAge: string;
@@ -59,6 +60,11 @@ export default function PastorFilterDialog({
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
 
+  // Sync internal state with initialFilters when dialog opens or initialFilters change
+  useEffect(() => {
+    setFilters(initialFilters);
+  }, [initialFilters, open]);
+
   const handleApply = () => {
     onApplyFilters(filters);
     setOpen(false);
@@ -66,15 +72,15 @@ export default function PastorFilterDialog({
 
   const handleReset = () => {
     const emptyFilters: FilterState = {
-      clergyType: "all",
-      maritalStatus: "all",
+      clergyType: [],
+      maritalStatus: [],
       gender: "all",
-      council: "all",
-      area: "all",
-      ministry: "all",
-      country: "all",
-      occupation: "all",
-      status: "all",
+      council: [],
+      area: [],
+      ministry: [],
+      country: [],
+      occupation: [],
+      status: "Active",
       minAge: "",
       maxAge: "",
     };
@@ -82,9 +88,12 @@ export default function PastorFilterDialog({
     onApplyFilters(emptyFilters);
   };
 
-  const activeFilterCount = Object.entries(filters).filter(
-    ([key, value]) => value && value !== "all" && value !== ""
-  ).length;
+  const activeFilterCount = Object.entries(filters).filter(([key, value]) => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    return value && value !== "all" && value !== "";
+  }).length;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -107,27 +116,21 @@ export default function PastorFilterDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="filter-clergy-type">Pastor Title</Label>
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "All Titles" },
-                  ...clergyTypes.map((type) => ({ value: type, label: type })),
-                ]}
+              <MultiSelect
+                options={clergyTypes.map((type) => ({ value: type, label: type }))}
                 value={filters.clergyType}
                 onValueChange={(value) => setFilters({ ...filters, clergyType: value })}
-                placeholder="Select title"
+                placeholder="Select title(s)"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="filter-marital-status">Marital Status</Label>
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "All Statuses" },
-                  ...maritalStatuses.map((status) => ({ value: status, label: status })),
-                ]}
+              <MultiSelect
+                options={maritalStatuses.map((status) => ({ value: status, label: status }))}
                 value={filters.maritalStatus}
                 onValueChange={(value) => setFilters({ ...filters, maritalStatus: value })}
-                placeholder="Select status"
+                placeholder="Select status(es)"
               />
             </div>
           </div>
@@ -148,37 +151,36 @@ export default function PastorFilterDialog({
 
             <div className="space-y-2">
               <Label htmlFor="filter-council">Council</Label>
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "All Councils" },
-                  ...councils.map((council) => ({ value: council, label: council })),
-                ]}
+              <MultiSelect
+                options={councils.map((council) => ({ value: council, label: council }))}
                 value={filters.council}
                 onValueChange={(value) => setFilters({ ...filters, council: value })}
-                placeholder="Select council"
+                placeholder="Select council(s)"
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="filter-area">Area</Label>
-              <SearchableSelect
-                options={[{ value: "all", label: "All Areas" }, ...areas.map((area) => ({ value: area, label: area }))]}
+              <MultiSelect
+                options={[{ value: "none", label: "No Area" }, ...areas.map((area) => ({ value: area, label: area }))]}
                 value={filters.area}
                 onValueChange={(value) => setFilters({ ...filters, area: value })}
-                placeholder="Select area"
+                placeholder="Select area(s)"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="filter-ministry">Ministry</Label>
-              <SearchableSelect
+              <MultiSelect
                 options={[
-                  { value: "all", label: "All Ministries" },
+                  { value: "none", label: "No Ministry" },
                   ...ministries.map((ministry) => ({ value: ministry, label: ministry })),
                 ]}
                 value={filters.ministry}
                 onValueChange={(value) => setFilters({ ...filters, ministry: value })}
-                placeholder="Select ministry"
+                placeholder="Select ministr(ies)"
               />
             </div>
           </div>
@@ -186,14 +188,11 @@ export default function PastorFilterDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="filter-country">Country</Label>
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "All Countries" },
-                  ...countries.map((country) => ({ value: country, label: country })),
-                ]}
+              <MultiSelect
+                options={countries.map((country) => ({ value: country, label: country }))}
                 value={filters.country}
                 onValueChange={(value) => setFilters({ ...filters, country: value })}
-                placeholder="Select country"
+                placeholder="Select countr(ies)"
               />
             </div>
 
@@ -201,8 +200,9 @@ export default function PastorFilterDialog({
               <Label htmlFor="filter-status">Status</Label>
               <SearchableSelect
                 options={[
-                  { value: "all", label: "All Statuses" },
-                  ...statuses.map((status) => ({ value: status, label: status })),
+                  { value: "all", label: "All" },
+                  { value: "Active", label: "Active" },
+                  { value: "Inactive", label: "Inactive" },
                 ]}
                 value={filters.status}
                 onValueChange={(value) => setFilters({ ...filters, status: value })}
@@ -213,14 +213,11 @@ export default function PastorFilterDialog({
 
           <div className="space-y-2">
             <Label htmlFor="filter-occupation">Occupation</Label>
-            <SearchableSelect
-              options={[
-                { value: "all", label: "All Occupations" },
-                ...occupations.map((occupation) => ({ value: occupation, label: occupation })),
-              ]}
+            <MultiSelect
+              options={occupations.map((occupation) => ({ value: occupation, label: occupation }))}
               value={filters.occupation}
               onValueChange={(value) => setFilters({ ...filters, occupation: value })}
-              placeholder="Select occupation"
+              placeholder="Select occupation(s)"
             />
           </div>
 

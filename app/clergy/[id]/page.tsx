@@ -7,8 +7,20 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import PastorFormDialog from "@/components/PastorFormDialog";
-import DeleteButton from "@/components/DeleteButton";
-import { Heart, Briefcase, ArrowLeft, Calendar, Church, User, Globe, Users, Award, Phone } from "lucide-react";
+import DeactivateButton from "@/components/DeactivateButton";
+import {
+  Heart,
+  Briefcase,
+  ArrowLeft,
+  Calendar,
+  Church,
+  User,
+  Globe,
+  Users,
+  Award,
+  Phone,
+  Activity,
+} from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
 
@@ -61,8 +73,46 @@ export default function ClergyDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading pastor's details...</div>
+      <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto">
+          {/* Header Skeleton */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="h-10 w-24 bg-muted rounded-md animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-10 w-20 bg-muted rounded-md animate-pulse" />
+              <div className="h-10 w-20 bg-muted rounded-md animate-pulse" />
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <div className="md:flex">
+              {/* Image Skeleton */}
+              <div className="md:w-1/2">
+                <div className="h-96 md:h-full w-full bg-muted animate-pulse" />
+              </div>
+
+              {/* Details Skeleton */}
+              <div className="p-8 md:w-1/2 space-y-6">
+                {/* Title Skeleton */}
+                <div className="text-center space-y-2">
+                  <div className="h-10 bg-muted rounded-md animate-pulse w-2/3 mx-auto" />
+                </div>
+
+                {/* Info Cards Skeleton */}
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                    <div key={i} className="p-4 bg-muted rounded-lg animate-pulse">
+                      <div className="flex justify-between items-center">
+                        <div className="h-5 w-32 bg-muted-foreground/20 rounded" />
+                        <div className="h-6 w-40 bg-muted-foreground/20 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -80,19 +130,20 @@ export default function ClergyDetailsPage() {
 
   // Get appointment date label based on clergy type
   const getAppointmentDateLabel = () => {
-    switch (pastor.clergy_type) {
-      case "Pastor":
-      case "Governor":
-        return "Date of Appointment";
-      case "Bishop":
-      case "Mother":
-        return "Date of Consecration";
-      case "Reverend":
-      case "Sister":
-        return "Date of Ordination";
-      default:
-        return "Date of Appointment";
+    // Handle both string and array formats
+    const types = Array.isArray(pastor.clergy_type)
+      ? pastor.clergy_type
+      : pastor.clergy_type
+      ? [pastor.clergy_type]
+      : [];
+    if (types.includes("Pastor") || types.includes("Governor")) {
+      return "Date of Appointment";
+    } else if (types.includes("Bishop") || types.includes("Mother")) {
+      return "Date of Consecration";
+    } else if (types.includes("Reverend") || types.includes("Sister")) {
+      return "Date of Ordination";
     }
+    return "Date of Appointment";
   };
 
   // Format date for display
@@ -116,10 +167,11 @@ export default function ClergyDetailsPage() {
           {pastor && (
             <div className="flex gap-2">
               <PastorFormDialog pastor={pastor} onSuccess={() => fetchPastor(params.id as string)} />
-              <DeleteButton
+              <DeactivateButton
                 id={pastor.id}
-                type="pastor"
                 name={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                currentStatus={pastor.status}
+                onSuccess={() => fetchPastor(params.id as string)}
               />
             </div>
           )}
@@ -127,7 +179,7 @@ export default function ClergyDetailsPage() {
 
         <Card className="overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/3">
+            <div className="md:w-1/2">
               <div className="relative h-96 md:h-full w-full">
                 <Image
                   src={pastor.profile_image || ""}
@@ -138,9 +190,9 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-8 md:w-2/3 space-y-6">
+            <div className="p-8 py-0 md:w-1/2 space-y-6">
               <div className="text-center">
-                <h1 className="text-3xl font-bold mb-2">
+                <h1 className="text-3xl lg:text-5xl font-bold mb-2">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </h1>
               </div>
@@ -150,8 +202,36 @@ export default function ClergyDetailsPage() {
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Briefcase className="h-5 w-5" />
                     Pastor Title
+                    {pastor.clergy_type && (Array.isArray(pastor.clergy_type) ? pastor.clergy_type.length > 1 : false)
+                      ? "s"
+                      : ""}
                   </span>
-                  <span className="text-xl font-bold">{pastor.clergy_type}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      // Handle both string and array formats
+                      const clergyTypes = Array.isArray(pastor.clergy_type)
+                        ? pastor.clergy_type
+                        : pastor.clergy_type
+                        ? [pastor.clergy_type]
+                        : [];
+
+                      return clergyTypes.length > 0 ? (
+                        <span className="text-base font-semibold">{clergyTypes.join(", ")}</span>
+                      ) : (
+                        <span className="text-base font-semibold">N/A</span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Activity className="h-5 w-5" />
+                    Status
+                  </span>
+                  <span className="text-base font-semibold">
+                    {!pastor.status || pastor.status === "Active" ? "Active" : "Inactive"}
+                  </span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -159,7 +239,7 @@ export default function ClergyDetailsPage() {
                     <Calendar className="h-5 w-5" />
                     Age
                   </span>
-                  <span className="text-xl font-bold">{calculateAge(pastor.date_of_birth || "")} years</span>
+                  <span className="text-base font-semibold">{calculateAge(pastor.date_of_birth || "")} years</span>
                 </div>
 
                 {pastor.date_of_appointment && (
@@ -168,7 +248,7 @@ export default function ClergyDetailsPage() {
                       <Award className="h-5 w-5" />
                       {getAppointmentDateLabel()}
                     </span>
-                    <span className="text-xl font-bold">{formatDate(pastor.date_of_appointment)}</span>
+                    <span className="text-base font-semibold">{formatDate(pastor.date_of_appointment)}</span>
                   </div>
                 )}
 
@@ -177,7 +257,7 @@ export default function ClergyDetailsPage() {
                     <User className="h-5 w-5" />
                     Gender
                   </span>
-                  <span className="text-xl font-bold">{pastor.gender}</span>
+                  <span className="text-base font-semibold">{pastor.gender}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -185,7 +265,7 @@ export default function ClergyDetailsPage() {
                     <Heart className="h-5 w-5" />
                     Marital Status
                   </span>
-                  <span className="text-xl font-bold">{pastor.marital_status}</span>
+                  <span className="text-base font-semibold">{pastor.marital_status}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -193,7 +273,7 @@ export default function ClergyDetailsPage() {
                     <Briefcase className="h-5 w-5" />
                     Occupation
                   </span>
-                  <span className="text-xl font-bold">{pastor.occupation}</span>
+                  <span className="text-base font-semibold">{pastor.occupation}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -201,7 +281,7 @@ export default function ClergyDetailsPage() {
                     <Users className="h-5 w-5" />
                     Council
                   </span>
-                  <span className="text-xl font-bold">{pastor.council}</span>
+                  <span className="text-base font-semibold">{pastor.council}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -209,7 +289,7 @@ export default function ClergyDetailsPage() {
                     <Globe className="h-5 w-5" />
                     Country
                   </span>
-                  <span className="text-xl font-bold">{pastor.country}</span>
+                  <span className="text-base font-semibold">{pastor.country}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -217,24 +297,23 @@ export default function ClergyDetailsPage() {
                     <Church className="h-5 w-5" />
                     Church
                   </span>
-                  <span className="text-xl font-bold">{churchName || "Loading..."}</span>
+                  <span className="text-base font-semibold">{churchName || "Loading..."}</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Phone className="h-5 w-5" />
-                    Phone Number
-                  </span>
-                  <span className="text-xl font-bold">{pastor.phone_number}</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Phone className="h-5 w-5" />
-                    WhatsApp Number
-                  </span>
-                  <span className="text-xl font-bold">{pastor.whatsapp_number}</span>
-                </div>
+                {pastor.contact_number && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <Phone className="h-5 w-5" />
+                      Contact Number
+                    </span>
+                    <a
+                      href={`tel:${pastor.contact_number}`}
+                      className="text-base font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      {pastor.contact_number}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>

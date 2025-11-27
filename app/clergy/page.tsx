@@ -1,28 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Pastor } from "@/types/entities";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-export default function ClergyPage() {
+function ClergyPageContent() {
+  const searchParams = useSearchParams();
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
-    clergyType: "all",
-    maritalStatus: "all",
+    clergyType: [],
+    maritalStatus: [],
     gender: "all",
-    council: "all",
-    area: "all",
-    ministry: "all",
-    country: "all",
-    occupation: "all",
-    status: "all",
+    council: [],
+    area: [],
+    ministry: [],
+    country: [],
+    occupation: [],
+    status: "Active",
     minAge: "",
     maxAge: "",
   });
@@ -31,6 +35,14 @@ export default function ClergyPage() {
   useEffect(() => {
     fetchPastors();
   }, []);
+
+  useEffect(() => {
+    // Check for status filter in URL params
+    const statusParam = searchParams.get("status");
+    if (statusParam === "inactive") {
+      setFilters((prev) => ({ ...prev, status: "Inactive" }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     applyFilters();
@@ -58,48 +70,67 @@ export default function ClergyPage() {
     if (searchQuery) {
       filtered = filtered.filter((pastor) => {
         const fullName = [pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ");
+        const clergyTypes = pastor.clergy_type?.join(" ") || "";
         return (
           fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          pastor.clergy_type?.toLowerCase().includes(searchQuery.toLowerCase())
+          clergyTypes.toLowerCase().includes(searchQuery.toLowerCase())
         );
       });
     }
 
-    // Apply filters
-    if (filters.clergyType !== "all") {
-      filtered = filtered.filter((pastor) => pastor.clergy_type === filters.clergyType);
+    // Apply filters - clergy type (multiple selection)
+    if (filters.clergyType.length > 0) {
+      filtered = filtered.filter((pastor) =>
+        filters.clergyType.some((type) => pastor.clergy_type?.includes(type as ClergyType))
+      );
     }
 
-    if (filters.maritalStatus !== "all") {
-      filtered = filtered.filter((pastor) => pastor.marital_status === filters.maritalStatus);
+    // Marital status (multiple selection)
+    if (filters.maritalStatus.length > 0) {
+      filtered = filtered.filter((pastor) => filters.maritalStatus.includes(pastor.marital_status || ""));
     }
 
+    // Gender (single selection)
     if (filters.gender !== "all") {
       filtered = filtered.filter((pastor) => pastor.gender === filters.gender);
     }
 
-    if (filters.council !== "all") {
-      filtered = filtered.filter((pastor) => pastor.council === filters.council);
+    // Council (multiple selection)
+    if (filters.council.length > 0) {
+      filtered = filtered.filter((pastor) => filters.council.includes(pastor.council || ""));
     }
 
-    if (filters.area !== "all") {
-      filtered = filtered.filter((pastor) => pastor.area === filters.area);
+    // Area (multiple selection)
+    if (filters.area.length > 0) {
+      filtered = filtered.filter((pastor) => {
+        if (filters.area.includes("none") && !pastor.area) return true;
+        return filters.area.includes(pastor.area || "");
+      });
     }
 
-    if (filters.ministry !== "all") {
-      filtered = filtered.filter((pastor) => pastor.ministry === filters.ministry);
+    // Ministry (multiple selection)
+    if (filters.ministry.length > 0) {
+      filtered = filtered.filter((pastor) => {
+        if (filters.ministry.includes("none") && !pastor.ministry) return true;
+        return filters.ministry.includes(pastor.ministry || "");
+      });
     }
 
-    if (filters.country !== "all") {
-      filtered = filtered.filter((pastor) => pastor.country === filters.country);
+    // Country (multiple selection)
+    if (filters.country.length > 0) {
+      filtered = filtered.filter((pastor) => filters.country.includes(pastor.country || ""));
     }
 
-    if (filters.occupation !== "all") {
-      filtered = filtered.filter((pastor) => pastor.occupation === filters.occupation);
+    // Occupation (multiple selection)
+    if (filters.occupation.length > 0) {
+      filtered = filtered.filter((pastor) => filters.occupation.includes(pastor.occupation || ""));
     }
 
-    if (filters.status !== "all") {
-      filtered = filtered.filter((pastor) => pastor.status === filters.status);
+    // Filter by status - treat undefined/missing status as "Active"
+    if (filters.status === "Active") {
+      filtered = filtered.filter((pastor) => !pastor.status || pastor.status === "Active");
+    } else if (filters.status === "Inactive") {
+      filtered = filtered.filter((pastor) => pastor.status === "Inactive");
     }
 
     // Filter by age range
@@ -115,6 +146,148 @@ export default function ClergyPage() {
     setFilteredPastors(filtered);
   };
 
+  // Get active filter labels
+  const getActiveFilters = () => {
+    const activeFilters: { label: string; value: string; key: keyof FilterState; filterValue?: string }[] = [];
+
+    // Clergy type (array)
+    if (filters.clergyType.length > 0) {
+      filters.clergyType.forEach((type) => {
+        activeFilters.push({
+          label: "Title",
+          value: type,
+          key: "clergyType",
+          filterValue: type,
+        });
+      });
+    }
+
+    // Marital status (array)
+    if (filters.maritalStatus.length > 0) {
+      filters.maritalStatus.forEach((status) => {
+        activeFilters.push({
+          label: "Marital Status",
+          value: status,
+          key: "maritalStatus",
+          filterValue: status,
+        });
+      });
+    }
+
+    // Gender (single)
+    if (filters.gender !== "all") {
+      activeFilters.push({
+        label: "Gender",
+        value: filters.gender,
+        key: "gender",
+      });
+    }
+
+    // Council (array)
+    if (filters.council.length > 0) {
+      filters.council.forEach((council) => {
+        activeFilters.push({
+          label: "Council",
+          value: council,
+          key: "council",
+          filterValue: council,
+        });
+      });
+    }
+
+    // Area (array)
+    if (filters.area.length > 0) {
+      filters.area.forEach((area) => {
+        activeFilters.push({
+          label: "Area",
+          value: area === "none" ? "No Area" : area,
+          key: "area",
+          filterValue: area,
+        });
+      });
+    }
+
+    // Ministry (array)
+    if (filters.ministry.length > 0) {
+      filters.ministry.forEach((ministry) => {
+        activeFilters.push({
+          label: "Ministry",
+          value: ministry === "none" ? "No Ministry" : ministry,
+          key: "ministry",
+          filterValue: ministry,
+        });
+      });
+    }
+
+    // Country (array)
+    if (filters.country.length > 0) {
+      filters.country.forEach((country) => {
+        activeFilters.push({
+          label: "Country",
+          value: country,
+          key: "country",
+          filterValue: country,
+        });
+      });
+    }
+
+    // Occupation (array)
+    if (filters.occupation.length > 0) {
+      filters.occupation.forEach((occupation) => {
+        activeFilters.push({
+          label: "Occupation",
+          value: occupation,
+          key: "occupation",
+          filterValue: occupation,
+        });
+      });
+    }
+
+    // Status (single)
+    if (filters.status !== "all") {
+      activeFilters.push({
+        label: "Status",
+        value: filters.status,
+        key: "status",
+      });
+    }
+
+    // Age range
+    if (filters.minAge || filters.maxAge) {
+      activeFilters.push({
+        label: "Age Range",
+        value: [filters.minAge && `Min: ${filters.minAge}`, filters.maxAge && `Max: ${filters.maxAge}`]
+          .filter(Boolean)
+          .join(", "),
+        key: "minAge",
+      });
+    }
+
+    return activeFilters;
+  };
+
+  const activeFilters = getActiveFilters();
+  const hasActiveFilters = activeFilters.length > 0 || searchQuery;
+
+  // Remove individual filter
+  const removeFilter = (key: keyof FilterState, filterValue?: string) => {
+    const updatedFilters = { ...filters };
+
+    if (Array.isArray(updatedFilters[key]) && filterValue) {
+      // Remove specific item from array filters
+      (updatedFilters[key] as string[]) = (updatedFilters[key] as string[]).filter((item) => item !== filterValue);
+    } else if (key === "minAge" || key === "maxAge") {
+      // Clear age range
+      updatedFilters.minAge = "";
+      updatedFilters.maxAge = "";
+    } else {
+      // Reset single select filters to "all"
+      updatedFilters[key] = "all" as any;
+    }
+
+    setFilters(updatedFilters);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -124,7 +297,7 @@ export default function ClergyPage() {
   }
 
   // Get unique values for filters
-  const clergyTypes = Array.from(new Set(pastors.map((p) => p.clergy_type))).filter(
+  const clergyTypes = Array.from(new Set(pastors.flatMap((p) => p.clergy_type || []))).filter(
     (type): type is NonNullable<typeof type> => type !== undefined
   );
   const councils = Array.from(new Set(pastors.map((p) => p.council))).filter(
@@ -176,6 +349,71 @@ export default function ClergyPage() {
               occupations={occupations}
             />
           </div>
+
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">
+                  Showing {filteredPastors.length} of {pastors.length} pastor{pastors.length !== 1 ? "s" : ""}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery("");
+                    const resetFilters: FilterState = {
+                      clergyType: [],
+                      maritalStatus: [],
+                      gender: "all",
+                      council: [],
+                      area: [],
+                      ministry: [],
+                      country: [],
+                      occupation: [],
+                      status: "Active",
+                      minAge: "",
+                      maxAge: "",
+                    };
+                    setFilters(resetFilters);
+                  }}
+                  className="text-xs"
+                >
+                  Clear All
+                </Button>
+              </div>
+
+              {searchQuery && (
+                <div className="mb-2">
+                  <Badge variant="secondary" className="mr-2 gap-1">
+                    Search: "{searchQuery}"
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="ml-1 hover:bg-background/20 rounded-full p-0.5 cursor-pointer"
+                    >
+                      <X className="h-3 w-3 cursor-pointer" />
+                    </button>
+                  </Badge>
+                </div>
+              )}
+
+              {activeFilters.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {activeFilters.map((filter, index) => (
+                    <Badge key={index} variant="outline" className="gap-1">
+                      {filter.label}: {filter.value}
+                      <button
+                        onClick={() => removeFilter(filter.key, filter.filterValue)}
+                        className="ml-1 hover:bg-background/20 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {filteredPastors.length === 0 ? (
@@ -212,5 +450,19 @@ export default function ClergyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ClergyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-xl">Loading...</div>
+        </div>
+      }
+    >
+      <ClergyPageContent />
+    </Suspense>
   );
 }

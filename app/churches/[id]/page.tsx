@@ -42,8 +42,61 @@ export default function ChurchDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading church details...</div>
+      <div className="min-h-screen flex flex-col md:px-6">
+        {/* Header Skeleton */}
+        <div className="my-4 px-4 flex justify-between items-center w-full mx-auto">
+          <div className="h-10 w-24 bg-muted rounded-md animate-pulse" />
+          <div className="flex gap-2">
+            <div className="h-10 w-20 bg-muted rounded-md animate-pulse" />
+            <div className="h-10 w-20 bg-muted rounded-md animate-pulse" />
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="flex flex-1 flex-col md:flex-row">
+          {/* Left Side - Image Skeleton */}
+          <div className="relative w-full md:w-2/3 h-[50vh] md:h-screen flex items-center justify-center bg-muted/20 p-8">
+            <div className="relative w-full max-w-2xl aspect-square rounded-2xl overflow-hidden bg-muted animate-pulse" />
+          </div>
+
+          {/* Right Side - Details Skeleton */}
+          <div className="w-full md:w-1/3 bg-background overflow-y-auto">
+            <div className="p-8 md:p-12 space-y-8">
+              {/* Title Skeleton */}
+              <div className="space-y-4 pt-12 md:pt-0">
+                <div className="h-12 bg-muted rounded-md animate-pulse w-3/4" />
+                <div className="h-6 bg-muted rounded-md animate-pulse w-1/2" />
+              </div>
+
+              {/* Badge Skeleton */}
+              <div className="p-6 rounded-xl flex items-center justify-center">
+                <div className="h-10 w-40 bg-muted rounded-md animate-pulse" />
+              </div>
+
+              {/* Statistics Skeletons */}
+              <div className="space-y-4">
+                <div className="p-6 rounded-xl border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-muted rounded-lg animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                      <div className="h-8 bg-muted rounded animate-pulse w-24" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 rounded-xl border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-muted rounded-lg animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                      <div className="h-8 bg-muted rounded animate-pulse w-24" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -164,13 +164,13 @@ export type MaritalStatus = "Single" | "Married" | "Divorced" | "Widowed";
 
 export type Gender = "Male" | "Female";
 
-export type Council = "Philippians" | "Galatians" | "2 Corinthians" | "Anagkazo" | "Area 1" | "Area 3" | "Area 4";
+export type Council = "Philippians" | "Galatians" | "2 Corinthians" | "Anagkazo" | "Ephesians" | "N/A";
 
 export type Area =
   | "HGE Area 1"
   | "HGE Area 2"
   | "HGE Area 3"
-  | "HGE Area"
+  | "HGE Area 4"
   | "Experience Area 1"
   | "Experience Area 2"
   | "Experience Area 3"
@@ -188,19 +188,18 @@ export interface Pastor {
   date_of_birth?: string;
   date_of_appointment?: string;
   profile_image?: string;
-  clergy_type?: ClergyType;
+  clergy_type?: ClergyType[];
   marital_status?: MaritalStatus;
   church?: string;
   gender?: Gender;
   council?: Council;
   area?: Area;
   ministry?: Ministry;
-  creative_arts?: string;
+  ministry_group?: string;
   basonta?: string;
   occupation?: string;
   country?: string;
   email?: string;
-  phone_number?: string;
-  whatsapp_number?: string;
+  contact_number?: string;
   status?: Status;
 }

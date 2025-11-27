@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Church } from "@/types/entities";
 import ChurchCard from "@/components/ChurchCard";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function ChurchesPage() {
   const [churches, setChurches] = useState<Church[]>([]);
@@ -54,6 +56,8 @@ export default function ChurchesPage() {
     );
   }
 
+  const hasSearch = searchQuery.trim() !== "";
+
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -77,6 +81,27 @@ export default function ChurchesPage() {
             </div>
             <ChurchFormDialog onSuccess={fetchChurches} />
           </div>
+
+          {/* Active Search Display */}
+          {hasSearch && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">
+                  Showing {filteredChurches.length} of {churches.length} campus{churches.length !== 1 ? "es" : ""}
+                </p>
+                <Button variant="ghost" size="sm" onClick={() => setSearchQuery("")} className="text-xs">
+                  Clear Search
+                </Button>
+              </div>
+
+              <Badge variant="secondary" className="gap-1">
+                Search: "{searchQuery}"
+                <button onClick={() => setSearchQuery("")} className="ml-1 hover:bg-background/20 rounded-full p-0.5">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            </div>
+          )}
         </div>
 
         {filteredChurches.length === 0 ? (

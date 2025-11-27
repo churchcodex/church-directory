@@ -13,6 +13,7 @@ interface DashboardStats {
   totalClergy: number;
   totalMembers: number;
   totalIncome: number;
+  inactiveClergy: number;
   recentChurches: ChurchType[];
   recentClergy: Pastor[];
 }
@@ -23,6 +24,7 @@ export default function Dashboard() {
     totalClergy: 0,
     totalMembers: 0,
     totalIncome: 0,
+    inactiveClergy: 0,
     recentChurches: [],
     recentClergy: [],
   });
@@ -43,14 +45,20 @@ export default function Dashboard() {
 
         const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
         const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
+        const activeClergy = clergy.filter((c) => !c.status || c.status === "Active").length;
+        const inactiveClergy = clergy.filter((c) => c.status === "Inactive").length;
 
         setStats({
           totalChurches: churches.length,
-          totalClergy: clergy.length,
+          totalClergy: activeClergy,
           totalMembers,
           totalIncome,
+          inactiveClergy,
           recentChurches: churches.slice(-5).reverse(),
-          recentClergy: clergy.slice(-5).reverse(),
+          recentClergy: clergy
+            .filter((c) => !c.status || c.status === "Active")
+            .slice(-5)
+            .reverse(),
         });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -93,6 +101,13 @@ export default function Dashboard() {
       href: "/clergy",
     },
     {
+      title: "Inactive Pastors",
+      value: formatNumber(stats.inactiveClergy),
+      icon: Users,
+      gradient: "from-red-500 to-red-700",
+      href: "/clergy?status=inactive",
+    },
+    {
       title: "Total Members",
       value: formatNumber(stats.totalMembers),
       icon: TrendingUp,
@@ -109,7 +124,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           const cardContent = (

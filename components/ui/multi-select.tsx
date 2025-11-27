@@ -1,50 +1,40 @@
 "use client";
 
 import React from "react";
-import ReactSelect, { Props as SelectProps, StylesConfig } from "react-select";
+import ReactSelect, { Props as SelectProps, StylesConfig, MultiValue } from "react-select";
 import { cn } from "@/lib/utils";
 
-export interface SearchableSelectOption {
+export interface MultiSelectOption {
   value: string;
   label: string;
 }
 
-interface SearchableSelectProps
-  extends Omit<SelectProps<SearchableSelectOption, false>, "options" | "value" | "onChange"> {
-  options: SearchableSelectOption[];
-  value?: string;
-  onValueChange?: (value: string) => void;
+interface MultiSelectProps extends Omit<SelectProps<MultiSelectOption, true>, "options" | "value" | "onChange"> {
+  options: MultiSelectOption[];
+  value?: string[];
+  onValueChange?: (value: string[]) => void;
   placeholder?: string;
   className?: string;
-  size?: "sm" | "default";
 }
 
-export default function SearchableSelect({
+export default function MultiSelect({
   options,
-  value,
+  value = [],
   onValueChange,
   placeholder = "Select...",
   className,
-  size = "default",
   ...props
-}: SearchableSelectProps) {
-  const selectedOption = options.find((option) => option.value === value) || null;
+}: MultiSelectProps) {
+  const selectedOptions = options.filter((option) => value.includes(option.value));
 
-  const customStyles: StylesConfig<SearchableSelectOption, false> = {
+  const customStyles: StylesConfig<MultiSelectOption, true> = {
     control: (base, state) => ({
       ...base,
-      minHeight: size === "sm" ? "2rem" : "2.25rem",
-      height: size === "sm" ? "2rem" : "2.25rem",
+      minHeight: "2.5rem",
       borderRadius: "0.375rem",
-      borderColor: state.isFocused
-        ? "hsl(var(--ring))"
-        : state.selectProps["aria-invalid"]
-        ? "hsl(var(--destructive))"
-        : "hsl(var(--input))",
+      borderColor: state.isFocused ? "hsl(var(--ring))" : "hsl(var(--input))",
       backgroundColor: "hsl(var(--background))",
-      boxShadow: state.isFocused ? "0 0 0 3px hsl(var(--ring) / 0.5)" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-      fontSize: "0.875rem",
-      transition: "color 0.2s, box-shadow 0.2s",
+      boxShadow: state.isFocused ? "0 0 0 3px hsl(var(--ring) / 0.5)" : "none",
       cursor: "pointer",
       "&:hover": {
         borderColor: state.isFocused ? "hsl(var(--ring))" : "hsl(var(--input))",
@@ -52,7 +42,6 @@ export default function SearchableSelect({
     }),
     valueContainer: (base) => ({
       ...base,
-      height: size === "sm" ? "2rem" : "2.25rem",
       padding: "0 0.75rem",
       backgroundColor: "hsl(var(--background))",
     }),
@@ -67,14 +56,12 @@ export default function SearchableSelect({
     }),
     indicatorsContainer: (base) => ({
       ...base,
-      height: size === "sm" ? "2rem" : "2.25rem",
       backgroundColor: "hsl(var(--background))",
     }),
     dropdownIndicator: (base) => ({
       ...base,
       padding: "0 0.5rem",
       color: "hsl(var(--muted-foreground))",
-      backgroundColor: "transparent",
       cursor: "pointer",
       "&:hover": {
         color: "hsl(var(--muted-foreground))",
@@ -112,13 +99,26 @@ export default function SearchableSelect({
         backgroundColor: "hsl(var(--accent))",
       },
     }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: "hsl(var(--accent))",
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: "hsl(var(--accent-foreground))",
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: "hsl(var(--accent-foreground))",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "hsl(var(--destructive))",
+        color: "hsl(var(--destructive-foreground))",
+      },
+    }),
     placeholder: (base) => ({
       ...base,
       color: "hsl(var(--muted-foreground))",
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: "hsl(var(--foreground))",
     }),
     noOptionsMessage: (base) => ({
       ...base,
@@ -130,11 +130,12 @@ export default function SearchableSelect({
   return (
     <ReactSelect
       {...props}
+      isMulti
       options={options}
-      value={selectedOption}
-      onChange={(option) => {
-        if (option && onValueChange) {
-          onValueChange(option.value);
+      value={selectedOptions}
+      onChange={(selected: MultiValue<MultiSelectOption>) => {
+        if (onValueChange) {
+          onValueChange(selected ? selected.map((option) => option.value) : []);
         }
       }}
       placeholder={placeholder}
@@ -142,7 +143,7 @@ export default function SearchableSelect({
       classNamePrefix="react-select"
       styles={customStyles}
       isSearchable
-      isClearable={false}
+      isClearable
     />
   );
 }

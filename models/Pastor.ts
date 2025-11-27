@@ -37,9 +37,21 @@ const PastorSchema = new Schema<PastorDocument>(
       required: false,
     },
     clergy_type: {
-      type: String,
+      type: [String],
       enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"],
       required: false,
+      validate: {
+        validator: function (v: string[]) {
+          // Allow empty array or undefined
+          if (!v || v.length === 0) return true;
+          // Allow maximum of 2 titles
+          if (v.length > 2) return false;
+          // If there are 2 titles, one must be Governor
+          if (v.length === 2 && !v.includes("Governor")) return false;
+          return true;
+        },
+        message: "A pastor can have a maximum of 2 titles, and if there are 2, one must be Governor",
+      },
     },
     marital_status: {
       type: String,
@@ -58,7 +70,7 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     council: {
       type: String,
-      enum: ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Area 1", "Area 3", "Area 4"],
+      enum: ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Ephesians", "N/A", ""],
       required: false,
     },
     area: {
@@ -67,20 +79,21 @@ const PastorSchema = new Schema<PastorDocument>(
         "HGE Area 1",
         "HGE Area 2",
         "HGE Area 3",
-        "HGE Area",
+        "HGE Area 4",
         "Experience Area 1",
         "Experience Area 2",
         "Experience Area 3",
         "Experience Area 4",
+        "",
       ],
       required: false,
     },
     ministry: {
       type: String,
-      enum: ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship"],
+      enum: ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", ""],
       required: false,
     },
-    creative_arts: {
+    ministry_group: {
       type: String,
       required: false,
     },
@@ -102,11 +115,7 @@ const PastorSchema = new Schema<PastorDocument>(
       lowercase: true,
       trim: true,
     },
-    phone_number: {
-      type: String,
-      required: false,
-    },
-    whatsapp_number: {
+    contact_number: {
       type: String,
       required: false,
     },

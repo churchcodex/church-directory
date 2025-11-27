@@ -23,6 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
+      clergy_type: pastor.clergy_type || [],
     };
 
     return NextResponse.json({ success: true, data: transformedPastor });
@@ -37,12 +38,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     const body = await request.json();
 
+    // Sanitize empty strings to undefined for enum fields
+    const sanitizedData = {
+      ...body,
+      council: body.council === "" ? undefined : body.council,
+      area: body.area === "" ? undefined : body.area,
+      ministry: body.ministry === "" ? undefined : body.ministry,
+      ministry_group: body.ministry_group === "" ? undefined : body.ministry_group,
+    };
+
     // Check for duplicate pastor (excluding the current pastor being updated)
     const existingPastor = await Pastor.findOne({
       _id: { $ne: id },
-      first_name: body.first_name,
-      last_name: body.last_name,
-      ...(body.date_of_birth && { date_of_birth: new Date(body.date_of_birth) }),
+      first_name: sanitizedData.first_name,
+      last_name: sanitizedData.last_name,
+      ...(sanitizedData.date_of_birth && { date_of_birth: new Date(sanitizedData.date_of_birth) }),
     });
 
     if (existingPastor) {
@@ -55,7 +65,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const pastor: any = await Pastor.findByIdAndUpdate(id, body, {
+    const pastor: any = await Pastor.findByIdAndUpdate(id, sanitizedData, {
       new: true,
       runValidators: true,
     }).lean();

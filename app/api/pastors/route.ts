@@ -36,11 +36,20 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
 
-    // Check for duplicate pastor based on first name, last name, and date of birth
+    // Sanitize empty strings to undefined for enum fields
+    const sanitizedData = {
+      ...body,
+      council: body.council === "" ? undefined : body.council,
+      area: body.area === "" ? undefined : body.area,
+      ministry: body.ministry === "" ? undefined : body.ministry,
+      ministry_group: body.ministry_group === "" ? undefined : body.ministry_group,
+    };
+
+    // Check for duplicate pastor
     const existingPastor = await Pastor.findOne({
-      first_name: body.first_name,
-      last_name: body.last_name,
-      ...(body.date_of_birth && { date_of_birth: new Date(body.date_of_birth) }),
+      first_name: sanitizedData.first_name,
+      last_name: sanitizedData.last_name,
+      ...(sanitizedData.date_of_birth && { date_of_birth: new Date(sanitizedData.date_of_birth) }),
     });
 
     if (existingPastor) {
@@ -53,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pastor: any = await Pastor.create(body);
+    const pastor: any = await Pastor.create(sanitizedData);
     const transformedPastor = {
       ...pastor.toObject(),
       id: pastor._id.toString(),
