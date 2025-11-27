@@ -337,7 +337,6 @@ function ClergyPageContent() {
                 className="pl-10 h-12"
               />
             </div>
-            <PastorFormDialog onSuccess={fetchPastors} />
             <PastorFilterDialog
               onApplyFilters={setFilters}
               initialFilters={filters}
@@ -348,6 +347,7 @@ function ClergyPageContent() {
               countries={countries}
               occupations={occupations}
             />
+            <PastorFormDialog onSuccess={fetchPastors} />
           </div>
 
           {/* Active Filters Display */}
