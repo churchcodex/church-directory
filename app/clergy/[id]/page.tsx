@@ -20,6 +20,9 @@ import {
   Award,
   Phone,
   Activity,
+  Mail,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
@@ -46,9 +49,11 @@ export default function ClergyDetailsPage() {
       const data = await response.json();
       if (data.success) {
         setPastor(data.data);
-        // Fetch church name
-        if (data.data.church) {
+        // Fetch church name only if church ID exists and is valid
+        if (data.data.church && data.data.church.trim() !== "") {
           fetchChurch(data.data.church);
+        } else {
+          setChurchName("No Church Assigned");
         }
       }
     } catch (error) {
@@ -190,7 +195,7 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-8 py-0 md:w-1/2 space-y-6">
+            <div className="p-8 md:py-0 md:w-1/2 space-y-6">
               <div className="text-center">
                 <h1 className="text-3xl lg:text-5xl font-bold mb-2">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
@@ -284,6 +289,46 @@ export default function ClergyDetailsPage() {
                   <span className="text-base font-semibold">{pastor.council}</span>
                 </div>
 
+                {pastor.area && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <MapPin className="h-5 w-5" />
+                      Area
+                    </span>
+                    <span className="text-base font-semibold">{pastor.area}</span>
+                  </div>
+                )}
+
+                {pastor.ministry && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <Sparkles className="h-5 w-5" />
+                      Ministry
+                    </span>
+                    <span className="text-base font-semibold">{pastor.ministry}</span>
+                  </div>
+                )}
+
+                {pastor.ministry_group && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <Sparkles className="h-5 w-5" />
+                      Ministry Group
+                    </span>
+                    <span className="text-base font-semibold">{pastor.ministry_group}</span>
+                  </div>
+                )}
+
+                {pastor.basonta && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <Award className="h-5 w-5" />
+                      Basonta
+                    </span>
+                    <span className="text-base font-semibold">{pastor.basonta}</span>
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Globe className="h-5 w-5" />
@@ -297,8 +342,23 @@ export default function ClergyDetailsPage() {
                     <Church className="h-5 w-5" />
                     Church
                   </span>
-                  <span className="text-base font-semibold">{churchName || "Loading..."}</span>
+                  <span className="text-base font-semibold">{churchName || "No Church Assigned"}</span>
                 </div>
+
+                {pastor.email && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <Mail className="h-5 w-5" />
+                      Email
+                    </span>
+                    <a
+                      href={`mailto:${pastor.email}`}
+                      className="text-base font-semibold text-primary hover:underline cursor-pointer break-all"
+                    >
+                      {pastor.email}
+                    </a>
+                  </div>
+                )}
 
                 {pastor.contact_number && (
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
