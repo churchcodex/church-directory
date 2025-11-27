@@ -45,6 +45,7 @@ export default function SearchableSelect({
       boxShadow: state.isFocused ? "0 0 0 3px hsl(var(--ring) / 0.5)" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
       fontSize: "0.875rem",
       transition: "color 0.2s, box-shadow 0.2s",
+      cursor: "pointer",
       "&:hover": {
         borderColor: state.isFocused ? "hsl(var(--ring))" : "hsl(var(--input))",
       },
@@ -74,6 +75,7 @@ export default function SearchableSelect({
       padding: "0 0.5rem",
       color: "hsl(var(--muted-foreground))",
       backgroundColor: "transparent",
+      cursor: "pointer",
       "&:hover": {
         color: "hsl(var(--muted-foreground))",
       },

@@ -15,13 +15,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Filter, X } from "lucide-react";
-import { ClergyType, MaritalStatus, Gender, Council } from "@/types/entities";
+import { ClergyType, MaritalStatus, Gender, Council, Area, Status, Ministry } from "@/types/entities";
 
 interface PastorFilterDialogProps {
   onApplyFilters: (filters: FilterState) => void;
   initialFilters: FilterState;
   clergyTypes: ClergyType[];
   councils: Council[];
+  areas: Area[];
+  ministries: Ministry[];
   countries: string[];
   occupations: string[];
 }
@@ -31,20 +33,26 @@ export interface FilterState {
   maritalStatus: string;
   gender: string;
   council: string;
+  area: string;
+  ministry: string;
   country: string;
   occupation: string;
+  status: string;
   minAge: string;
   maxAge: string;
 }
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
+const statuses: Status[] = ["Active", "Inactive"];
 
 export default function PastorFilterDialog({
   onApplyFilters,
   initialFilters,
   clergyTypes,
   councils,
+  areas,
+  ministries,
   countries,
   occupations,
 }: PastorFilterDialogProps) {
@@ -62,8 +70,11 @@ export default function PastorFilterDialog({
       maritalStatus: "all",
       gender: "all",
       council: "all",
+      area: "all",
+      ministry: "all",
       country: "all",
       occupation: "all",
+      status: "all",
       minAge: "",
       maxAge: "",
     };
@@ -78,9 +89,8 @@ export default function PastorFilterDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 relative">
+        <Button variant="outline" className="gap-2 relative p-4">
           <Filter className="h-4 w-4" />
-          Filters
           {activeFilterCount > 0 && (
             <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
               {activeFilterCount}
@@ -148,6 +158,29 @@ export default function PastorFilterDialog({
                 placeholder="Select council"
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="filter-area">Area</Label>
+              <SearchableSelect
+                options={[{ value: "all", label: "All Areas" }, ...areas.map((area) => ({ value: area, label: area }))]}
+                value={filters.area}
+                onValueChange={(value) => setFilters({ ...filters, area: value })}
+                placeholder="Select area"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="filter-ministry">Ministry</Label>
+              <SearchableSelect
+                options={[
+                  { value: "all", label: "All Ministries" },
+                  ...ministries.map((ministry) => ({ value: ministry, label: ministry })),
+                ]}
+                value={filters.ministry}
+                onValueChange={(value) => setFilters({ ...filters, ministry: value })}
+                placeholder="Select ministry"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -165,17 +198,30 @@ export default function PastorFilterDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="filter-occupation">Occupation</Label>
+              <Label htmlFor="filter-status">Status</Label>
               <SearchableSelect
                 options={[
-                  { value: "all", label: "All Occupations" },
-                  ...occupations.map((occupation) => ({ value: occupation, label: occupation })),
+                  { value: "all", label: "All Statuses" },
+                  ...statuses.map((status) => ({ value: status, label: status })),
                 ]}
-                value={filters.occupation}
-                onValueChange={(value) => setFilters({ ...filters, occupation: value })}
-                placeholder="Select occupation"
+                value={filters.status}
+                onValueChange={(value) => setFilters({ ...filters, status: value })}
+                placeholder="Select status"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filter-occupation">Occupation</Label>
+            <SearchableSelect
+              options={[
+                { value: "all", label: "All Occupations" },
+                ...occupations.map((occupation) => ({ value: occupation, label: occupation })),
+              ]}
+              value={filters.occupation}
+              onValueChange={(value) => setFilters({ ...filters, occupation: value })}
+              placeholder="Select occupation"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

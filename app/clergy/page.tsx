@@ -18,8 +18,11 @@ export default function ClergyPage() {
     maritalStatus: "all",
     gender: "all",
     council: "all",
+    area: "all",
+    ministry: "all",
     country: "all",
     occupation: "all",
+    status: "all",
     minAge: "",
     maxAge: "",
   });
@@ -57,7 +60,6 @@ export default function ClergyPage() {
         const fullName = [pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ");
         return (
           fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          pastor.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           pastor.clergy_type?.toLowerCase().includes(searchQuery.toLowerCase())
         );
       });
@@ -80,12 +82,24 @@ export default function ClergyPage() {
       filtered = filtered.filter((pastor) => pastor.council === filters.council);
     }
 
+    if (filters.area !== "all") {
+      filtered = filtered.filter((pastor) => pastor.area === filters.area);
+    }
+
+    if (filters.ministry !== "all") {
+      filtered = filtered.filter((pastor) => pastor.ministry === filters.ministry);
+    }
+
     if (filters.country !== "all") {
       filtered = filtered.filter((pastor) => pastor.country === filters.country);
     }
 
     if (filters.occupation !== "all") {
       filtered = filtered.filter((pastor) => pastor.occupation === filters.occupation);
+    }
+
+    if (filters.status !== "all") {
+      filtered = filtered.filter((pastor) => pastor.status === filters.status);
     }
 
     // Filter by age range
@@ -116,6 +130,12 @@ export default function ClergyPage() {
   const councils = Array.from(new Set(pastors.map((p) => p.council))).filter(
     (council): council is NonNullable<typeof council> => council !== undefined
   );
+  const areas = Array.from(new Set(pastors.map((p) => p.area)))
+    .filter((area): area is NonNullable<typeof area> => area !== undefined)
+    .sort();
+  const ministries = Array.from(new Set(pastors.map((p) => p.ministry)))
+    .filter((ministry): ministry is NonNullable<typeof ministry> => ministry !== undefined)
+    .sort();
   const countries = Array.from(new Set(pastors.map((p) => p.country)))
     .filter((country): country is NonNullable<typeof country> => country !== undefined)
     .sort();
@@ -133,26 +153,28 @@ export default function ClergyPage() {
         </div>
 
         <div className="mb-8 max-w-4xl mx-auto">
-          <div className="flex gap-2 flex-col md:flex-row items-stretch">
+          <div className="flex gap-2 flex-col md:flex-row md:items-center items-stretch">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
                 type="text"
-                placeholder="Search by name, position, or type..."
+                placeholder="Search by name or type..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 h-12"
               />
             </div>
+            <PastorFormDialog onSuccess={fetchPastors} />
             <PastorFilterDialog
               onApplyFilters={setFilters}
               initialFilters={filters}
               clergyTypes={clergyTypes}
               councils={councils}
+              areas={areas}
+              ministries={ministries}
               countries={countries}
               occupations={occupations}
             />
-            <PastorFormDialog onSuccess={fetchPastors} />
           </div>
         </div>
 

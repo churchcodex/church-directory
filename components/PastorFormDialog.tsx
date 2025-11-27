@@ -17,7 +17,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Building2 } from "lucide-react";
-import { Pastor, ClergyType, MaritalStatus, Gender, Council, Occupation } from "@/types/entities";
+import {
+  Pastor,
+  ClergyType,
+  MaritalStatus,
+  Gender,
+  Council,
+  Area,
+  Status,
+  Occupation,
+  Ministry,
+  DancingStarsCreativeArts,
+  FilmStarsCreativeArts,
+  GLGCCreativeArts,
+  PraiseAndWorshipCreativeArts,
+  Basonta,
+} from "@/types/entities";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
 
 interface PastorFormDialogProps {
@@ -25,12 +40,179 @@ interface PastorFormDialogProps {
   onSuccess?: () => void;
 }
 
-const clergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor"];
+const clergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
 const councils: Council[] = ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Area 1", "Area 3", "Area 4"];
-const occupations: Occupation[] = ["Medical Doctor", "Lawyer", "Engineer", "Accountant", "Pharmacist", "Other"];
+const areas: Area[] = [
+  "HGE Area 1",
+  "HGE Area 2",
+  "HGE Area 3",
+  "HGE Area",
+  "Experience Area 1",
+  "Experience Area 2",
+  "Experience Area 3",
+  "Experience Area 4",
+];
+const statuses: Status[] = ["Active", "Inactive"];
+const ministries: Ministry[] = ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship"];
+
+const dancingStarsCreativeArts: DancingStarsCreativeArts[] = [
+  "Eels on wheels",
+  "Spiders",
+  "Doves",
+  "Lizardos",
+  "Butterflies",
+  "Kangaroos",
+  "Impalas",
+  "Unicorns",
+  "Gazelles",
+  "Camels",
+  "Eagles",
+  "Lions",
+  "Dolphins",
+];
+
+const filmStarsCreativeArts: FilmStarsCreativeArts[] = [
+  "Actors Ministry",
+  "Props Ministry",
+  "Costume ministry",
+  "Make up",
+  "Protocol",
+  "Script writers",
+  "Social media",
+  "Technical",
+  "Love theatre company",
+];
+
+const glgcCreativeArts: GLGCCreativeArts[] = [
+  "Many Are Called",
+  "Love is Large",
+  "Peace and Love",
+  "True Love",
+  "Love Never Fails",
+  "Abundant Love",
+  "Steadfast Love",
+  "Perfect Love",
+  "Unfeigned Love",
+  "Love Is Patient",
+  "Everlasting Love",
+  "God So Loved",
+];
+
+const praiseAndWorshipCreativeArts: PraiseAndWorshipCreativeArts[] = ["Praise Stars", "Worship Stars"];
+
+const basontas: Basonta[] = [
+  "Backstage Hostesses",
+  "Backstage Hosts",
+  "Engedi Food Team",
+  "Mood Changing Food Team",
+  "Marriage Counseling",
+  "Sheep seeking September",
+  "Sheep seeking October",
+  "Sheep seeking November",
+  "Sheep seeking December",
+  "Sheep seeking January",
+  "Sheep seeking February",
+  "Sheep seeking March",
+  "Sheep seeking April",
+  "Sheep seeking May",
+  "Sheep seeking June",
+  "Sheep seeking July",
+  "Sheep seeking August",
+  "School of Solid Foundation",
+  "School of Victorious Living",
+  "School of Evangelism",
+  "School of the Word",
+  "School of Apologetics",
+  "Addictions and substance abuse Counsellors",
+  "Grief and Trauma Counsellors",
+  "Relationship and love related issues Counsellors",
+  "Career and financial management Counsellors",
+  "Business Community",
+  "Music mixers",
+  "Salvation corner ushers",
+  "Podcast corner ushers",
+  "Balcony ushers",
+  "Left wing ushers",
+  "Right wing ushers",
+  "Middle ground ushers",
+  "Photography Team",
+  "Vox Team",
+  "Video Clip Cutters Team",
+  "YouTube & Graphics Team",
+  "X Team",
+  "TikTok & Snapchat Team",
+  "Videography team",
+  "Meta Team",
+  "FLOC Production and editing Team",
+  "Clap nighters",
+  "Sunday intercessors",
+  "Soul winning intercessors",
+  "Testimony Maestros",
+  "Mood changing Campus control",
+  "External Campus control",
+  "Cross Car Park Campus control",
+  "Office block Car Park Campus control",
+  "Revival street Campus control",
+  "Lord's Tower- Praise and Worship",
+  "Lord's Tower- Preaching and solo team",
+  "Lord's Tower- Film stars",
+  "Lord's Tower- Choir",
+  "Lord's Tower- Dance",
+  "Choir Telepastors",
+  "Dancing stars Telepastors",
+  "Film stars Telepastors",
+  "Basonta Telepastors",
+  "Philippians Telepastors",
+  "Galatians Telepastors",
+  "Ephesians Telepastors",
+  "Anagkazo Telepastors",
+  "Hostesses of the Offices",
+  "Hostesses of the First timers",
+  "Hostesses of the Greater lovers & Special Visitors",
+  "Balcony Security",
+  "Stage Security",
+  "Ground Security",
+  "I - church",
+  "J - Church",
+  "K - Church",
+  "B - Church",
+  "Y - Church",
+  "Lovelets Check in",
+  "Smiles on arrival airport stars",
+  "First Offering airport stars",
+  "Second offering airport stars",
+  "Bus welcomers airport stars",
+  "Car welcomers airport stars",
+  "Car confirmers",
+  "Bus confirmers",
+  "Payments",
+  "Treasurers",
+  "Fragrance",
+  "Governors lounge",
+  "The Lord's garden",
+  "HGE Telepastors",
+  "HGE Understanding campaign",
+  "HGE Sheep seeking",
+  "HGE Airport Stars",
+  "HGE Intimate counseling",
+  "HGE Lord's tower",
+  "HGE Ushers",
+  "HGE Hostesses",
+  "HGE Hearing and seeing",
+];
+
+const occupations: Occupation[] = [
+  "Medical Doctor",
+  "Lawyer",
+  "Engineer",
+  "Accountant",
+  "Pharmacist",
+  "Student",
+  "Other",
+];
 
 export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialogProps) {
   const router = useRouter();
@@ -45,17 +227,25 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     middle_name: pastor?.middle_name || "",
     last_name: pastor?.last_name || "",
     date_of_birth: pastor?.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
-    position: pastor?.position || "",
+    date_of_appointment: pastor?.date_of_appointment
+      ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
+      : "",
     profile_image: pastor?.profile_image || "",
     clergy_type: pastor?.clergy_type || "Pastor",
     marital_status: pastor?.marital_status || "Single",
     church: pastor?.church || "",
     gender: pastor?.gender || "Male",
-    council: pastor?.council || "Philippians",
+    council: pastor?.council || "",
+    area: pastor?.area || "",
+    ministry: pastor?.ministry || "",
+    creative_arts: pastor?.creative_arts || "",
+    basonta: pastor?.basonta || "",
     occupation: pastor?.occupation || "Medical Doctor",
     country: pastor?.country || "",
+    email: pastor?.email || "",
     phone_number: pastor?.phone_number || "",
     whatsapp_number: pastor?.whatsapp_number || "",
+    status: pastor?.status || "Active",
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
     pastor?.occupation && occupations.includes(pastor.occupation as Occupation)
@@ -130,17 +320,25 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         middle_name: pastor.middle_name || "",
         last_name: pastor.last_name || "",
         date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
-        position: pastor.position || "",
+        date_of_appointment: pastor.date_of_appointment
+          ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
+          : "",
         profile_image: pastor.profile_image || "",
         clergy_type: pastor.clergy_type || "Pastor",
         marital_status: pastor.marital_status || "Single",
         church: pastor.church || "",
         gender: pastor.gender || "Male",
-        council: pastor.council || "Philippians",
+        council: pastor.council || "",
+        area: pastor.area || "",
+        ministry: pastor.ministry || "",
+        creative_arts: pastor.creative_arts || "",
+        basonta: pastor.basonta || "",
         occupation: pastor.occupation || "Medical Doctor",
         country: pastor.country || "",
+        email: pastor.email || "",
         phone_number: pastor.phone_number || "",
         whatsapp_number: pastor.whatsapp_number || "",
+        status: pastor.status || "Active",
       });
     }
   }, [open, pastor]);
@@ -175,17 +373,23 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             middle_name: "",
             last_name: "",
             date_of_birth: "",
-            position: "",
+            date_of_appointment: "",
             profile_image: "",
             clergy_type: "Pastor",
             marital_status: "Single",
             church: "",
             gender: "Male",
-            council: "Philippians",
+            council: "",
+            area: "",
+            ministry: "",
+            creative_arts: "",
+            basonta: "",
             occupation: "Medical Doctor",
             country: "",
+            email: "",
             phone_number: "",
             whatsapp_number: "",
+            status: "Active",
           });
           setOccupationType("Medical Doctor");
           setCustomOccupation("");
@@ -205,6 +409,39 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     await fetchChurches();
     if (churchId) {
       setFormData({ ...formData, church: churchId });
+    }
+  };
+
+  // Get creative arts options based on selected ministry
+  const getCreativeArtsOptions = () => {
+    switch (formData.ministry) {
+      case "Dancing Stars":
+        return dancingStarsCreativeArts.map((b) => ({ value: b, label: b }));
+      case "Film Stars":
+        return filmStarsCreativeArts.map((b) => ({ value: b, label: b }));
+      case "GLGC":
+        return glgcCreativeArts.map((b) => ({ value: b, label: b }));
+      case "Praise and Worship":
+        return praiseAndWorshipCreativeArts.map((b) => ({ value: b, label: b }));
+      default:
+        return [];
+    }
+  };
+
+  // Get appointment date label based on clergy type
+  const getAppointmentDateLabel = () => {
+    switch (formData.clergy_type) {
+      case "Pastor":
+      case "Governor":
+        return "Date of Appointment";
+      case "Bishop":
+      case "Mother":
+        return "Date of Consecration";
+      case "Reverend":
+      case "Sister":
+        return "Date of Ordination";
+      default:
+        return "Date of Appointment";
     }
   };
 
@@ -287,15 +524,28 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="Senior Pastor"
+                <Label htmlFor="clergy_type">Pastor Title</Label>
+                <SearchableSelect
+                  options={clergyTypes.map((t) => ({ value: t, label: t }))}
+                  value={formData.clergy_type}
+                  onValueChange={(value) => setFormData({ ...formData, clergy_type: value as ClergyType })}
+                  placeholder="Select title"
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="date_of_appointment">{getAppointmentDateLabel()}</Label>
+                <Input
+                  id="date_of_appointment"
+                  type="date"
+                  value={formData.date_of_appointment}
+                  onChange={(e) => setFormData({ ...formData, date_of_appointment: e.target.value })}
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="occupation">Occupation</Label>
                 <SearchableSelect
@@ -309,6 +559,15 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                     }
                   }}
                   placeholder="Select occupation"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marital_status">Marital Status</Label>
+                <SearchableSelect
+                  options={maritalStatuses.map((s) => ({ value: s, label: s }))}
+                  value={formData.marital_status}
+                  onValueChange={(value) => setFormData({ ...formData, marital_status: value as MaritalStatus })}
+                  placeholder="Select status"
                 />
               </div>
             </div>
@@ -328,35 +587,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
             )}
 
-            <ImageUpload
-              label="Profile Image"
-              value={formData.profile_image}
-              onChange={(url) => setFormData({ ...formData, profile_image: url as string })}
-              multiple={false}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clergy_type">Pastor Title</Label>
-                <SearchableSelect
-                  options={clergyTypes.map((t) => ({ value: t, label: t }))}
-                  value={formData.clergy_type}
-                  onValueChange={(value) => setFormData({ ...formData, clergy_type: value as ClergyType })}
-                  placeholder="Select title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="marital_status">Marital Status</Label>
-                <SearchableSelect
-                  options={maritalStatuses.map((s) => ({ value: s, label: s }))}
-                  value={formData.marital_status}
-                  onValueChange={(value) => setFormData({ ...formData, marital_status: value as MaritalStatus })}
-                  placeholder="Select status"
-                />
-              </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="council">Council</Label>
@@ -368,6 +598,43 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="area">Area</Label>
+                <SearchableSelect
+                  options={areas.map((a) => ({ value: a, label: a }))}
+                  value={formData.area}
+                  onValueChange={(value) => setFormData({ ...formData, area: value as Area })}
+                  placeholder="Select area"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ministry">Ministry</Label>
+                <SearchableSelect
+                  options={ministries.map((m) => ({ value: m, label: m }))}
+                  value={formData.ministry}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, ministry: value as Ministry, creative_arts: "" });
+                  }}
+                  placeholder="Select ministry"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="creative_arts">Creative Arts</Label>
+                <SearchableSelect
+                  options={getCreativeArtsOptions()}
+                  value={formData.creative_arts}
+                  onValueChange={(value) => setFormData({ ...formData, creative_arts: value })}
+                  placeholder="Select creative arts"
+                  isDisabled={!formData.ministry}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
                 {loadingCountries ? (
@@ -383,6 +650,27 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                   />
                 )}
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <SearchableSelect
+                  options={statuses.map((s) => ({ value: s, label: s }))}
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
+                  placeholder="Select status"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="pastor@example.com"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -445,6 +733,22 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 </div>
               )}
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="basonta">Basonta</Label>
+              <SearchableSelect
+                options={basontas.map((b) => ({ value: b, label: b }))}
+                value={formData.basonta}
+                onValueChange={(value) => setFormData({ ...formData, basonta: value as Basonta })}
+                placeholder="Select basonta"
+              />
+            </div>
+            <ImageUpload
+              label="Profile Image"
+              value={formData.profile_image}
+              onChange={(url) => setFormData({ ...formData, profile_image: url as string })}
+              multiple={false}
+            />
           </div>
 
           <DialogFooter>

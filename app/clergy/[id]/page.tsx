@@ -78,6 +78,33 @@ export default function ClergyDetailsPage() {
     );
   }
 
+  // Get appointment date label based on clergy type
+  const getAppointmentDateLabel = () => {
+    switch (pastor.clergy_type) {
+      case "Pastor":
+      case "Governor":
+        return "Date of Appointment";
+      case "Bishop":
+      case "Mother":
+        return "Date of Consecration";
+      case "Reverend":
+      case "Sister":
+        return "Date of Ordination";
+      default:
+        return "Date of Appointment";
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto">
@@ -116,7 +143,6 @@ export default function ClergyDetailsPage() {
                 <h1 className="text-3xl font-bold mb-2">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </h1>
-                <p className="text-xl text-muted-foreground">{pastor.position}</p>
               </div>
 
               <div className="space-y-4">
@@ -135,6 +161,16 @@ export default function ClergyDetailsPage() {
                   </span>
                   <span className="text-xl font-bold">{calculateAge(pastor.date_of_birth || "")} years</span>
                 </div>
+
+                {pastor.date_of_appointment && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <Award className="h-5 w-5" />
+                      {getAppointmentDateLabel()}
+                    </span>
+                    <span className="text-xl font-bold">{formatDate(pastor.date_of_appointment)}</span>
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">

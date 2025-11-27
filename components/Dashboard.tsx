@@ -193,7 +193,6 @@ export default function Dashboard() {
                       <h3 className="font-semibold">
                         {pastor.first_name} {pastor.middle_name} {pastor.last_name}
                       </h3>
-                      <p className="text-sm text-muted-foreground">{pastor.position}</p>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {pastor.clergy_type}
