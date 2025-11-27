@@ -122,7 +122,7 @@ export default function ChurchDetailsPage() {
         </Button>
         <div className="flex gap-2">
           <ChurchFormDialog church={church} onSuccess={() => fetchChurch(params.id as string)} />
-          <DeleteButton id={church.id} type="church" name={church.name} />
+          <DeleteButton id={church.id} name={church.name} />
         </div>
       </div>
 
