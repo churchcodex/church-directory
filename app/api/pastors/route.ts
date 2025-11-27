@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const transformedPastors = pastors.map((pastor: any) => ({
       ...pastor,
       id: pastor._id.toString(),
-      church: pastor.church.toString(),
+      church: pastor.church ? pastor.church.toString() : "",
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
       date_of_appointment: pastor.date_of_appointment
         ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]

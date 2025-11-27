@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
+import PastorBulkUpload from "@/components/PastorBulkUpload";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -70,7 +71,7 @@ function ClergyPageContent() {
     if (searchQuery) {
       filtered = filtered.filter((pastor) => {
         const fullName = [pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ");
-        const clergyTypes = pastor.clergy_type?.join(" ") || "";
+        const clergyTypes = Array.isArray(pastor.clergy_type) ? pastor.clergy_type.join(" ") : pastor.clergy_type || "";
         return (
           fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           clergyTypes.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,9 +81,14 @@ function ClergyPageContent() {
 
     // Apply filters - clergy type (multiple selection)
     if (filters.clergyType.length > 0) {
-      filtered = filtered.filter((pastor) =>
-        filters.clergyType.some((type) => pastor.clergy_type?.includes(type as ClergyType))
-      );
+      filtered = filtered.filter((pastor) => {
+        const clergyTypeArray = Array.isArray(pastor.clergy_type)
+          ? pastor.clergy_type
+          : pastor.clergy_type
+          ? [pastor.clergy_type]
+          : [];
+        return filters.clergyType.some((type) => clergyTypeArray.includes(type as ClergyType));
+      });
     }
 
     // Marital status (multiple selection)
@@ -347,6 +353,7 @@ function ClergyPageContent() {
               countries={countries}
               occupations={occupations}
             />
+            <PastorBulkUpload onSuccess={fetchPastors} />
             <PastorFormDialog onSuccess={fetchPastors} />
           </div>
 
