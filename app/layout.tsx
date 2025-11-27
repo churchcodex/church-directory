@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { Church, Users } from "lucide-react";
+import Image from "next/image";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,9 +32,9 @@ export default function RootLayout({
           <div className=" mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
-                <Link href="/" className="flex items-center space-x-2">
-                  <Church className="h-6 w-6" />
-                  {/* <span className="font-bold text-xl">Church Directory</span> */}
+                <Link href="/" className="items-center space-x-2 block">
+                  {/* <Church className="h-6 w-6" /> */}
+                  <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={60} height={60} />
                 </Link>
               </div>
               <div className="flex items-center space-x-4">
