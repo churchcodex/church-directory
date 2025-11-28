@@ -428,7 +428,7 @@ function ClergyPageContent() {
             <p className="text-muted-foreground text-lg">No pastor found matching your search.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3">
             {filteredPastors.map((pastor) => (
               <Link
                 key={pastor.id}

@@ -43,7 +43,7 @@ export default function RootLayout({
                   className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
                 >
                   <Church className="h-4 w-4" />
-                  Churches
+                  Campuses
                 </Link>
                 <Link
                   href="/clergy"
