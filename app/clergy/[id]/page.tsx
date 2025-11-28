@@ -193,7 +193,7 @@ export default function ClergyDetailsPage() {
         <div className="flex justify-between items-center mb-6">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <p className="hidden md:block">Back</p>
           </Button>
           {pastor && (
             <div className="flex gap-2">
@@ -222,7 +222,7 @@ export default function ClergyDetailsPage() {
                     src={pastor.profile_image}
                     alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-cover object-top rounded-lg"
                     unoptimized={pastor.profile_image.includes("fl-admin-apps.s3.eu-west-2.amazonaws.com")}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;

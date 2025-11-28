@@ -30,26 +30,52 @@ export default function SearchableSelect({
 }: SearchableSelectProps) {
   const selectedOption = options.find((option) => option.value === value) || null;
 
+  // Get computed colors from CSS variables
+  const getComputedColor = (variable: string) => {
+    if (typeof window !== "undefined") {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+      return value ? `hsl(${value})` : undefined;
+    }
+    return undefined;
+  };
+
   const customStyles: StylesConfig<SearchableSelectOption, false> = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: size === "sm" ? "2rem" : "2.25rem",
-      height: size === "sm" ? "2rem" : "2.25rem",
-      borderRadius: "0.375rem",
-      borderColor: state.isFocused
-        ? "hsl(var(--ring))"
-        : state.selectProps["aria-invalid"]
-        ? "hsl(var(--destructive))"
-        : "hsl(var(--input))",
-      backgroundColor: "hsl(var(--background))",
-      boxShadow: state.isFocused ? "0 0 0 3px hsl(var(--ring) / 0.5)" : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-      fontSize: "0.875rem",
-      transition: "color 0.2s, box-shadow 0.2s",
-      cursor: "pointer",
-      "&:hover": {
-        borderColor: state.isFocused ? "hsl(var(--ring))" : "hsl(var(--input))",
-      },
-    }),
+    control: (base, state) => {
+      const primaryColor = getComputedColor("--primary");
+      const backgroundColor = getComputedColor("--background");
+      const destructiveColor = getComputedColor("--destructive");
+
+      return {
+        ...base,
+        minHeight: size === "sm" ? "2rem" : "2.25rem",
+        height: size === "sm" ? "2rem" : "2.25rem",
+        borderRadius: "0.375rem",
+        borderWidth: "2px",
+        borderColor: state.isFocused
+          ? primaryColor
+          : state.selectProps["aria-invalid"]
+          ? destructiveColor
+          : primaryColor
+          ? `${primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.3)")}`
+          : "#e5e7eb",
+        backgroundColor: backgroundColor || "white",
+        boxShadow: state.isFocused
+          ? `0 0 0 3px ${
+              primaryColor ? primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.2)") : "rgba(139, 92, 246, 0.2)"
+            }`
+          : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        fontSize: "0.875rem",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+        cursor: "pointer",
+        "&:hover": {
+          borderColor: state.isFocused
+            ? primaryColor
+            : primaryColor
+            ? `${primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.5)")}`
+            : "#d1d5db",
+        },
+      };
+    },
     valueContainer: (base) => ({
       ...base,
       height: size === "sm" ? "2rem" : "2.25rem",

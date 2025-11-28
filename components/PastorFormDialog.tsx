@@ -258,6 +258,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     country: pastor?.country || "",
     email: pastor?.email || "",
     contact_number: pastor?.contact_number || "",
+    status: pastor?.status || "Active",
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
     pastor?.occupation && occupations.includes(pastor.occupation as Occupation)
@@ -363,6 +364,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         country: pastor.country || "",
         email: pastor.email || "",
         contact_number: pastor.contact_number || "",
+        status: pastor.status || "Active",
       });
     }
   }, [open, pastor]);
@@ -413,6 +415,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             country: "",
             email: "",
             contact_number: "",
+            status: "Active",
           });
           setOccupationType("Medical Doctor");
           setCustomOccupation("");
@@ -812,6 +815,19 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 placeholder="Select basonta"
               />
             </div>
+
+            {pastor && (
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <SearchableSelect
+                  options={statuses.map((s) => ({ value: s, label: s }))}
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
+                  placeholder="Select status"
+                />
+              </div>
+            )}
+
             <ImageUpload
               label="Profile Image"
               value={formData.profile_image}

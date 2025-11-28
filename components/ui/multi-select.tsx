@@ -27,19 +27,47 @@ export default function MultiSelect({
 }: MultiSelectProps) {
   const selectedOptions = options.filter((option) => value.includes(option.value));
 
+  // Get computed colors from CSS variables
+  const getComputedColor = (variable: string) => {
+    if (typeof window !== "undefined") {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+      return value ? `hsl(${value})` : undefined;
+    }
+    return undefined;
+  };
+
   const customStyles: StylesConfig<MultiSelectOption, true> = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: "2.5rem",
-      borderRadius: "0.375rem",
-      borderColor: state.isFocused ? "hsl(var(--ring))" : "hsl(var(--input))",
-      backgroundColor: "hsl(var(--background))",
-      boxShadow: state.isFocused ? "0 0 0 3px hsl(var(--ring) / 0.5)" : "none",
-      cursor: "pointer",
-      "&:hover": {
-        borderColor: state.isFocused ? "hsl(var(--ring))" : "hsl(var(--input))",
-      },
-    }),
+    control: (base, state) => {
+      const primaryColor = getComputedColor("--primary");
+      const backgroundColor = getComputedColor("--background");
+
+      return {
+        ...base,
+        minHeight: "2.5rem",
+        borderRadius: "0.375rem",
+        borderWidth: "2px",
+        borderColor: state.isFocused
+          ? primaryColor
+          : primaryColor
+          ? `${primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.3)")}`
+          : "#e5e7eb",
+        backgroundColor: backgroundColor || "white",
+        boxShadow: state.isFocused
+          ? `0 0 0 3px ${
+              primaryColor ? primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.2)") : "rgba(139, 92, 246, 0.2)"
+            }`
+          : "none",
+        cursor: "pointer",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+        "&:hover": {
+          borderColor: state.isFocused
+            ? primaryColor
+            : primaryColor
+            ? `${primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.5)")}`
+            : "#d1d5db",
+        },
+      };
+    },
     valueContainer: (base) => ({
       ...base,
       padding: "0 0.75rem",

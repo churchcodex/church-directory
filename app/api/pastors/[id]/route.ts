@@ -38,15 +38,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     const body = await request.json();
 
-    // Validate clergy_type
-    if (!body.clergy_type || body.clergy_type.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Please select at least one title",
-        },
-        { status: 400 }
-      );
+    // Validate clergy_type only if it's being updated
+    if (body.clergy_type !== undefined) {
+      if (!body.clergy_type || body.clergy_type.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Please select at least one title",
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Sanitize empty strings to undefined for optional enum fields only
@@ -57,33 +59,44 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       // Council, Area, and Ministry are now required, so don't sanitize them
     };
 
-    // Build duplicate check query - always check first name and last name, exclude current pastor
-    const duplicateQuery: any = {
-      _id: { $ne: id },
-      first_name: sanitizedData.first_name,
-      last_name: sanitizedData.last_name,
-    };
+    // Build duplicate check query only if name or DOB is being updated
+    if (body.first_name !== undefined || body.last_name !== undefined || body.date_of_birth !== undefined) {
+      const duplicateQuery: any = {
+        _id: { $ne: id },
+      };
 
-    // Add date of birth to query if provided
-    if (sanitizedData.date_of_birth) {
-      duplicateQuery.date_of_birth = new Date(sanitizedData.date_of_birth);
-    }
+      // Add fields that are being updated or fetch current values
+      const currentPastor = await Pastor.findById(id);
+      if (!currentPastor) {
+        return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
+      }
 
-    // Check for duplicate pastor (excluding the current pastor being updated)
-    const existingPastor = await Pastor.findOne(duplicateQuery);
+      duplicateQuery.first_name = body.first_name !== undefined ? sanitizedData.first_name : currentPastor.first_name;
+      duplicateQuery.last_name = body.last_name !== undefined ? sanitizedData.last_name : currentPastor.last_name;
 
-    if (existingPastor) {
-      const errorMessage = sanitizedData.date_of_birth
-        ? "A pastor with the same first name, last name, and date of birth already exists"
-        : "A pastor with the same first name and last name already exists";
+      // Add date of birth to query if provided in update or exists in current record
+      if (sanitizedData.date_of_birth) {
+        duplicateQuery.date_of_birth = new Date(sanitizedData.date_of_birth);
+      } else if (currentPastor.date_of_birth) {
+        duplicateQuery.date_of_birth = currentPastor.date_of_birth;
+      }
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: errorMessage,
-        },
-        { status: 409 }
-      );
+      // Check for duplicate pastor (excluding the current pastor being updated)
+      const existingPastor = await Pastor.findOne(duplicateQuery);
+
+      if (existingPastor) {
+        const errorMessage = duplicateQuery.date_of_birth
+          ? "A pastor with the same first name, last name, and date of birth already exists"
+          : "A pastor with the same first name and last name already exists";
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: errorMessage,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const pastor: any = await Pastor.findByIdAndUpdate(id, sanitizedData, {

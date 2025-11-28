@@ -41,7 +41,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         "Last Name": "Doe",
         "Date of Birth": "1990-01-15",
         "Date of Appointment": "2020-06-01",
-        "Clergy Type": "Pastor,Reverend",
+        "Clergy Type": "Pastor,Governor",
         "Marital Status": "Married",
         Gender: "Male",
         Council: "Philippians",
@@ -62,8 +62,8 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const worksheet = XLSX.utils.json_to_sheet(templateData);
     const workbook = XLSX.utils.book_new();
 
-    // Create a reference sheet for ministry groups
-    const referenceData = [
+    // Create reference sheet for ministry groups
+    const ministryGroupsData = [
       {
         Ministry: "GLGC",
         "Ministry Groups":
@@ -81,10 +81,176 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       },
       { Ministry: "Praise and Worship", "Ministry Groups": "Praise Stars, Worship Stars" },
     ];
-    const referenceSheet = XLSX.utils.json_to_sheet(referenceData);
+    const ministryGroupsSheet = XLSX.utils.json_to_sheet(ministryGroupsData);
 
+    // Create reference sheet for councils
+    const councilsData = [
+      { Council: "Philippians" },
+      { Council: "Galatians" },
+      { Council: "Colossians" },
+      { Council: "2 Corinthians" },
+      { Council: "Anagkazo" },
+      { Council: "Ephesians" },
+      { Council: "Signs and Wonders HGE" },
+      { Council: "N/A" },
+    ];
+    const councilsSheet = XLSX.utils.json_to_sheet(councilsData);
+
+    // Create reference sheet for areas
+    const areasData = [
+      { Area: "HGE Area 1" },
+      { Area: "HGE Area 2" },
+      { Area: "HGE Area 3" },
+      { Area: "HGE Area 4" },
+      { Area: "Experience Area 1" },
+      { Area: "Experience Area 2" },
+      { Area: "Experience Area 3" },
+      { Area: "Experience Area 4" },
+    ];
+    const areasSheet = XLSX.utils.json_to_sheet(areasData);
+
+    // Create reference sheet for clergy types
+    const clergyTypesData = [
+      { "Clergy Type": "Bishop", Description: "Can be combined with Governor (max 2 titles)" },
+      { "Clergy Type": "Mother", Description: "Can be combined with Governor (max 2 titles)" },
+      { "Clergy Type": "Sister", Description: "Can be combined with Governor (max 2 titles)" },
+      { "Clergy Type": "Reverend", Description: "Can be combined with Governor (max 2 titles)" },
+      { "Clergy Type": "Pastor", Description: "Can be combined with Governor (max 2 titles)" },
+      { "Clergy Type": "Governor", Description: "Can be combined with any other title" },
+    ];
+    const clergyTypesSheet = XLSX.utils.json_to_sheet(clergyTypesData);
+
+    // Create reference sheet for marital status
+    const maritalStatusData = [
+      { "Marital Status": "Single" },
+      { "Marital Status": "Married" },
+      { "Marital Status": "Divorced" },
+      { "Marital Status": "Widowed" },
+    ];
+    const maritalStatusSheet = XLSX.utils.json_to_sheet(maritalStatusData);
+
+    // Create reference sheet for gender
+    const genderData = [{ Gender: "Male" }, { Gender: "Female" }];
+    const genderSheet = XLSX.utils.json_to_sheet(genderData);
+
+    // Create reference sheet for status
+    const statusData = [{ Status: "Active" }, { Status: "Inactive" }];
+    const statusSheet = XLSX.utils.json_to_sheet(statusData);
+
+    // Create reference sheet for basonta (split into multiple columns for readability)
+    const basontaOptions = [
+      "Backstage Hostesses",
+      "Backstage Hosts",
+      "Engedi Food Team",
+      "Mood Changing Food Team",
+      "Marriage Counseling",
+      "Sheep seeking September",
+      "Sheep seeking October",
+      "Sheep seeking November",
+      "Sheep seeking December",
+      "Sheep seeking January",
+      "Sheep seeking February",
+      "Sheep seeking March",
+      "Sheep seeking April",
+      "Sheep seeking May",
+      "Sheep seeking June",
+      "Sheep seeking July",
+      "Sheep seeking August",
+      "School of Solid Foundation",
+      "School of Victorious Living",
+      "School of Evangelism",
+      "School of the Word",
+      "School of Apologetics",
+      "Addictions and substance abuse Counsellors",
+      "Grief and Trauma Counsellors",
+      "Relationship and love related issues Counsellors",
+      "Career and financial management Counsellors",
+      "Business Community",
+      "Music mixers",
+      "Salvation corner ushers",
+      "Podcast corner ushers",
+      "Balcony ushers",
+      "Left wing ushers",
+      "Right wing ushers",
+      "Middle ground ushers",
+      "Photography Team",
+      "Vox Team",
+      "Video Clip Cutters Team",
+      "YouTube & Graphics Team",
+      "X Team",
+      "TikTok & Snapchat Team",
+      "Videography team",
+      "Meta Team",
+      "FLOC Production and editing Team",
+      "Clap nighters",
+      "Sunday intercessors",
+      "Soul winning intercessors",
+      "Testimony Maestros",
+      "Mood changing Campus control",
+      "External Campus control",
+      "Cross Car Park Campus control",
+      "Office block Car Park Campus control",
+      "Revival street Campus control",
+      "Lord's Tower- Praise and Worship",
+      "Lord's Tower- Preaching and solo team",
+      "Lord's Tower- Film stars",
+      "Lord's Tower- Choir",
+      "Lord's Tower- Dance",
+      "Choir Telepastors",
+      "Dancing stars Telepastors",
+      "Film stars Telepastors",
+      "Basonta Telepastors",
+      "Philippians Telepastors",
+      "Galatians Telepastors",
+      "Ephesians Telepastors",
+      "Anagkazo Telepastors",
+      "Hostesses of the Offices",
+      "Hostesses of the First timers",
+      "Hostesses of the Greater lovers & Special Visitors",
+      "Balcony Security",
+      "Stage Security",
+      "Ground Security",
+      "I - church",
+      "J - Church",
+      "K - Church",
+      "B - Church",
+      "Y - Church",
+      "Lovelets Check in",
+      "Smiles on arrival airport stars",
+      "First Offering airport stars",
+      "Second offering airport stars",
+      "Bus welcomers airport stars",
+      "Car welcomers airport stars",
+      "Car confirmers",
+      "Bus confirmers",
+      "Payments",
+      "Treasurers",
+      "Fragrance",
+      "Governors lounge",
+      "The Lord's garden",
+      "HGE Telepastors",
+      "HGE Understanding campaign",
+      "HGE Sheep seeking",
+      "HGE Airport Stars",
+      "HGE Intimate counseling",
+      "HGE Lord's tower",
+      "HGE Ushers",
+      "HGE Hostesses",
+      "HGE Hearing and seeing",
+    ];
+    const basontaData = basontaOptions.map((b) => ({ Basonta: b }));
+    const basontaSheet = XLSX.utils.json_to_sheet(basontaData);
+
+    // Append all sheets to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pastors");
-    XLSX.utils.book_append_sheet(workbook, referenceSheet, "Ministry Groups Reference");
+    XLSX.utils.book_append_sheet(workbook, ministryGroupsSheet, "Ministry Groups");
+    XLSX.utils.book_append_sheet(workbook, councilsSheet, "Councils");
+    XLSX.utils.book_append_sheet(workbook, areasSheet, "Areas");
+    XLSX.utils.book_append_sheet(workbook, clergyTypesSheet, "Titles");
+    XLSX.utils.book_append_sheet(workbook, maritalStatusSheet, "Marital Status");
+    XLSX.utils.book_append_sheet(workbook, genderSheet, "Gender");
+    XLSX.utils.book_append_sheet(workbook, statusSheet, "Status");
+    XLSX.utils.book_append_sheet(workbook, basontaSheet, "Basonta");
 
     // Set column widths
     worksheet["!cols"] = [
@@ -109,6 +275,16 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 30 }, // Profile Image URL
       { wch: 10 }, // Status
     ];
+
+    // Set column widths for reference sheets
+    ministryGroupsSheet["!cols"] = [{ wch: 20 }, { wch: 100 }];
+    councilsSheet["!cols"] = [{ wch: 25 }];
+    areasSheet["!cols"] = [{ wch: 25 }];
+    clergyTypesSheet["!cols"] = [{ wch: 20 }, { wch: 50 }];
+    maritalStatusSheet["!cols"] = [{ wch: 20 }];
+    genderSheet["!cols"] = [{ wch: 15 }];
+    statusSheet["!cols"] = [{ wch: 15 }];
+    basontaSheet["!cols"] = [{ wch: 50 }];
 
     // Add data validations for dropdowns
     if (!worksheet["!dataValidation"]) worksheet["!dataValidation"] = [];
@@ -443,7 +619,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
                 <li>
                   <strong>Required fields:</strong> First Name, Last Name
                 </li>
-                <li>For Clergy Type, separate multiple types with commas (e.g., "Pastor,Reverend")</li>
+                <li>For Title, separate multiple types with commas (e.g., "Pastor,Governor")</li>
                 <li>
                   <strong>Ministry Group:</strong> Check the "Ministry Groups Reference" sheet to see which groups
                   belong to each ministry
