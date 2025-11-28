@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Building2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Pastor,
   ClergyType,
@@ -46,7 +47,16 @@ const clergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pa
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
-const councils: Council[] = ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Ephesians", "N/A"];
+const councils: Council[] = [
+  "Philippians",
+  "Galatians",
+  "Colossians",
+  "2 Corinthians",
+  "Anagkazo",
+  "Ephesians",
+  "Signs and Wonders HGE",
+  "None",
+];
 const areas: Area[] = [
   "HGE Area 1",
   "HGE Area 2",
@@ -56,9 +66,10 @@ const areas: Area[] = [
   "Experience Area 2",
   "Experience Area 3",
   "Experience Area 4",
+  "None",
 ];
 const statuses: Status[] = ["Active", "Inactive"];
-const ministries: Ministry[] = ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship"];
+const ministries: Ministry[] = ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", "None"];
 
 const dancingStarsCreativeArts: DancingStarsCreativeArts[] = [
   "Eels on wheels",
@@ -106,6 +117,7 @@ const glgcCreativeArts: GLGCCreativeArts[] = [
 const praiseAndWorshipCreativeArts: PraiseAndWorshipCreativeArts[] = ["Praise Stars", "Worship Stars"];
 
 const basontas: Basonta[] = [
+  "N/A",
   "Backstage Hostesses",
   "Backstage Hosts",
   "Engedi Food Team",
@@ -276,6 +288,13 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       }
     } catch (error) {
       console.error("Failed to fetch churches:", error);
+      toast.error("Failed to load churches. Please try again.", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
     } finally {
       setLoadingChurches(false);
     }
@@ -292,6 +311,13 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       setCountries(countryNames);
     } catch (error) {
       console.error("Failed to fetch countries:", error);
+      toast.error("Failed to load countries. Using fallback list.", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
       // Fallback to a basic list if API fails
       setCountries([
         "Ghana",
@@ -363,6 +389,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       if (response.ok) {
         setOpen(false);
         router.refresh();
+        toast.success(pastor ? "Pastor updated successfully" : "Pastor created successfully");
         if (onSuccess) onSuccess();
         // Reset form for create mode
         if (!pastor) {
@@ -392,10 +419,23 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         }
       } else {
         const data = await response.json();
-        alert(`Error: ${data.error}`);
+        toast.error(data.error || "Failed to save pastor. Please try again.", {
+          style: {
+            background: "#7f1d1d",
+            border: "1px solid #991b1b",
+            color: "#fef2f2",
+          },
+        });
       }
     } catch (error) {
-      alert("Failed to save pastor");
+      console.error("Failed to save pastor:", error);
+      toast.error("An unexpected error occurred. Please try again.", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -424,41 +464,89 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     }
   };
 
+  // Get appointment date label based on clergy type
+  const getAppointmentDateLabel = () => {
+    const types = formData.clergy_type || [];
+
+    // Check for Bishops, Mothers, or Sisters first (Date of Consecration)
+    if (types.includes("Bishop") || types.includes("Mother") || types.includes("Sister")) {
+      return "Date of Consecration";
+    }
+    // Then check for Reverend (Date of Ordination)
+    else if (types.includes("Reverend")) {
+      return "Date of Ordination";
+    }
+    // Default for Pastor and Governor (Date of Appointment)
+    else if (types.includes("Pastor") || types.includes("Governor")) {
+      return "Date of Appointment";
+    }
+
+    return "Date of Appointment";
+  };
+
   // Validate clergy type selection
   const handleClergyTypeChange = (selectedValues: string[]) => {
+    // Require at least one title
+    if (selectedValues.length === 0) {
+      toast.error("Please select at least one title", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
+      return;
+    }
+
     // Allow maximum of 2 titles
     if (selectedValues.length > 2) {
-      alert("A pastor can have a maximum of 2 titles");
+      toast.error("A pastor can have a maximum of 2 titles", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
       return;
     }
 
     // If there are 2 titles, one must be Governor
     if (selectedValues.length === 2 && !selectedValues.includes("Governor")) {
-      alert("If a pastor has 2 titles, one must be Governor");
+      toast.error("If a pastor has 2 titles, one must be Governor", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
       return;
     }
 
     setFormData({ ...formData, clergy_type: selectedValues as ClergyType[] });
   };
 
-  // Get appointment date label based on clergy type
-  const getAppointmentDateLabel = () => {
-    const types = formData.clergy_type || [];
-    if (types.includes("Pastor") || types.includes("Governor")) {
-      return "Date of Appointment";
-    } else if (types.includes("Bishop") || types.includes("Mother")) {
-      return "Date of Consecration";
-    } else if (types.includes("Reverend") || types.includes("Sister")) {
-      return "Date of Ordination";
+  // Get filtered area options based on selected council
+  const getAreaOptions = () => {
+    if (formData.council === "Signs and Wonders HGE") {
+      // Show only HGE areas and None
+      return areas.filter((area) => area.startsWith("HGE") || area === "None").map((a) => ({ value: a, label: a }));
+    } else {
+      // Show only Experience areas and None
+      return areas
+        .filter((area) => area.startsWith("Experience") || area === "None")
+        .map((a) => ({ value: a, label: a }));
     }
-    return "Date of Appointment";
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {pastor ? (
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+          >
             Edit
           </Button>
         ) : (
@@ -533,12 +621,13 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="clergy_type">Pastor Title (Max 2)</Label>
+                <Label htmlFor="clergy_type">Title (Required) *</Label>
                 <MultiSelect
                   options={clergyTypes.map((t) => ({ value: t, label: t }))}
                   value={formData.clergy_type}
                   onValueChange={handleClergyTypeChange}
                   placeholder="Select title(s)"
+                  required
                 />
               </div>
 
@@ -598,36 +687,39 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="council">Council</Label>
+                <Label htmlFor="council">Council *</Label>
                 <SearchableSelect
-                  options={[{ value: "", label: "None" }, ...councils.map((c) => ({ value: c, label: c }))]}
+                  options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
-                  onValueChange={(value) => setFormData({ ...formData, council: value as Council })}
-                  placeholder="Select council (optional)"
+                  onValueChange={(value) => {
+                    // Reset area when council changes
+                    setFormData({ ...formData, council: value as Council, area: "" });
+                  }}
+                  placeholder="Select council"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="area">Area</Label>
+                <Label htmlFor="area">Area *</Label>
                 <SearchableSelect
-                  options={[{ value: "", label: "None" }, ...areas.map((a) => ({ value: a, label: a }))]}
+                  options={getAreaOptions()}
                   value={formData.area}
                   onValueChange={(value) => setFormData({ ...formData, area: value as Area })}
-                  placeholder="Select area (optional)"
+                  placeholder="Select area"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ministry">Ministry</Label>
+                <Label htmlFor="ministry">Ministry *</Label>
                 <SearchableSelect
-                  options={[{ value: "", label: "None" }, ...ministries.map((m) => ({ value: m, label: m }))]}
+                  options={ministries.map((m) => ({ value: m, label: m }))}
                   value={formData.ministry}
                   onValueChange={(value) => {
                     setFormData({ ...formData, ministry: value as Ministry, ministry_group: "" });
                   }}
-                  placeholder="Select ministry (optional)"
+                  placeholder="Select ministry"
                 />
               </div>
 
@@ -638,7 +730,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                   value={formData.ministry_group}
                   onValueChange={(value) => setFormData({ ...formData, ministry_group: value })}
                   placeholder="Select ministry group"
-                  isDisabled={!formData.ministry}
+                  isDisabled={!formData.ministry || formData.ministry === "None"}
                 />
               </div>
             </div>

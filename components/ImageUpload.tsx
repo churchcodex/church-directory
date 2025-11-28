@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
   value?: string | string[];
@@ -21,6 +22,21 @@ export default function ImageUpload({ value, onChange, multiple = false, label =
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    // Check file sizes before uploading
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > maxSize) {
+        toast.error(`File "${files[i].name}" exceeds 50MB limit`, {
+          style: {
+            background: "#7f1d1d",
+            border: "1px solid #991b1b",
+            color: "#fef2f2",
+          },
+        });
+        return;
+      }
+    }
 
     setUploading(true);
 
@@ -41,7 +57,8 @@ export default function ImageUpload({ value, onChange, multiple = false, label =
           const data = await response.json();
           uploadedUrls.push(data.data.url);
         } else {
-          throw new Error("Upload failed");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Upload failed");
         }
       }
 
@@ -53,8 +70,17 @@ export default function ImageUpload({ value, onChange, multiple = false, label =
         setPreviews([uploadedUrls[0]]);
         onChange(uploadedUrls[0]);
       }
-    } catch (error) {
-      alert("Failed to upload image(s)");
+
+      toast.success(`Successfully uploaded ${uploadedUrls.length} image${uploadedUrls.length > 1 ? "s" : ""}`);
+    } catch (error: any) {
+      console.error("Failed to upload image(s):", error);
+      toast.error(error.message || "Failed to upload image(s). Please try again.", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

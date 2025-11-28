@@ -10,7 +10,7 @@ export interface Church {
 
 export type ClergyType = "Bishop" | "Mother" | "Sister" | "Reverend" | "Pastor" | "Governor";
 
-export type Ministry = "GLGC" | "Film Stars" | "Dancing Stars" | "Praise and Worship" | "N/A";
+export type Ministry = "GLGC" | "Film Stars" | "Dancing Stars" | "Praise and Worship" | "None";
 
 export type DancingStarsCreativeArts =
   | "Eels on wheels"
@@ -61,6 +61,7 @@ export type CreativeArts =
   | PraiseAndWorshipCreativeArts;
 
 export type Basonta =
+  | "N/A"
   | "Backstage Hostesses"
   | "Backstage Hosts"
   | "Engedi Food Team"
@@ -164,7 +165,15 @@ export type MaritalStatus = "Single" | "Married" | "Divorced" | "Widowed";
 
 export type Gender = "Male" | "Female";
 
-export type Council = "Philippians" | "Galatians" | "Colossians" | "2 Corinthians" | "Anagkazo" | "Ephesians" | "N/A";
+export type Council =
+  | "Philippians"
+  | "Galatians"
+  | "Colossians"
+  | "2 Corinthians"
+  | "Anagkazo"
+  | "Ephesians"
+  | "Signs and Wonders HGE"
+  | "None";
 
 export type Area =
   | "HGE Area 1"
@@ -174,7 +183,8 @@ export type Area =
   | "Experience Area 1"
   | "Experience Area 2"
   | "Experience Area 3"
-  | "Experience Area 4";
+  | "Experience Area 4"
+  | "None";
 
 export type Status = "Active" | "Inactive";
 
@@ -192,9 +202,9 @@ export interface Pastor {
   marital_status?: MaritalStatus;
   church?: string;
   gender?: Gender;
-  council?: Council;
-  area?: Area;
-  ministry?: Ministry;
+  council: Council;
+  area: Area;
+  ministry: Ministry;
   ministry_group?: string;
   basonta?: string;
   occupation?: string;

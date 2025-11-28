@@ -24,6 +24,7 @@ import {
   Mail,
   MapPin,
   Sparkles,
+  ImageIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
@@ -142,13 +143,16 @@ export default function ClergyDetailsPage() {
       : pastor.clergy_type
       ? [pastor.clergy_type]
       : [];
-    if (types.includes("Pastor") || types.includes("Governor")) {
-      return "Date of Appointment";
-    } else if (types.includes("Bishop") || types.includes("Mother")) {
+
+    // Check for Bishops, Mothers, or Sisters first (Date of Consecration)
+    if (types.includes("Bishop") || types.includes("Mother") || types.includes("Sister")) {
       return "Date of Consecration";
-    } else if (types.includes("Reverend") || types.includes("Sister")) {
+    }
+    // Then check for Reverend (Date of Ordination)
+    else if (types.includes("Reverend")) {
       return "Date of Ordination";
     }
+    // Default for Pastor and Governor (Date of Appointment)
     return "Date of Appointment";
   };
 
@@ -160,6 +164,27 @@ export default function ClergyDetailsPage() {
       month: "long",
       day: "numeric",
     });
+  };
+
+  // Format clergy types in the correct order
+  const formatClergyTypes = () => {
+    const types = Array.isArray(pastor.clergy_type)
+      ? pastor.clergy_type
+      : pastor.clergy_type
+      ? [pastor.clergy_type]
+      : [];
+
+    if (types.length === 0) return "N/A";
+
+    // Define the display order
+    const order = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
+
+    // Sort types according to the defined order
+    const sortedTypes = types.sort((a, b) => {
+      return order.indexOf(a) - order.indexOf(b);
+    });
+
+    return sortedTypes.join(", ");
   };
 
   return (
@@ -192,12 +217,23 @@ export default function ClergyDetailsPage() {
           <div className="md:flex">
             <div className="md:w-1/2">
               <div className="relative h-96 md:h-full w-full">
-                <Image
-                  src={pastor.profile_image || ""}
-                  alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
-                  fill
-                  className="object-cover object-top rounded-3xl"
-                />
+                {pastor.profile_image ? (
+                  <Image
+                    src={pastor.profile_image}
+                    alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                    fill
+                    className="object-cover rounded-lg"
+                    unoptimized={pastor.profile_image.includes("fl-admin-apps.s3.eu-west-2.amazonaws.com")}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/placeholder-avatar.png"; // Add a fallback image
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">
+                    <ImageIcon className="h-24 w-24 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -212,37 +248,9 @@ export default function ClergyDetailsPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Briefcase className="h-5 w-5" />
-                    Pastor Title
-                    {pastor.clergy_type && (Array.isArray(pastor.clergy_type) ? pastor.clergy_type.length > 1 : false)
-                      ? "s"
-                      : ""}
+                    Title
                   </span>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      // Handle both string and array formats
-                      const clergyTypes = Array.isArray(pastor.clergy_type)
-                        ? pastor.clergy_type
-                        : pastor.clergy_type
-                        ? [pastor.clergy_type]
-                        : [];
-
-                      return clergyTypes.length > 0 ? (
-                        <span className="text-base font-semibold">{clergyTypes.join(", ")}</span>
-                      ) : (
-                        <span className="text-base font-semibold">N/A</span>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Activity className="h-5 w-5" />
-                    Status
-                  </span>
-                  <span className="text-base font-semibold">
-                    {!pastor.status || pastor.status === "Active" ? "Active" : "Inactive"}
-                  </span>
+                  <span className="text-base font-semibold">{formatClergyTypes()}</span>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
@@ -295,7 +303,7 @@ export default function ClergyDetailsPage() {
                   <span className="text-base font-semibold">{pastor.council}</span>
                 </div>
 
-                {pastor.area && (
+                {pastor.area && pastor.area !== "None" && (
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                     <span className="flex items-center gap-2 text-sm font-medium">
                       <MapPin className="h-5 w-5" />
@@ -305,7 +313,7 @@ export default function ClergyDetailsPage() {
                   </div>
                 )}
 
-                {pastor.ministry && (
+                {pastor.ministry && pastor.ministry !== "None" && (
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                     <span className="flex items-center gap-2 text-sm font-medium">
                       <Sparkles className="h-5 w-5" />
@@ -346,9 +354,19 @@ export default function ClergyDetailsPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     <Church className="h-5 w-5" />
-                    Church
+                    Campus
                   </span>
                   <span className="text-base font-semibold">{churchName || "No Church Assigned"}</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Activity className="h-5 w-5" />
+                    Status
+                  </span>
+                  <span className="text-base font-semibold">
+                    {!pastor.status || pastor.status === "Active" ? "Active" : "Inactive"}
+                  </span>
                 </div>
 
                 {pastor.email && (

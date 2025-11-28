@@ -39,18 +39,18 @@ const PastorSchema = new Schema<PastorDocument>(
     clergy_type: {
       type: [String],
       enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"],
-      required: false,
+      required: [true, "Please select at least one title"],
       validate: {
         validator: function (v: string[]) {
-          // Allow empty array or undefined
-          if (!v || v.length === 0) return true;
+          // Require at least one title
+          if (!v || v.length === 0) return false;
           // Allow maximum of 2 titles
           if (v.length > 2) return false;
           // If there are 2 titles, one must be Governor
           if (v.length === 2 && !v.includes("Governor")) return false;
           return true;
         },
-        message: "A pastor can have a maximum of 2 titles, and if there are 2, one must be Governor",
+        message: "A pastor must have at least one title (maximum of 2), and if there are 2, one must be Governor",
       },
     },
     marital_status: {
@@ -62,6 +62,7 @@ const PastorSchema = new Schema<PastorDocument>(
       type: Schema.Types.ObjectId,
       ref: "Church",
       required: false,
+      default: null,
     },
     gender: {
       type: String,
@@ -70,8 +71,17 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     council: {
       type: String,
-      enum: ["Philippians", "Galatians", "Colossians", "2 Corinthians", "Anagkazo", "Ephesians", "N/A", ""],
-      required: false,
+      enum: [
+        "Philippians",
+        "Galatians",
+        "Colossians",
+        "2 Corinthians",
+        "Anagkazo",
+        "Ephesians",
+        "Signs and Wonders HGE",
+        "None",
+      ],
+      required: [true, "Please select a council"],
     },
     area: {
       type: String,
@@ -84,14 +94,14 @@ const PastorSchema = new Schema<PastorDocument>(
         "Experience Area 2",
         "Experience Area 3",
         "Experience Area 4",
-        "",
+        "None",
       ],
-      required: false,
+      required: [true, "Please select an area"],
     },
     ministry: {
       type: String,
-      enum: ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", "N/A", ""],
-      required: false,
+      enum: ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", "None"],
+      required: [true, "Please select a ministry"],
     },
     ministry_group: {
       type: String,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Church as ChurchType, Pastor } from "@/types/entities";
+import { Church as ChurchType, ClergyType, Pastor } from "@/types/entities";
 import { Church, Users, DollarSign, TrendingUp } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import Link from "next/link";
@@ -121,6 +121,23 @@ export default function Dashboard() {
     },
   ];
 
+  // Format clergy types in the correct order
+  const formatClergyTypes = (clergyType?: ClergyType | ClergyType[]) => {
+    const types = Array.isArray(clergyType) ? clergyType : clergyType ? [clergyType] : [];
+
+    if (types.length === 0) return "N/A";
+
+    // Define the display order
+    const order = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
+
+    // Sort types according to the defined order
+    const sortedTypes = types.sort((a, b) => {
+      return order.indexOf(a) - order.indexOf(b);
+    });
+
+    return sortedTypes.join(", ");
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -210,7 +227,7 @@ export default function Dashboard() {
                       </h3>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {pastor.clergy_type}
+                      {formatClergyTypes(pastor.clergy_type)}
                     </Badge>
                   </div>
                 </Link>

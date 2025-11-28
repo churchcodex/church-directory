@@ -4,6 +4,7 @@ import "./globals.css";
 import Link from "next/link";
 import { Church, Users } from "lucide-react";
 import Image from "next/image";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({
           </div>
         </nav>
         {children}
+        <Toaster />
       </body>
     </html>
   );

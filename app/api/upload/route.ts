@@ -7,6 +7,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Configure route to allow larger file uploads (50MB)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "50mb",
+    },
+  },
+};
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const formData = await request.formData();
@@ -14,6 +23,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!file) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+    }
+
+    // Check file size (50MB limit)
+    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > maxSize) {
+      return NextResponse.json({ success: false, error: "File size exceeds 50MB limit" }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -25,6 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           {
             folder: "church-directory",
             resource_type: "auto",
+            max_file_size: 52428800, // 50MB in bytes for Cloudinary
           },
           (error, result) => {
             if (error) {

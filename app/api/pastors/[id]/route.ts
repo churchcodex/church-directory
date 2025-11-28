@@ -38,28 +38,49 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     const body = await request.json();
 
-    // Sanitize empty strings to undefined for enum fields
-    const sanitizedData = {
-      ...body,
-      council: body.council === "" ? undefined : body.council,
-      area: body.area === "" ? undefined : body.area,
-      ministry: body.ministry === "" ? undefined : body.ministry,
-      ministry_group: body.ministry_group === "" ? undefined : body.ministry_group,
-    };
-
-    // Check for duplicate pastor (excluding the current pastor being updated)
-    const existingPastor = await Pastor.findOne({
-      _id: { $ne: id },
-      first_name: sanitizedData.first_name,
-      last_name: sanitizedData.last_name,
-      ...(sanitizedData.date_of_birth && { date_of_birth: new Date(sanitizedData.date_of_birth) }),
-    });
-
-    if (existingPastor) {
+    // Validate clergy_type
+    if (!body.clergy_type || body.clergy_type.length === 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "A pastor with the same first name, last name, and date of birth already exists",
+          error: "Please select at least one title",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize empty strings to undefined for optional enum fields only
+    const sanitizedData = {
+      ...body,
+      church: body.church === "" ? undefined : body.church,
+      ministry_group: body.ministry_group === "" ? undefined : body.ministry_group,
+      // Council, Area, and Ministry are now required, so don't sanitize them
+    };
+
+    // Build duplicate check query - always check first name and last name, exclude current pastor
+    const duplicateQuery: any = {
+      _id: { $ne: id },
+      first_name: sanitizedData.first_name,
+      last_name: sanitizedData.last_name,
+    };
+
+    // Add date of birth to query if provided
+    if (sanitizedData.date_of_birth) {
+      duplicateQuery.date_of_birth = new Date(sanitizedData.date_of_birth);
+    }
+
+    // Check for duplicate pastor (excluding the current pastor being updated)
+    const existingPastor = await Pastor.findOne(duplicateQuery);
+
+    if (existingPastor) {
+      const errorMessage = sanitizedData.date_of_birth
+        ? "A pastor with the same first name, last name, and date of birth already exists"
+        : "A pastor with the same first name and last name already exists";
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: errorMessage,
         },
         { status: 409 }
       );

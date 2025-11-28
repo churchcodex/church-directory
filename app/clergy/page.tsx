@@ -103,13 +103,16 @@ function ClergyPageContent() {
 
     // Council (multiple selection)
     if (filters.council.length > 0) {
-      filtered = filtered.filter((pastor) => filters.council.includes(pastor.council || ""));
+      filtered = filtered.filter((pastor) => {
+        if (filters.council.includes("None") && pastor.council === "None") return true;
+        return filters.council.includes(pastor.council || "");
+      });
     }
 
     // Area (multiple selection)
     if (filters.area.length > 0) {
       filtered = filtered.filter((pastor) => {
-        if (filters.area.includes("none") && !pastor.area) return true;
+        if (filters.area.includes("None") && pastor.area === "None") return true;
         return filters.area.includes(pastor.area || "");
       });
     }
@@ -117,7 +120,7 @@ function ClergyPageContent() {
     // Ministry (multiple selection)
     if (filters.ministry.length > 0) {
       filtered = filtered.filter((pastor) => {
-        if (filters.ministry.includes("none") && !pastor.ministry) return true;
+        if (filters.ministry.includes("None") && pastor.ministry === "None") return true;
         return filters.ministry.includes(pastor.ministry || "");
       });
     }

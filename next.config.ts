@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+    domains: ["res.cloudinary.com", "fl-admin-apps.s3.eu-west-2.amazonaws.com"],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "50mb",
+    },
   },
 };
 

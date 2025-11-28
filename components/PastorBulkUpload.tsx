@@ -140,7 +140,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     worksheet["!dataValidation"].push({
       sqref: "I2:I1000",
       type: "list",
-      formula1: '"Philippians,Galatians,Colossians,2 Corinthians,Anagkazo,Ephesians,N/A"',
+      formula1: '"Philippians,Galatians,Colossians,2 Corinthians,Anagkazo,Ephesians,Signs and Wonders HGE,N/A"',
       showErrorMessage: true,
       errorTitle: "Invalid Council",
       error: "Please select from the dropdown list",
