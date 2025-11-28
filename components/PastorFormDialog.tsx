@@ -525,19 +525,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     setFormData({ ...formData, clergy_type: selectedValues as ClergyType[] });
   };
 
-  // Get filtered area options based on selected council
-  const getAreaOptions = () => {
-    if (formData.council === "Signs and Wonders HGE") {
-      // Show only HGE areas and None
-      return areas.filter((area) => area.startsWith("HGE") || area === "None").map((a) => ({ value: a, label: a }));
-    } else {
-      // Show only Experience areas and None
-      return areas
-        .filter((area) => area.startsWith("Experience") || area === "None")
-        .map((a) => ({ value: a, label: a }));
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -692,8 +679,10 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                   options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
                   onValueChange={(value) => {
-                    // Reset area when council changes
-                    setFormData({ ...formData, council: value as Council, area: "" });
+                    // Auto-select Experience Area 2 for councils other than Signs and Wonders HGE and None
+                    const newArea =
+                      value !== "Signs and Wonders HGE" && value !== "None" ? "Experience Area 2" : formData.area;
+                    setFormData({ ...formData, council: value as Council, area: newArea });
                   }}
                   placeholder="Select council"
                 />
@@ -702,7 +691,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               <div className="space-y-2">
                 <Label htmlFor="area">Area *</Label>
                 <SearchableSelect
-                  options={getAreaOptions()}
+                  options={areas.map((a) => ({ value: a, label: a }))}
                   value={formData.area}
                   onValueChange={(value) => setFormData({ ...formData, area: value as Area })}
                   placeholder="Select area"

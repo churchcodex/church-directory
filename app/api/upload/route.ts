@@ -7,15 +7,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure route to allow larger file uploads (50MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "50mb",
-    },
-  },
-};
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const formData = await request.formData();
