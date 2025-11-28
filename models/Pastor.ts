@@ -70,7 +70,7 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     council: {
       type: String,
-      enum: ["Philippians", "Galatians", "2 Corinthians", "Anagkazo", "Ephesians", "N/A", ""],
+      enum: ["Philippians", "Galatians", "Colossians", "2 Corinthians", "Anagkazo", "Ephesians", "N/A", ""],
       required: false,
     },
     area: {
@@ -90,7 +90,7 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     ministry: {
       type: String,
-      enum: ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", ""],
+      enum: ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", "N/A", ""],
       required: false,
     },
     ministry_group: {

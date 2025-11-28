@@ -10,7 +10,7 @@ export interface Church {
 
 export type ClergyType = "Bishop" | "Mother" | "Sister" | "Reverend" | "Pastor" | "Governor";
 
-export type Ministry = "GLGC" | "Film Stars" | "Dancing Stars" | "Praise and Worship";
+export type Ministry = "GLGC" | "Film Stars" | "Dancing Stars" | "Praise and Worship" | "N/A";
 
 export type DancingStarsCreativeArts =
   | "Eels on wheels"
@@ -164,7 +164,7 @@ export type MaritalStatus = "Single" | "Married" | "Divorced" | "Widowed";
 
 export type Gender = "Male" | "Female";
 
-export type Council = "Philippians" | "Galatians" | "2 Corinthians" | "Anagkazo" | "Ephesians" | "N/A";
+export type Council = "Philippians" | "Galatians" | "Colossians" | "2 Corinthians" | "Anagkazo" | "Ephesians" | "N/A";
 
 export type Area =
   | "HGE Area 1"

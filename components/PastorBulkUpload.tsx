@@ -61,7 +61,30 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
 
     const worksheet = XLSX.utils.json_to_sheet(templateData);
     const workbook = XLSX.utils.book_new();
+
+    // Create a reference sheet for ministry groups
+    const referenceData = [
+      {
+        Ministry: "GLGC",
+        "Ministry Groups":
+          "Many Are Called, Love is Large, Peace and Love, True Love, Love Never Fails, Abundant Love, Steadfast Love, Perfect Love, Unfeigned Love, Love Is Patient, Everlasting Love, God So Loved",
+      },
+      {
+        Ministry: "Dancing Stars",
+        "Ministry Groups":
+          "Eels on wheels, Spiders, Doves, Lizardos, Butterflies, Kangaroos, Impalas, Unicorns, Gazelles, Camels, Eagles, Lions, Dolphins",
+      },
+      {
+        Ministry: "Film Stars",
+        "Ministry Groups":
+          "Actors Ministry, Props Ministry, Costume ministry, Make up, Protocol, Script writers, Social media, Technical, Love theatre company",
+      },
+      { Ministry: "Praise and Worship", "Ministry Groups": "Praise Stars, Worship Stars" },
+    ];
+    const referenceSheet = XLSX.utils.json_to_sheet(referenceData);
+
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pastors");
+    XLSX.utils.book_append_sheet(workbook, referenceSheet, "Ministry Groups Reference");
 
     // Set column widths
     worksheet["!cols"] = [
@@ -74,11 +97,11 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 15 }, // Marital Status
       { wch: 10 }, // Gender
       { wch: 15 }, // Council
-      { wch: 18 }, // Area
-      { wch: 18 }, // Ministry
-      { wch: 20 }, // Ministry Group
-      { wch: 25 }, // Basonta
-      { wch: 18 }, // Occupation
+      { wch: 20 }, // Area
+      { wch: 20 }, // Ministry
+      { wch: 25 }, // Ministry Group
+      { wch: 30 }, // Basonta
+      { wch: 20 }, // Occupation
       { wch: 15 }, // Country
       { wch: 25 }, // Email
       { wch: 18 }, // Contact Number
@@ -86,6 +109,233 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 30 }, // Profile Image URL
       { wch: 10 }, // Status
     ];
+
+    // Add data validations for dropdowns
+    if (!worksheet["!dataValidation"]) worksheet["!dataValidation"] = [];
+
+    // Clergy Type - Note: This shows all options, user can type comma-separated values
+    const clergyTypes = "Bishop,Mother,Sister,Reverend,Pastor,Governor";
+
+    // Marital Status dropdown (column G, row 2 onwards)
+    worksheet["!dataValidation"].push({
+      sqref: "G2:G1000",
+      type: "list",
+      formula1: '"Single,Married,Divorced,Widowed"',
+      showErrorMessage: true,
+      errorTitle: "Invalid Marital Status",
+      error: "Please select from the dropdown list",
+    });
+
+    // Gender dropdown (column H)
+    worksheet["!dataValidation"].push({
+      sqref: "H2:H1000",
+      type: "list",
+      formula1: '"Male,Female"',
+      showErrorMessage: true,
+      errorTitle: "Invalid Gender",
+      error: "Please select Male or Female",
+    });
+
+    // Council dropdown (column I)
+    worksheet["!dataValidation"].push({
+      sqref: "I2:I1000",
+      type: "list",
+      formula1: '"Philippians,Galatians,Colossians,2 Corinthians,Anagkazo,Ephesians,N/A"',
+      showErrorMessage: true,
+      errorTitle: "Invalid Council",
+      error: "Please select from the dropdown list",
+    });
+
+    // Area dropdown (column J)
+    worksheet["!dataValidation"].push({
+      sqref: "J2:J1000",
+      type: "list",
+      formula1:
+        '"HGE Area 1,HGE Area 2,HGE Area 3,HGE Area 4,Experience Area 1,Experience Area 2,Experience Area 3,Experience Area 4"',
+      showErrorMessage: true,
+      errorTitle: "Invalid Area",
+      error: "Please select from the dropdown list",
+    });
+
+    // Ministry dropdown (column K)
+    worksheet["!dataValidation"].push({
+      sqref: "K2:K1000",
+      type: "list",
+      formula1: '"GLGC,Film Stars,Dancing Stars,Praise and Worship,N/A"',
+      showErrorMessage: true,
+      errorTitle: "Invalid Ministry",
+      error: "Please select from the dropdown list",
+    });
+
+    // Ministry Group dropdown (column L) - Combined list with note to check reference sheet
+    const ministryGroups = [
+      "Many Are Called",
+      "Love is Large",
+      "Peace and Love",
+      "True Love",
+      "Love Never Fails",
+      "Abundant Love",
+      "Steadfast Love",
+      "Perfect Love",
+      "Unfeigned Love",
+      "Love Is Patient",
+      "Everlasting Love",
+      "God So Loved",
+      "Eels on wheels",
+      "Spiders",
+      "Doves",
+      "Lizardos",
+      "Butterflies",
+      "Kangaroos",
+      "Impalas",
+      "Unicorns",
+      "Gazelles",
+      "Camels",
+      "Eagles",
+      "Lions",
+      "Dolphins",
+      "Actors Ministry",
+      "Props Ministry",
+      "Costume ministry",
+      "Make up",
+      "Protocol",
+      "Script writers",
+      "Social media",
+      "Technical",
+      "Love theatre company",
+      "Praise Stars",
+      "Worship Stars",
+    ].join(",");
+
+    worksheet["!dataValidation"].push({
+      sqref: "L2:L1000",
+      type: "list",
+      formula1: `"${ministryGroups}"`,
+      showErrorMessage: true,
+      errorTitle: "Invalid Ministry Group",
+      error: "Please select based on your Ministry (see 'Ministry Groups Reference' sheet)",
+    });
+
+    // Basonta dropdown (column M) - Very long list
+    const basontaList = [
+      "Backstage Hostesses",
+      "Backstage Hosts",
+      "Engedi Food Team",
+      "Mood Changing Food Team",
+      "Marriage Counseling",
+      "Sheep seeking September",
+      "Sheep seeking October",
+      "Sheep seeking November",
+      "Sheep seeking December",
+      "Sheep seeking January",
+      "Sheep seeking February",
+      "Sheep seeking March",
+      "Sheep seeking April",
+      "Sheep seeking May",
+      "Sheep seeking June",
+      "Sheep seeking July",
+      "Sheep seeking August",
+      "School of Solid Foundation",
+      "School of Victorious Living",
+      "School of Evangelism",
+      "School of the Word",
+      "School of Apologetics",
+      "Addictions and substance abuse Counsellors",
+      "Grief and Trauma Counsellors",
+      "Relationship and love related issues Counsellors",
+      "Career and financial management Counsellors",
+      "Business Community",
+      "Music mixers",
+      "Salvation corner ushers",
+      "Podcast corner ushers",
+      "Balcony ushers",
+      "Left wing ushers",
+      "Right wing ushers",
+      "Middle ground ushers",
+      "Photography Team",
+      "Vox Team",
+      "Video Clip Cutters Team",
+      "YouTube & Graphics Team",
+      "X Team",
+      "TikTok & Snapchat Team",
+      "Videography team",
+      "Meta Team",
+      "FLOC Production and editing Team",
+      "Clap nighters",
+      "Sunday intercessors",
+      "Soul winning intercessors",
+      "Testimony Maestros",
+      "Mood changing Campus control",
+      "External Campus control",
+      "Cross Car Park Campus control",
+      "Office block Car Park Campus control",
+      "Revival street Campus control",
+      "Lord's Tower- Praise and Worship",
+      "Lord's Tower- Preaching and solo team",
+      "Lord's Tower- Film stars",
+      "Lord's Tower- Choir",
+      "Lord's Tower- Dance",
+      "Choir Telepastors",
+      "Dancing stars Telepastors",
+      "Film stars Telepastors",
+      "Basonta Telepastors",
+      "Philippians Telepastors",
+      "Galatians Telepastors",
+      "Ephesians Telepastors",
+      "Anagkazo Telepastors",
+      "Hostesses of the Offices",
+      "Hostesses of the First timers",
+      "Hostesses of the Greater lovers & Special Visitors",
+      "Balcony Security",
+      "Stage Security",
+      "Ground Security",
+      "I - church",
+      "J - Church",
+      "K - Church",
+      "B - Church",
+      "Y - Church",
+      "Lovelets Check in",
+      "Smiles on arrival airport stars",
+      "First Offering airport stars",
+      "Second offering airport stars",
+      "Bus welcomers airport stars",
+      "Car welcomers airport stars",
+      "Car confirmers",
+      "Bus confirmers",
+      "Payments",
+      "Treasurers",
+      "Fragrance",
+      "Governors lounge",
+      "The Lord's garden",
+      "HGE Telepastors",
+      "HGE Understanding campaign",
+      "HGE Sheep seeking",
+      "HGE Airport Stars",
+      "HGE Intimate counseling",
+      "HGE Lord's tower",
+      "HGE Ushers",
+      "HGE Hostesses",
+      "HGE Hearing and seeing",
+    ].join(",");
+
+    worksheet["!dataValidation"].push({
+      sqref: "M2:M1000",
+      type: "list",
+      formula1: `"${basontaList}"`,
+      showErrorMessage: true,
+      errorTitle: "Invalid Basonta",
+      error: "Please select from the dropdown list",
+    });
+
+    // Status dropdown (column T)
+    worksheet["!dataValidation"].push({
+      sqref: "T2:T1000",
+      type: "list",
+      formula1: '"Active,Inactive"',
+      showErrorMessage: true,
+      errorTitle: "Invalid Status",
+      error: "Please select from the dropdown list",
+    });
 
     XLSX.writeFile(workbook, "pastors_upload_template.xlsx");
   };
@@ -183,7 +433,6 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
               </div>
             </div>
           </div>
-
           {/* Instructions */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -195,13 +444,19 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
                   <strong>Required fields:</strong> First Name, Last Name
                 </li>
                 <li>For Clergy Type, separate multiple types with commas (e.g., "Pastor,Reverend")</li>
+                <li>
+                  <strong>Ministry Group:</strong> Check the "Ministry Groups Reference" sheet to see which groups
+                  belong to each ministry
+                </li>
+                <li>
+                  <strong>Occupation:</strong> You can type any occupation - not limited to dropdown options
+                </li>
                 <li>Date format: YYYY-MM-DD (e.g., 2020-06-01)</li>
                 <li>Leave Church ID blank if you don't have it yet</li>
                 <li>Status defaults to "Active" if not specified</li>
               </ul>
             </AlertDescription>
           </Alert>
-
           {/* File Upload Section */}
           <div className="border-2 border-dashed rounded-lg p-6 text-center">
             <input
@@ -231,14 +486,12 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
               </div>
             )}
           </div>
-
           {/* Upload Button */}
           {file && !result && (
             <Button onClick={handleUpload} disabled={uploading} className="w-full">
               {uploading ? "Uploading..." : "Upload and Process"}
             </Button>
           )}
-
           {/* Results Section */}
           {result && (
             <div className="space-y-4">
