@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
+import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export default function ClergyDetailsPage() {
   const params = useParams();
@@ -35,15 +36,19 @@ export default function ClergyDetailsPage() {
   const [pastor, setPastor] = useState<Pastor | null>(null);
   const [churchName, setChurchName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const { setTitle } = usePageTitle();
 
   useEffect(() => {
     // Smooth scroll to top when page loads
     window.scrollTo({ top: 0, behavior: "smooth" });
 
+    // Clear page title for detail page
+    setTitle("");
+
     if (params.id) {
       fetchPastor(params.id as string);
     }
-  }, [params.id]);
+  }, [params.id, setTitle]);
 
   const fetchPastor = async (id: string) => {
     try {

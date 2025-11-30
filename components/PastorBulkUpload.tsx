@@ -583,7 +583,6 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Upload className="h-4 w-4" />
-          Bulk Upload
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

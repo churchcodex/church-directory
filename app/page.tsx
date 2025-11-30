@@ -1,6 +1,16 @@
+"use client";
+
+import { useEffect } from "react";
 import Dashboard from "@/components/Dashboard";
+import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export default function Home() {
+  const { setTitle } = usePageTitle();
+
+  useEffect(() => {
+    setTitle("");
+  }, [setTitle]);
+
   return (
     <div className="space-y-12 p-6">
       <div className="text-center space-y-4">

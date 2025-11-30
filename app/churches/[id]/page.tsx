@@ -10,21 +10,26 @@ import DeleteButton from "@/components/DeleteButton";
 import { MapPin, Users, DollarSign, ArrowLeft, User } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import Image from "next/image";
+import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export default function ChurchDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const [church, setChurch] = useState<Church | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setTitle } = usePageTitle();
 
   useEffect(() => {
     // Smooth scroll to top when page loads
     window.scrollTo({ top: 0, behavior: "smooth" });
 
+    // Clear page title for detail page
+    setTitle("");
+
     if (params.id) {
       fetchChurch(params.id as string);
     }
-  }, [params.id]);
+  }, [params.id, setTitle]);
 
   const fetchChurch = async (id: string) => {
     try {

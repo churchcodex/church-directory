@@ -770,7 +770,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="church">Church</Label>
+              <Label htmlFor="church">Campus</Label>
               {loadingChurches ? (
                 <div className="flex items-center justify-center h-10 border rounded-md">
                   <Loader2 className="h-4 w-4 animate-spin" />
