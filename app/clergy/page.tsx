@@ -26,7 +26,6 @@ function ClergyPageContent() {
     gender: "all",
     council: [],
     area: [],
-    ministry: [],
     country: [],
     occupation: [],
     status: "Active",
@@ -92,14 +91,6 @@ function ClergyPageContent() {
     [pastors]
   );
 
-  const ministries = useMemo(
-    () =>
-      Array.from(new Set(pastors.map((p) => p.ministry)))
-        .filter((ministry): ministry is NonNullable<typeof ministry> => ministry !== undefined)
-        .sort(),
-    [pastors]
-  );
-
   const countries = useMemo(
     () =>
       Array.from(new Set(pastors.map((p) => p.country)))
@@ -124,12 +115,11 @@ function ClergyPageContent() {
         clergyTypes={clergyTypes}
         councils={councils}
         areas={areas}
-        ministries={ministries}
         countries={countries}
         occupations={occupations}
       />
     );
-  }, [setFilterButton, filters, clergyTypes, councils, areas, ministries, countries, occupations]);
+  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations]);
 
   useEffect(() => {
     setAddButton(
@@ -190,14 +180,6 @@ function ClergyPageContent() {
       filtered = filtered.filter((pastor) => {
         if (filters.area.includes("None") && pastor.area === "None") return true;
         return filters.area.includes(pastor.area || "");
-      });
-    }
-
-    // Ministry (multiple selection)
-    if (filters.ministry.length > 0) {
-      filtered = filtered.filter((pastor) => {
-        if (filters.ministry.includes("None") && pastor.ministry === "None") return true;
-        return filters.ministry.includes(pastor.ministry || "");
       });
     }
 
@@ -292,18 +274,6 @@ function ClergyPageContent() {
           value: area === "none" ? "No Area" : area,
           key: "area",
           filterValue: area,
-        });
-      });
-    }
-
-    // Ministry (array)
-    if (filters.ministry.length > 0) {
-      filters.ministry.forEach((ministry) => {
-        activeFilters.push({
-          label: "Ministry",
-          value: ministry === "none" ? "No Ministry" : ministry,
-          key: "ministry",
-          filterValue: ministry,
         });
       });
     }

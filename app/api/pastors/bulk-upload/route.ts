@@ -52,9 +52,6 @@ export async function POST(request: NextRequest) {
           gender: row["Gender"] || row["gender"] || undefined,
           council: row["Council"] || row["council"] || undefined,
           area: row["Area"] || row["area"] || undefined,
-          ministry: row["Ministry"] || row["ministry"] || undefined,
-          ministry_group: row["Ministry Group"] || row["ministry_group"] || undefined,
-          basonta: row["Basonta"] || row["basonta"] || undefined,
           occupation: row["Occupation"] || row["occupation"] || undefined,
           country: row["Country"] || row["country"] || undefined,
           email: row["Email"] || row["email"] || undefined,
@@ -83,8 +80,6 @@ export async function POST(request: NextRequest) {
         // Sanitize empty strings to undefined for enum fields
         if (pastorData.council === "") pastorData.council = undefined;
         if (pastorData.area === "") pastorData.area = undefined;
-        if (pastorData.ministry === "") pastorData.ministry = undefined;
-        if (pastorData.ministry_group === "") pastorData.ministry_group = undefined;
 
         // Check for duplicate pastor
         const existingPastor = await Pastor.findOne({

@@ -19,22 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Building2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Pastor,
-  ClergyType,
-  MaritalStatus,
-  Gender,
-  Council,
-  Area,
-  Status,
-  Occupation,
-  Ministry,
-  DancingStarsCreativeArts,
-  FilmStarsCreativeArts,
-  GLGCCreativeArts,
-  PraiseAndWorshipCreativeArts,
-  Basonta,
-} from "@/types/entities";
+import { Pastor, ClergyType, MaritalStatus, Gender, Council, Area, Status, Occupation } from "@/types/entities";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
 import ReactSelect from "react-select";
 
@@ -44,19 +29,6 @@ interface PastorFormDialogProps {
 }
 
 const clergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
-
-const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
-const genders: Gender[] = ["Male", "Female"];
-const councils: Council[] = [
-  "Philippians",
-  "Galatians",
-  "Colossians",
-  "2 Corinthians",
-  "Anagkazo",
-  "Ephesians",
-  "Signs and Wonders HGE",
-  "None",
-];
 const areas: Area[] = [
   "HGE Area 1",
   "HGE Area 2",
@@ -69,9 +41,29 @@ const areas: Area[] = [
   "None",
 ];
 const statuses: Status[] = ["Active", "Inactive"];
-const ministries: Ministry[] = ["GLGC", "Film Stars", "Dancing Stars", "Praise and Worship", "None"];
+const occupations: Occupation[] = [
+  "Full Time Pastor",
+  "Medical Doctor",
+  "Lawyer",
+  "Engineer",
+  "Accountant",
+  "Pharmacist",
+  "Student",
+  "Other",
+];
 
-const dancingStarsCreativeArts: DancingStarsCreativeArts[] = [
+const councils: Council[] = [
+  "Philippians",
+  "Galatians",
+  "Colossians",
+  "2 Corinthians",
+  "Anagkazo",
+  "Ephesians",
+  "Signs and Wonders HGE",
+  "GLGC",
+  "Film Stars",
+  "Dancing Stars",
+  "Praise and Worship",
   "Eels on wheels",
   "Spiders",
   "Doves",
@@ -85,9 +77,6 @@ const dancingStarsCreativeArts: DancingStarsCreativeArts[] = [
   "Eagles",
   "Lions",
   "Dolphins",
-];
-
-const filmStarsCreativeArts: FilmStarsCreativeArts[] = [
   "Actors Ministry",
   "Props Ministry",
   "Costume ministry",
@@ -97,9 +86,6 @@ const filmStarsCreativeArts: FilmStarsCreativeArts[] = [
   "Social media",
   "Technical",
   "Love theatre company",
-];
-
-const glgcCreativeArts: GLGCCreativeArts[] = [
   "Many Are Called",
   "Love is Large",
   "Peace and Love",
@@ -112,11 +98,8 @@ const glgcCreativeArts: GLGCCreativeArts[] = [
   "Love Is Patient",
   "Everlasting Love",
   "God So Loved",
-];
-
-const praiseAndWorshipCreativeArts: PraiseAndWorshipCreativeArts[] = ["Praise Stars", "Worship Stars"];
-
-const basontas: Basonta[] = [
+  "Praise Stars",
+  "Worship Stars",
   "N/A",
   "Backstage Hostesses",
   "Backstage Hosts",
@@ -216,17 +199,11 @@ const basontas: Basonta[] = [
   "HGE Ushers",
   "HGE Hostesses",
   "HGE Hearing and seeing",
+  "None",
 ];
 
-const occupations: Occupation[] = [
-  "Medical Doctor",
-  "Lawyer",
-  "Engineer",
-  "Accountant",
-  "Pharmacist",
-  "Student",
-  "Other",
-];
+const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
+const genders: Gender[] = ["Male", "Female"];
 
 export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialogProps) {
   const router = useRouter();
@@ -251,9 +228,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     gender: pastor?.gender || "Male",
     council: pastor?.council || "",
     area: pastor?.area || "",
-    ministry: pastor?.ministry || "",
-    ministry_group: pastor?.ministry_group || "",
-    basonta: pastor?.basonta || "",
     occupation: pastor?.occupation || "Medical Doctor",
     country: pastor?.country || "",
     email: pastor?.email || "",
@@ -357,9 +331,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         gender: pastor.gender || "Male",
         council: pastor.council || "",
         area: pastor.area || "",
-        ministry: pastor.ministry || "",
-        ministry_group: pastor.ministry_group || "",
-        basonta: pastor.basonta || "",
         occupation: pastor.occupation || "Medical Doctor",
         country: pastor.country || "",
         email: pastor.email || "",
@@ -408,9 +379,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             gender: "Male",
             council: "",
             area: "",
-            ministry: "",
-            ministry_group: "",
-            basonta: "",
             occupation: "Medical Doctor",
             country: "",
             email: "",
@@ -448,22 +416,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     await fetchChurches();
     if (churchId) {
       setFormData({ ...formData, church: churchId });
-    }
-  };
-
-  // Get ministry group options based on selected ministry
-  const getMinistryGroupOptions = () => {
-    switch (formData.ministry) {
-      case "Dancing Stars":
-        return dancingStarsCreativeArts.map((b) => ({ value: b, label: b }));
-      case "Film Stars":
-        return filmStarsCreativeArts.map((b) => ({ value: b, label: b }));
-      case "GLGC":
-        return glgcCreativeArts.map((b) => ({ value: b, label: b }));
-      case "Praise and Worship":
-        return praiseAndWorshipCreativeArts.map((b) => ({ value: b, label: b }));
-      default:
-        return [];
     }
   };
 
@@ -682,9 +634,26 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                   options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
                   onValueChange={(value) => {
-                    // Auto-select Experience Area 2 for councils other than Signs and Wonders HGE and None
-                    const newArea =
-                      value !== "Signs and Wonders HGE" && value !== "None" ? "Experience Area 2" : formData.area;
+                    // Auto-select area based on council selection
+                    let newArea = formData.area;
+
+                    // HGE related councils get HGE Area 1
+                    if (value === "Signs and Wonders HGE" || value.includes("HGE") || value.startsWith("HGE ")) {
+                      newArea = "HGE Area 1";
+                    }
+                    // Experience related councils (original councils) get Experience Area 2
+                    else if (
+                      value === "Philippians" ||
+                      value === "Galatians" ||
+                      value === "Colossians" ||
+                      value === "2 Corinthians" ||
+                      value === "Anagkazo" ||
+                      value === "Ephesians"
+                    ) {
+                      newArea = "Experience Area 2";
+                    }
+                    // For None and other councils, keep current area
+
                     setFormData({ ...formData, council: value as Council, area: newArea });
                   }}
                   placeholder="Select council"
@@ -698,31 +667,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                   value={formData.area}
                   onValueChange={(value) => setFormData({ ...formData, area: value as Area })}
                   placeholder="Select area"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ministry">Ministry *</Label>
-                <SearchableSelect
-                  options={ministries.map((m) => ({ value: m, label: m }))}
-                  value={formData.ministry}
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, ministry: value as Ministry, ministry_group: "" });
-                  }}
-                  placeholder="Select ministry"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ministry_group">Ministry Group</Label>
-                <SearchableSelect
-                  options={getMinistryGroupOptions()}
-                  value={formData.ministry_group}
-                  onValueChange={(value) => setFormData({ ...formData, ministry_group: value })}
-                  placeholder="Select ministry group"
-                  isDisabled={!formData.ministry || formData.ministry === "None"}
                 />
               </div>
             </div>
@@ -804,16 +748,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                   </ChurchFormDialog>
                 </div>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="basonta">Basonta</Label>
-              <SearchableSelect
-                options={basontas.map((b) => ({ value: b, label: b }))}
-                value={formData.basonta}
-                onValueChange={(value) => setFormData({ ...formData, basonta: value as Basonta })}
-                placeholder="Select basonta"
-              />
             </div>
 
             {pastor && (

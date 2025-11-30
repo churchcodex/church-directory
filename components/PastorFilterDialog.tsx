@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Filter, X } from "lucide-react";
-import { ClergyType, MaritalStatus, Gender, Council, Area, Status, Ministry } from "@/types/entities";
+import { ClergyType, MaritalStatus, Gender, Council, Area, Status } from "@/types/entities";
 
 interface PastorFilterDialogProps {
   onApplyFilters: (filters: FilterState) => void;
@@ -24,7 +24,6 @@ interface PastorFilterDialogProps {
   clergyTypes: ClergyType[];
   councils: Council[];
   areas: Area[];
-  ministries: Ministry[];
   countries: string[];
   occupations: string[];
 }
@@ -35,7 +34,6 @@ export interface FilterState {
   gender: string;
   council: string[];
   area: string[];
-  ministry: string[];
   country: string[];
   occupation: string[];
   status: string;
@@ -53,7 +51,6 @@ export default function PastorFilterDialog({
   clergyTypes,
   councils,
   areas,
-  ministries,
   countries,
   occupations,
 }: PastorFilterDialogProps) {
@@ -77,7 +74,6 @@ export default function PastorFilterDialog({
       gender: "all",
       council: [],
       area: [],
-      ministry: [],
       country: [],
       occupation: [],
       status: "Active",
@@ -172,27 +168,24 @@ export default function PastorFilterDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="filter-ministry">Ministry</Label>
-              <MultiSelect
-                options={[
-                  { value: "none", label: "No Ministry" },
-                  ...ministries.map((ministry) => ({ value: ministry, label: ministry })),
-                ]}
-                value={filters.ministry}
-                onValueChange={(value) => setFilters({ ...filters, ministry: value })}
-                placeholder="Select ministr(ies)"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
               <Label htmlFor="filter-country">Country</Label>
               <MultiSelect
                 options={countries.map((country) => ({ value: country, label: country }))}
                 value={filters.country}
                 onValueChange={(value) => setFilters({ ...filters, country: value })}
                 placeholder="Select countr(ies)"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="filter-occupation">Occupation</Label>
+              <MultiSelect
+                options={occupations.map((occupation) => ({ value: occupation, label: occupation }))}
+                value={filters.occupation}
+                onValueChange={(value) => setFilters({ ...filters, occupation: value })}
+                placeholder="Select occupation(s)"
               />
             </div>
 

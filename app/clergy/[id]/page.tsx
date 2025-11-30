@@ -179,7 +179,7 @@ export default function ClergyDetailsPage() {
       ? [pastor.clergy_type]
       : [];
 
-    if (types.length === 0) return "N/A";
+    if (types.length === 0) return [];
 
     // Define the display order
     const order = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
@@ -189,13 +189,13 @@ export default function ClergyDetailsPage() {
       return order.indexOf(a) - order.indexOf(b);
     });
 
-    return sortedTypes.join(", ");
+    return sortedTypes;
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex justify-between items-center mb-4">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             <p className="hidden md:block">Back</p>
@@ -220,8 +220,8 @@ export default function ClergyDetailsPage() {
 
         <Card className="overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/2">
-              <div className="relative h-96 md:h-full w-full">
+            <div className="md:w-1/4">
+              <div className="relative h-48 md:h-full w-full min-h-[300px]">
                 {pastor.profile_image ? (
                   <Image
                     src={pastor.profile_image}
@@ -231,158 +231,72 @@ export default function ClergyDetailsPage() {
                     unoptimized={pastor.profile_image.includes("fl-admin-apps.s3.eu-west-2.amazonaws.com")}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/placeholder-avatar.png"; // Add a fallback image
+                      target.src = "/placeholder-avatar.png";
                     }}
                   />
                 ) : (
                   <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">
-                    <ImageIcon className="h-24 w-24 text-muted-foreground" />
+                    <ImageIcon className="h-16 w-16 text-muted-foreground" />
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="p-8 md:py-0 md:w-1/2 space-y-6">
-              <div className="text-center">
-                <h1 className="text-3xl lg:text-5xl font-bold mb-2">
+            <div className="p-4 md:w-3/4">
+              <div className="mb-6 flex flex-col items-center text-center">
+                <h1 className="text-2xl lg:text-5xl font-bold text-center mb-2 ">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </h1>
+                {(() => {
+                  const types = formatClergyTypes();
+
+                  if (types.length === 0) {
+                    return null;
+                  }
+
+                  return <p className="lg:text-2xl text-primary">{types.join(" • ")}</p>;
+                })()}
+                <p className="lg:text-xl text-primary">{churchName}</p>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Briefcase className="h-5 w-5" />
-                    Title
-                  </span>
-                  <span className="text-base font-semibold">{formatClergyTypes()}</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Calendar className="h-5 w-5" />
-                    Age
-                  </span>
-                  <span className="text-base font-semibold">{calculateAge(pastor.date_of_birth || "")} years</span>
+              <div className="grid grid-cols-1 md:grid-cols-2  gap-2">
+                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <span className="text-sm font-semibold">{calculateAge(pastor.date_of_birth || "")} years</span>
                 </div>
 
                 {pastor.date_of_appointment && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Award className="h-5 w-5" />
-                      {getAppointmentDateLabel()}
-                    </span>
-                    <span className="text-base font-semibold">{formatDate(pastor.date_of_appointment)}</span>
+                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                    <span className="text-sm font-semibold">{formatDate(pastor.date_of_appointment)}</span>
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <User className="h-5 w-5" />
-                    Gender
-                  </span>
-                  <span className="text-base font-semibold">{pastor.gender}</span>
+                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <span className="text-sm font-semibold">{pastor.gender}</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Heart className="h-5 w-5" />
-                    Marital Status
-                  </span>
-                  <span className="text-base font-semibold">{pastor.marital_status}</span>
+                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <span className="text-sm font-semibold">{pastor.marital_status}</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Briefcase className="h-5 w-5" />
-                    Occupation
-                  </span>
-                  <span className="text-base font-semibold">{pastor.occupation}</span>
+                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <span className="text-sm font-semibold">{pastor.occupation}</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Users className="h-5 w-5" />
-                    Council
-                  </span>
-                  <span className="text-base font-semibold">{pastor.council}</span>
+                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <span className="text-sm font-semibold">{pastor.council} Council</span>
                 </div>
 
                 {pastor.area && pastor.area !== "None" && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <MapPin className="h-5 w-5" />
-                      Area
-                    </span>
-                    <span className="text-base font-semibold">{pastor.area}</span>
+                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                    <span className="text-sm font-semibold">{pastor.area}</span>
                   </div>
                 )}
-
-                {pastor.ministry && pastor.ministry !== "None" && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Sparkles className="h-5 w-5" />
-                      Ministry
-                    </span>
-                    <span className="text-base font-semibold">{pastor.ministry}</span>
-                  </div>
-                )}
-
-                {pastor.ministry_group && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Sparkles className="h-5 w-5" />
-                      Ministry Group
-                    </span>
-                    <span className="text-base font-semibold">{pastor.ministry_group}</span>
-                  </div>
-                )}
-
-                {pastor.basonta && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Award className="h-5 w-5" />
-                      Basonta
-                    </span>
-                    <span className="text-base font-semibold">{pastor.basonta}</span>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Globe className="h-5 w-5" />
-                    Country
-                  </span>
-                  <span className="text-base font-semibold">{pastor.country}</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Church className="h-5 w-5" />
-                    Campus
-                  </span>
-                  <span className="text-base font-semibold">{churchName || "No Church Assigned"}</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <Activity className="h-5 w-5" />
-                    Status
-                  </span>
-                  <span className="text-base font-semibold">
-                    {!pastor.status || pastor.status === "Active" ? "Active" : "Inactive"}
-                  </span>
-                </div>
 
                 {pastor.email && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Mail className="h-5 w-5" />
-                      Email
-                    </span>
+                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
                     <a
                       href={`mailto:${pastor.email}`}
-                      className="text-base font-semibold text-primary hover:underline cursor-pointer break-all"
+                      className="text-sm font-semibold text-primary hover:underline cursor-pointer truncate"
                     >
                       {pastor.email}
                     </a>
@@ -390,14 +304,10 @@ export default function ClergyDetailsPage() {
                 )}
 
                 {pastor.contact_number && (
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted rounded-lg gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Phone className="h-5 w-5" />
-                      Contact Number
-                    </span>
+                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
                     <a
                       href={`tel:${pastor.contact_number}`}
-                      className="text-base font-semibold text-primary hover:underline cursor-pointer"
+                      className="text-sm font-semibold text-primary hover:underline cursor-pointer"
                     >
                       {pastor.contact_number}
                     </a>

@@ -2,20 +2,23 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Church, Users, Search, Menu, X } from "lucide-react";
+import { Church, Users, Search, Menu, X, LogOut, ShieldCheck } from "lucide-react";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useSession, signOut } from "next-auth/react";
 
 export default function NavBar() {
   const { title } = usePageTitle();
   const { searchQuery, setSearchQuery, filterButton, addButton, searchPlaceholder } = usePageActions();
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession();
 
   const showActions = searchPlaceholder !== "";
+  const isAdmin = (session?.user as any)?.role === "admin";
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
@@ -30,7 +33,7 @@ export default function NavBar() {
 
           {showActions && (
             <div className="  flex-1">
-              <div className=" max-w-md gap-2 flex items-center">
+              <div className=" max-w-[300px] gap-2 flex items-center">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
@@ -68,6 +71,26 @@ export default function NavBar() {
               <Users className="h-4 w-4" />
               Pastors
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/users"
+                className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin
+              </Link>
+            )}
+            {session && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex items-center gap-1"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            )}
           </div>
         </div>
 
@@ -108,6 +131,29 @@ export default function NavBar() {
                     <Users className="h-5 w-5" />
                     Pastors
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                    >
+                      <ShieldCheck className="h-5 w-5" />
+                      Admin
+                    </Link>
+                  )}
+                  {session && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setIsOpen(false);
+                        signOut({ callbackUrl: "/login" });
+                      }}
+                      className="flex items-center gap-2 px-4 py-3 justify-start"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Logout
+                    </Button>
+                  )}
                 </div>
               </div>
             </SheetContent>

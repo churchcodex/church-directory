@@ -51,8 +51,7 @@ export async function POST(request: NextRequest) {
     const sanitizedData = {
       ...body,
       church: body.church === "" ? undefined : body.church,
-      ministry_group: body.ministry_group === "" ? undefined : body.ministry_group,
-      // Council, Area, and Ministry are now required, so don't sanitize them
+      // Council and Area are now required, so don't sanitize them
     };
 
     // Build duplicate check query - always check first name and last name
