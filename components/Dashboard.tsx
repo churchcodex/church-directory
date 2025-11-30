@@ -101,13 +101,6 @@ export default function Dashboard() {
       href: "/clergy",
     },
     {
-      title: "Inactive Pastors",
-      value: formatNumber(stats.inactiveClergy),
-      icon: Users,
-      gradient: "from-red-500 to-red-700",
-      href: "/clergy?status=inactive",
-    },
-    {
       title: "Total Members",
       value: formatNumber(stats.totalMembers),
       icon: TrendingUp,
@@ -141,7 +134,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           const cardContent = (

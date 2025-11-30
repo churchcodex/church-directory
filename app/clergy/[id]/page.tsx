@@ -256,7 +256,6 @@ export default function ClergyDetailsPage() {
 
                   return <p className="lg:text-2xl text-primary">{types.join(" • ")}</p>;
                 })()}
-                <p className="lg:text-xl text-primary">{churchName}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2  gap-2">
@@ -282,8 +281,17 @@ export default function ClergyDetailsPage() {
                   <span className="text-sm font-semibold">{pastor.occupation}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                  <span className="text-sm font-semibold">{pastor.council} Council</span>
+                {pastor.council && pastor.council !== "None" && pastor.council !== "N/A" && (
+                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                    <span className="text-sm font-semibold">{pastor.council} Council</span>
+                  </div>
+                )}
+                <div className="flex flex-col items-center justify-between p-2 bg-muted rounded-lg">
+                  <span className="flex items-center text-xs mb-2">
+                    <Church className="mr-2 h-4 w-4" />
+                    Campus
+                  </span>
+                  <span className="text-sm font-semibold">{churchName}</span>
                 </div>
 
                 {pastor.area && pastor.area !== "None" && (
