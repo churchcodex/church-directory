@@ -4,7 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
 import { PageActionsProvider } from "@/contexts/PageActionsContext";
-import NavBar from "@/components/NavBar";
+import ConditionalNavBar from "@/components/ConditionalNavBar";
 import AuthProvider from "@/components/AuthProvider";
 
 const geistSans = Geist({
@@ -33,7 +33,7 @@ export default function RootLayout({
         <AuthProvider>
           <PageTitleProvider>
             <PageActionsProvider>
-              <NavBar />
+              <ConditionalNavBar />
               {children}
               <Toaster />
             </PageActionsProvider>
