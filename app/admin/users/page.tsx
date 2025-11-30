@@ -237,7 +237,10 @@ export default function AdminUsersPage() {
           ) : (
             <div className="space-y-4">
               {tokens.map((token) => (
-                <div key={token._id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div
+                  key={token._id}
+                  className="flex flex-col lg:flex-row lg:items-center items-start gap-4 justify-between p-4 border rounded-lg"
+                >
                   <div className="flex-1">
                     <p className="font-mono text-sm">{token.token}</p>
                     <p className="text-sm text-gray-500">

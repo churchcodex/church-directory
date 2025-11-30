@@ -56,17 +56,17 @@ export default function NavBar() {
             </div>
           )}
 
-          <div className="flex flex-1 ml-auto justify-end w-fit items-center space-x-4">
+          <div className="flex flex-1 ml-auto justify-end w-fit items-center space-x-2">
             <Link
               href="/churches"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
             >
               <Church className="h-4 w-4" />
               Campuses
             </Link>
             <Link
               href="/clergy"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
             >
               <Users className="h-4 w-4" />
               Pastors
@@ -74,7 +74,7 @@ export default function NavBar() {
             {isAdmin && (
               <Link
                 href="/admin/users"
-                className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Admin
@@ -118,7 +118,7 @@ export default function NavBar() {
                   <Link
                     href="/churches"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
                   >
                     <Church className="h-5 w-5" />
                     Campuses
@@ -126,7 +126,7 @@ export default function NavBar() {
                   <Link
                     href="/clergy"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
                   >
                     <Users className="h-5 w-5" />
                     Pastors
@@ -135,7 +135,7 @@ export default function NavBar() {
                     <Link
                       href="/admin/users"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                      className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
                     >
                       <ShieldCheck className="h-5 w-5" />
                       Admin
@@ -148,7 +148,7 @@ export default function NavBar() {
                         setIsOpen(false);
                         signOut({ callbackUrl: "/login" });
                       }}
-                      className="flex items-center gap-2 px-4 py-3 justify-start"
+                      className="flex items-center gap-2 px-4 py-3 ml-1.5 justify-start"
                     >
                       <LogOut className="h-5 w-5" />
                       Logout
