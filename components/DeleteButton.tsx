@@ -19,10 +19,11 @@ import { Trash2, Loader2 } from "lucide-react";
 interface DeleteButtonProps {
   id: string;
   name: string;
+  type?: "pastor" | "campus";
   onSuccess?: () => void;
 }
 
-export default function DeleteButton({ id, name, onSuccess }: DeleteButtonProps) {
+export default function DeleteButton({ id, name, type = "pastor", onSuccess }: DeleteButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -53,6 +54,9 @@ export default function DeleteButton({ id, name, onSuccess }: DeleteButtonProps)
     }
   };
 
+  const entityLabel = type === "campus" ? "campus" : "pastor";
+  const apiEndpoint = type === "campus" ? "churches" : "pastors";
+
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
@@ -63,8 +67,10 @@ export default function DeleteButton({ id, name, onSuccess }: DeleteButtonProps)
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {name}?</AlertDialogTitle>
-          <AlertDialogDescription>Are you sure you want to delete this pastor?</AlertDialogDescription>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Do you want to delete <strong>{name}</strong>? This action cannot be undone.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>

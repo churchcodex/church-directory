@@ -10,6 +10,17 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSession, signOut } from "next-auth/react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function NavBar() {
   const { title } = usePageTitle();
@@ -19,6 +30,10 @@ export default function NavBar() {
 
   const showActions = searchPlaceholder !== "";
   const isAdmin = (session?.user as any)?.role === "admin";
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
@@ -81,15 +96,24 @@ export default function NavBar() {
               </Link>
             )}
             {session && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className="flex items-center gap-1"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                    <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         </div>
@@ -142,17 +166,31 @@ export default function NavBar() {
                     </Link>
                   )}
                   {session && (
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setIsOpen(false);
-                        signOut({ callbackUrl: "/login" });
-                      }}
-                      className="flex items-center gap-2 px-4 py-3 ml-1.5 justify-start"
-                    >
-                      <LogOut className="h-5 w-5" />
-                      Logout
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" className="flex items-center gap-2 px-4 py-3 ml-1.5 justify-start">
+                          <LogOut className="h-5 w-5" />
+                          Logout
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                          <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              setIsOpen(false);
+                              handleLogout();
+                            }}
+                          >
+                            Logout
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </div>
               </div>
