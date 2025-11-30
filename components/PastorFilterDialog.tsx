@@ -36,14 +36,12 @@ export interface FilterState {
   area: string[];
   country: string[];
   occupation: string[];
-  status: string;
   minAge: string;
   maxAge: string;
 }
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
-const statuses: Status[] = ["Active", "Inactive"];
 
 export default function PastorFilterDialog({
   onApplyFilters,
@@ -76,7 +74,6 @@ export default function PastorFilterDialog({
       area: [],
       country: [],
       occupation: [],
-      status: "Active",
       minAge: "",
       maxAge: "",
     };
@@ -174,32 +171,6 @@ export default function PastorFilterDialog({
                 value={filters.country}
                 onValueChange={(value) => setFilters({ ...filters, country: value })}
                 placeholder="Select countr(ies)"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="filter-occupation">Occupation</Label>
-              <MultiSelect
-                options={occupations.map((occupation) => ({ value: occupation, label: occupation }))}
-                value={filters.occupation}
-                onValueChange={(value) => setFilters({ ...filters, occupation: value })}
-                placeholder="Select occupation(s)"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="filter-status">Status</Label>
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                ]}
-                value={filters.status}
-                onValueChange={(value) => setFilters({ ...filters, status: value })}
-                placeholder="Select status"
               />
             </div>
           </div>

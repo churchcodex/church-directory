@@ -30,8 +30,11 @@ export default function DeleteButton({ id, name, onSuccess }: DeleteButtonProps)
   const handleDelete = async () => {
     setLoading(true);
     try {
+      // Soft delete by setting status to Inactive
       const response = await fetch(`/api/pastors/${id}`, {
-        method: "DELETE",
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Inactive" }),
       });
 
       if (response.ok) {
@@ -61,10 +64,7 @@ export default function DeleteButton({ id, name, onSuccess }: DeleteButtonProps)
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this pastor? This action cannot be undone and will permanently remove all
-            their information from the system.
-          </AlertDialogDescription>
+          <AlertDialogDescription>Are you sure you want to delete this pastor?</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>

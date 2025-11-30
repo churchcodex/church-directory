@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Church as ChurchType, ClergyType, Pastor } from "@/types/entities";
@@ -19,6 +20,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats>({
     totalChurches: 0,
     totalClergy: 0,
@@ -45,20 +47,15 @@ export default function Dashboard() {
 
         const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
         const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
-        const activeClergy = clergy.filter((c) => !c.status || c.status === "Active").length;
-        const inactiveClergy = clergy.filter((c) => c.status === "Inactive").length;
 
         setStats({
           totalChurches: churches.length,
-          totalClergy: activeClergy,
+          totalClergy: clergy.length,
           totalMembers,
           totalIncome,
-          inactiveClergy,
+          inactiveClergy: 0,
           recentChurches: churches.slice(-5).reverse(),
-          recentClergy: clergy
-            .filter((c) => !c.status || c.status === "Active")
-            .slice(-5)
-            .reverse(),
+          recentClergy: clergy.slice(-5).reverse(),
         });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);

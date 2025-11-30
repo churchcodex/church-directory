@@ -28,7 +28,6 @@ function ClergyPageContent() {
     area: [],
     country: [],
     occupation: [],
-    status: "Active",
     minAge: "",
     maxAge: "",
   });
@@ -58,13 +57,6 @@ function ClergyPageContent() {
       clearActions();
     };
   }, [setTitle, setSearchPlaceholder, fetchPastors, clearActions]);
-
-  useEffect(() => {
-    const statusParam = searchParams.get("status");
-    if (statusParam === "inactive") {
-      setFilters((prev) => ({ ...prev, status: "Inactive" }));
-    }
-  }, [searchParams]);
 
   // Get unique values for filters - memoized to prevent infinite re-renders
   const clergyTypes = useMemo(
@@ -193,13 +185,6 @@ function ClergyPageContent() {
       filtered = filtered.filter((pastor) => filters.occupation.includes(pastor.occupation || ""));
     }
 
-    // Filter by status - treat undefined/missing status as "Active"
-    if (filters.status === "Active") {
-      filtered = filtered.filter((pastor) => !pastor.status || pastor.status === "Active");
-    } else if (filters.status === "Inactive") {
-      filtered = filtered.filter((pastor) => pastor.status === "Inactive");
-    }
-
     // Filter by age range
     if (filters.minAge || filters.maxAge) {
       filtered = filtered.filter((pastor) => {
@@ -299,15 +284,6 @@ function ClergyPageContent() {
           key: "occupation",
           filterValue: occupation,
         });
-      });
-    }
-
-    // Status (single)
-    if (filters.status !== "all") {
-      activeFilters.push({
-        label: "Status",
-        value: filters.status,
-        key: "status",
       });
     }
 

@@ -185,9 +185,14 @@ export default function AdminUsersPage() {
           <h1 className="text-3xl font-bold">User Management</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage users and invite tokens</p>
         </div>
-        <Button onClick={generateInviteToken} disabled={generatingToken}>
-          {generatingToken ? "Generating..." : "Generate Invite Link"}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push("/admin/inactive-pastors")}>
+            View Inactive Pastors
+          </Button>
+          <Button onClick={generateInviteToken} disabled={generatingToken}>
+            {generatingToken ? "Generating..." : "Generate Invite Link"}
+          </Button>
+        </div>
       </div>
 
       {/* Users Section */}

@@ -3,21 +3,36 @@
 import { Church } from "@/types/entities";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, DollarSign } from "lucide-react";
+import { MapPin, Users, DollarSign, ImageIcon } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 
 interface ChurchCardProps {
   church: Church;
 }
 
 export default function ChurchCard({ church }: ChurchCardProps) {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <Link href={`/churches/${church.id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-        <div className="relative h-48 w-full">
-          <Image src={church.images[0] || "/placeholder-church.jpg"} alt={church.name} fill className="object-cover" />
+        <div className="relative h-48 w-full bg-muted">
+          {!imageError && church.images[0] ? (
+            <Image
+              src={church.images[0]}
+              alt={church.name}
+              fill
+              className="object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full w-full">
+              <ImageIcon className="h-16 w-16 text-muted-foreground" />
+            </div>
+          )}
         </div>
         <CardHeader>
           <CardTitle className="text-xl">{church.name}</CardTitle>

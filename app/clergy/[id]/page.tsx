@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import PastorFormDialog from "@/components/PastorFormDialog";
-import DeactivateButton from "@/components/DeactivateButton";
 import DeleteButton from "@/components/DeleteButton";
 import {
   Heart,
@@ -203,12 +202,6 @@ export default function ClergyDetailsPage() {
           {pastor && (
             <div className="flex gap-2">
               <PastorFormDialog pastor={pastor} onSuccess={() => fetchPastor(params.id as string)} />
-              <DeactivateButton
-                id={pastor.id}
-                name={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
-                currentStatus={pastor.status}
-                onSuccess={() => fetchPastor(params.id as string)}
-              />
               <DeleteButton
                 id={pastor.id}
                 name={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}

@@ -5,7 +5,8 @@ import Pastor from "@/models/Pastor";
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    const pastors = await Pastor.find({}).lean();
+    // Exclude pastors with status 'Inactive'
+    const pastors = await Pastor.find({ status: { $ne: "Inactive" } }).lean();
     const transformedPastors = pastors.map((pastor: any) => ({
       ...pastor,
       id: pastor._id.toString(),
