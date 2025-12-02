@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Church } from "@/types/entities";
 import ChurchCard from "@/components/ChurchCard";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
@@ -19,7 +19,7 @@ export default function ChurchesPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const fetchChurches = async () => {
+  const fetchChurches = useCallback(async () => {
     try {
       const response = await fetch("/api/churches");
       const data = await response.json();
@@ -32,7 +32,7 @@ export default function ChurchesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setTitle("First Love Campuses");
@@ -42,7 +42,7 @@ export default function ChurchesPage() {
     return () => {
       clearActions();
     };
-  }, [setTitle, setSearchPlaceholder, clearActions]);
+  }, [setTitle, setSearchPlaceholder, clearActions, fetchChurches]);
 
   useEffect(() => {
     setAddButton(
