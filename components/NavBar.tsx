@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Church, Users, Search, Menu, X, LogOut, ShieldCheck } from "lucide-react";
+import { Church, Users, Menu, LogOut, ShieldCheck } from "lucide-react";
 import { usePageTitle } from "@/contexts/PageTitleContext";
-import { usePageActions } from "@/contexts/PageActionsContext";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -24,11 +22,9 @@ import {
 
 export default function NavBar() {
   const { title } = usePageTitle();
-  const { searchQuery, setSearchQuery, filterButton, addButton, searchPlaceholder } = usePageActions();
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
 
-  const showActions = searchPlaceholder !== "";
   const isAdmin = (session?.user as any)?.role === "admin";
 
   const handleLogout = () => {
@@ -45,25 +41,6 @@ export default function NavBar() {
               <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={120} height={120} />
             </Link>
           </div>
-
-          {showActions && (
-            <div className="  flex-1">
-              <div className=" max-w-[300px] gap-2 flex items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    type="text"
-                    placeholder={searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-10"
-                  />
-                </div>
-                {filterButton}
-                {addButton}
-              </div>
-            </div>
-          )}
 
           {title && (
             <div className="flex items-center mx-auto">
@@ -197,26 +174,6 @@ export default function NavBar() {
             </SheetContent>
           </Sheet>
         </div>
-
-        {/* Mobile Search Bar (when actions are present) */}
-        {showActions && (
-          <div className="lg:hidden pb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10"
-              />
-            </div>
-            <div className="flex gap-2 mt-4 md:mt-2 justify-center md:justify-start ">
-              {filterButton}
-              {addButton}
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );

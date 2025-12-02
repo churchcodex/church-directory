@@ -6,20 +6,23 @@ import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
-import { X } from "lucide-react";
+import { X, Search, LayoutGrid, List, Award } from "lucide-react";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 
 function ClergyPageContent() {
   const searchParams = useSearchParams();
   const { setTitle } = usePageTitle();
-  const { searchQuery, setSearchPlaceholder, setFilterButton, setAddButton, clearActions } = usePageActions();
+  const { setSearchPlaceholder, clearActions } = usePageActions();
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filters, setFilters] = useState<FilterState>({
     clergyType: [],
     maritalStatus: [],
@@ -98,29 +101,6 @@ function ClergyPageContent() {
         .sort(),
     [pastors]
   );
-
-  useEffect(() => {
-    setFilterButton(
-      <PastorFilterDialog
-        onApplyFilters={setFilters}
-        initialFilters={filters}
-        clergyTypes={clergyTypes}
-        councils={councils}
-        areas={areas}
-        countries={countries}
-        occupations={occupations}
-      />
-    );
-  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations]);
-
-  useEffect(() => {
-    setAddButton(
-      <>
-        <PastorBulkUpload onSuccess={fetchPastors} />
-        <PastorFormDialog onSuccess={fetchPastors} />
-      </>
-    );
-  }, [setAddButton, fetchPastors]);
 
   const applyFilters = useCallback(() => {
     let filtered = pastors;
@@ -333,6 +313,53 @@ function ClergyPageContent() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto mb-6">
+        {/* Search and Actions Section */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+          <div className="relative flex-1 max-w-md w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search by name or type..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 w-full"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap justify-center">
+            <div className="flex gap-1 border rounded-md">
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className="rounded-r-none"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="rounded-l-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            <PastorFilterDialog
+              onApplyFilters={setFilters}
+              initialFilters={filters}
+              clergyTypes={clergyTypes}
+              councils={councils}
+              areas={areas}
+              countries={countries}
+              occupations={occupations}
+            />
+            <PastorBulkUpload onSuccess={fetchPastors} />
+            <PastorFormDialog onSuccess={fetchPastors} />
+          </div>
+        </div>
+      </div>
+
       {hasActiveFilters && (
         <div className="fixed top-20 right-4 z-50 max-w-xs">
           <div className="p-2 bg-background/95 backdrop-blur-sm rounded-md border shadow-lg ring-1 ring-ring">
@@ -344,7 +371,7 @@ function ClergyPageContent() {
               {searchQuery && (
                 <Badge variant="secondary" className="text-xs py-0 px-1.5 gap-1">
                   "{searchQuery}"
-                  <button onClick={() => clearActions()} className="hover:bg-background/20 rounded-full p-0.5">
+                  <button onClick={() => setSearchQuery("")} className="hover:bg-background/20 rounded-full p-0.5">
                     <X className="h-2.5 w-2.5" />
                   </button>
                 </Badge>
@@ -365,18 +392,18 @@ function ClergyPageContent() {
         </div>
       )}
 
-      <div className=" mx-auto">
+      <div className="mx-auto">
         {filteredPastors.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No pastor found matching your search.</p>
           </div>
-        ) : (
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
             {filteredPastors.map((pastor) => (
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
-                className="group cursor-pointer flex flex-col items-center max-w-[96px] mx-auto"
+                className="group cursor-pointer flex flex-col items-center max-w-24 mx-auto"
               >
                 <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-105">
                   {pastor.profile_image ? (
@@ -394,6 +421,43 @@ function ClergyPageContent() {
                 <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="max-w-5xl mx-auto space-y-2">
+            {filteredPastors.map((pastor) => (
+              <Link
+                key={pastor.id}
+                href={`/clergy/${pastor.id}`}
+                className="flex items-center gap-4 p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border"
+              >
+                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted shrink-0">
+                  {pastor.profile_image ? (
+                    <img
+                      src={pastor.profile_image}
+                      alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-purple-500 to-blue-600">
+                      <span className="text-white text-sm font-bold">{pastor.first_name.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-sm mb-1">
+                    {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Award className="h-3.5 w-3.5 shrink-0" />
+                    <p className="truncate">
+                      {Array.isArray(pastor.clergy_type) && pastor.clergy_type.length > 0
+                        ? pastor.clergy_type.join(" • ")
+                        : pastor.clergy_type || "N/A"}
+                    </p>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
