@@ -4,16 +4,18 @@ import { useEffect, useState, useCallback } from "react";
 import { Church } from "@/types/entities";
 import ChurchCard from "@/components/ChurchCard";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
-import { X, LayoutGrid, List, MapPin, User } from "lucide-react";
+import { X, LayoutGrid, List, MapPin, User, Search } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 
 export default function ChurchesPage() {
   const { setTitle } = usePageTitle();
-  const { searchQuery, setSearchPlaceholder, setAddButton, clearActions } = usePageActions();
+  const { searchQuery, setSearchQuery, searchPlaceholder, setSearchPlaceholder, setAddButton, clearActions } =
+    usePageActions();
   const [churches, setChurches] = useState<Church[]>([]);
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,42 @@ export default function ChurchesPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+      <div className=" mx-auto">
+        {/* Mobile Actions */}
+        <div className="lg:hidden mb-6 flex flex-col gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10"
+            />
+          </div>
+          <div className="flex items-center gap-2 justify-end">
+            <div className="flex gap-1 border rounded-md">
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className="rounded-r-none"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="rounded-l-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            <ChurchFormDialog onSuccess={fetchChurches} />
+          </div>
+        </div>
+
         {hasSearch && (
           <div className="mb-8 max-w-md mx-auto">
             <div className="p-4 bg-muted/50 rounded-lg border">

@@ -18,7 +18,15 @@ import { usePageActions } from "@/contexts/PageActionsContext";
 function ClergyPageContent() {
   const searchParams = useSearchParams();
   const { setTitle } = usePageTitle();
-  const { searchQuery, setSearchPlaceholder, setFilterButton, setAddButton, clearActions } = usePageActions();
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchPlaceholder,
+    setSearchPlaceholder,
+    setFilterButton,
+    setAddButton,
+    clearActions,
+  } = usePageActions();
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -353,6 +361,51 @@ function ClergyPageContent() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
+      {/* Mobile Actions */}
+      <div className="lg:hidden mb-6 flex flex-col gap-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-10"
+          />
+        </div>
+        <div className="flex items-center gap-2 justify-end">
+          <PastorFilterDialog
+            onApplyFilters={setFilters}
+            initialFilters={filters}
+            clergyTypes={clergyTypes}
+            councils={councils}
+            areas={areas}
+            countries={countries}
+            occupations={occupations}
+          />
+          <div className="flex gap-1 border rounded-md">
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="rounded-r-none"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <PastorBulkUpload onSuccess={fetchPastors} />
+          <PastorFormDialog onSuccess={fetchPastors} />
+        </div>
+      </div>
+
       {hasActiveFilters && (
         <div className="fixed top-20 right-4 z-50 max-w-xs">
           <div className="p-2 bg-background/95 backdrop-blur-sm rounded-md border shadow-lg ring-1 ring-ring">

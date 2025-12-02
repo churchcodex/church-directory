@@ -41,7 +41,7 @@ export default function NavBar() {
     <nav className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
       <div className="mx-auto px-4 lg:p-2 sm:px-6 lg:px-8">
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex justify-between items-center gap-4">
+        <div className="hidden lg:flex justify-between items-center gap-4 relative">
           <div className="flex items-center">
             <Link href="/" className="items-center space-x-2 block">
               <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={120} height={120} />
@@ -49,15 +49,35 @@ export default function NavBar() {
           </div>
 
           {title && (
-            <div className="flex items-center mx-auto">
-              <h1 className="text-4xl font-bold">{title}</h1>
+            <div
+              className={
+                title === "First Love Church"
+                  ? "absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                  : "flex items-center mx-auto"
+              }
+            >
+              <h1
+                className={`text-4xl font-bold whitespace-nowrap ${
+                  title === "First Love Church"
+                    ? "bg-linear-to-r from-purple-500 via-blue-500 to-cyan-500 bg-clip-text text-transparent text-5xl"
+                    : ""
+                }`}
+              >
+                {title}
+              </h1>
             </div>
           )}
 
-          <div className="flex flex-1 ml-auto justify-end w-fit items-center gap-2">
+          <div
+            className={
+              title === "First Love Church"
+                ? "flex ml-auto justify-end w-fit items-center gap-2"
+                : "flex flex-1 ml-auto justify-end w-fit items-center gap-2"
+            }
+          >
             {showActions && (
               <>
-                <div className="relative w-64">
+                <div className="relative w-64 hidden lg:block">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     type="text"
@@ -67,8 +87,10 @@ export default function NavBar() {
                     className="pl-9 h-10"
                   />
                 </div>
-                {filterButton}
-                {addButton}
+                <div className="hidden lg:flex items-center gap-2">
+                  {filterButton}
+                  {addButton}
+                </div>
               </>
             )}
 
@@ -144,16 +166,19 @@ export default function NavBar() {
             <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={80} height={80} />
           </Link>
 
-          {title && <h1 className="text-xl font-bold truncate mx-2">{title}</h1>}
+          {title && (
+            <h1
+              className={`text-xl md:text-3xl font-bold mx-2 ${
+                title === "First Love Church"
+                  ? "bg-linear-to-r from-purple-500 via-blue-500 to-cyan-500 bg-clip-text text-transparent "
+                  : "truncate"
+              }`}
+            >
+              {title}
+            </h1>
+          )}
 
-          <div className="flex items-center gap-2">
-            {showActions && (
-              <div className="flex items-center gap-2">
-                {filterButton}
-                {addButton}
-              </div>
-            )}
-
+          <div className="flex items-center gap-2 shrink-0">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -226,22 +251,6 @@ export default function NavBar() {
             </Sheet>
           </div>
         </div>
-
-        {/* Mobile Search Bar */}
-        {showActions && (
-          <div className="lg:hidden pb-3 pt-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );
