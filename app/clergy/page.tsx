@@ -23,6 +23,7 @@ function ClergyPageContent() {
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isChangingView, setIsChangingView] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     clergyType: [],
     maritalStatus: [],
@@ -331,7 +332,13 @@ function ClergyPageContent() {
               <Button
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setViewMode("grid")}
+                onClick={() => {
+                  setIsChangingView(true);
+                  setTimeout(() => {
+                    setViewMode("grid");
+                    setIsChangingView(false);
+                  }, 150);
+                }}
                 className="rounded-r-none"
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -339,7 +346,13 @@ function ClergyPageContent() {
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setViewMode("list")}
+                onClick={() => {
+                  setIsChangingView(true);
+                  setTimeout(() => {
+                    setViewMode("list");
+                    setIsChangingView(false);
+                  }, 150);
+                }}
                 className="rounded-l-none"
               >
                 <List className="h-4 w-4" />
@@ -397,6 +410,29 @@ function ClergyPageContent() {
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No pastor found matching your search.</p>
           </div>
+        ) : isChangingView ? (
+          viewMode === "grid" ? (
+            <div className="space-y-2 animate-pulse">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-card border">
+                  <div className="w-12 h-12 rounded-full bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="w-48 h-4 bg-muted rounded" />
+                    <div className="w-64 h-3 bg-muted rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3 animate-pulse">
+              {[...Array(60)].map((_, i) => (
+                <div key={i} className="flex flex-col items-center max-w-24 mx-auto">
+                  <div className="w-24 h-32 rounded-lg bg-muted mb-1.5" />
+                  <div className="w-20 h-3 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
+          )
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
             {filteredPastors.map((pastor) => (
@@ -425,7 +461,7 @@ function ClergyPageContent() {
             ))}
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto space-y-2">
+          <div className="space-y-2">
             {filteredPastors.map((pastor) => (
               <Link
                 key={pastor.id}
@@ -445,7 +481,7 @@ function ClergyPageContent() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex gap-4">
                   <h3 className="font-medium text-sm mb-1">
                     {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                   </h3>
