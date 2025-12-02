@@ -18,12 +18,10 @@ import { usePageActions } from "@/contexts/PageActionsContext";
 function ClergyPageContent() {
   const searchParams = useSearchParams();
   const { setTitle } = usePageTitle();
-  const { setSearchPlaceholder, clearActions } = usePageActions();
+  const { searchQuery, setSearchPlaceholder, setFilterButton, setAddButton, clearActions } = usePageActions();
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [isChangingView, setIsChangingView] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     clergyType: [],
     maritalStatus: [],
@@ -102,6 +100,47 @@ function ClergyPageContent() {
         .sort(),
     [pastors]
   );
+
+  useEffect(() => {
+    setFilterButton(
+      <PastorFilterDialog
+        onApplyFilters={setFilters}
+        initialFilters={filters}
+        clergyTypes={clergyTypes}
+        councils={councils}
+        areas={areas}
+        countries={countries}
+        occupations={occupations}
+      />
+    );
+  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations]);
+
+  useEffect(() => {
+    setAddButton(
+      <>
+        <div className="flex gap-1 border rounded-md">
+          <Button
+            variant={viewMode === "grid" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+            className="rounded-r-none"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            className="rounded-l-none"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
+        <PastorBulkUpload onSuccess={fetchPastors} />
+        <PastorFormDialog onSuccess={fetchPastors} />
+      </>
+    );
+  }, [setAddButton, viewMode, fetchPastors]);
 
   const applyFilters = useCallback(() => {
     let filtered = pastors;
@@ -314,65 +353,6 @@ function ClergyPageContent() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto mb-6">
-        {/* Search and Actions Section */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-          <div className="relative flex-1 max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              type="text"
-              placeholder="Search by name or type..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 w-full"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap justify-center">
-            <div className="flex gap-1 border rounded-md">
-              <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setIsChangingView(true);
-                  setTimeout(() => {
-                    setViewMode("grid");
-                    setIsChangingView(false);
-                  }, 150);
-                }}
-                className="rounded-r-none"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setIsChangingView(true);
-                  setTimeout(() => {
-                    setViewMode("list");
-                    setIsChangingView(false);
-                  }, 150);
-                }}
-                className="rounded-l-none"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-            <PastorFilterDialog
-              onApplyFilters={setFilters}
-              initialFilters={filters}
-              clergyTypes={clergyTypes}
-              councils={councils}
-              areas={areas}
-              countries={countries}
-              occupations={occupations}
-            />
-            <PastorBulkUpload onSuccess={fetchPastors} />
-            <PastorFormDialog onSuccess={fetchPastors} />
-          </div>
-        </div>
-      </div>
-
       {hasActiveFilters && (
         <div className="fixed top-20 right-4 z-50 max-w-xs">
           <div className="p-2 bg-background/95 backdrop-blur-sm rounded-md border shadow-lg ring-1 ring-ring">
@@ -384,7 +364,7 @@ function ClergyPageContent() {
               {searchQuery && (
                 <Badge variant="secondary" className="text-xs py-0 px-1.5 gap-1">
                   "{searchQuery}"
-                  <button onClick={() => setSearchQuery("")} className="hover:bg-background/20 rounded-full p-0.5">
+                  <button onClick={() => clearActions()} className="hover:bg-background/20 rounded-full p-0.5">
                     <X className="h-2.5 w-2.5" />
                   </button>
                 </Badge>
@@ -410,29 +390,6 @@ function ClergyPageContent() {
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No pastor found matching your search.</p>
           </div>
-        ) : isChangingView ? (
-          viewMode === "grid" ? (
-            <div className="space-y-2 animate-pulse">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-card border">
-                  <div className="w-12 h-12 rounded-full bg-muted shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="w-48 h-4 bg-muted rounded" />
-                    <div className="w-64 h-3 bg-muted rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3 animate-pulse">
-              {[...Array(60)].map((_, i) => (
-                <div key={i} className="flex flex-col items-center max-w-24 mx-auto">
-                  <div className="w-24 h-32 rounded-lg bg-muted mb-1.5" />
-                  <div className="w-20 h-3 bg-muted rounded" />
-                </div>
-              ))}
-            </div>
-          )
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
             {filteredPastors.map((pastor) => (

@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Church, Users, Menu, LogOut, ShieldCheck } from "lucide-react";
+import { Church, Users, Menu, LogOut, ShieldCheck, MoreVertical, Search } from "lucide-react";
 import { usePageTitle } from "@/contexts/PageTitleContext";
+import { usePageActions } from "@/contexts/PageActionsContext";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -22,9 +25,12 @@ import {
 
 export default function NavBar() {
   const { title } = usePageTitle();
+  const { searchQuery, setSearchQuery, filterButton, addButton, searchPlaceholder } = usePageActions();
   const [isOpen, setIsOpen] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { data: session } = useSession();
 
+  const showActions = searchPlaceholder !== "";
   const isAdmin = (session?.user as any)?.role === "admin";
 
   const handleLogout = () => {
@@ -48,50 +54,87 @@ export default function NavBar() {
             </div>
           )}
 
-          <div className="flex flex-1 ml-auto justify-end w-fit items-center space-x-2">
-            <Link
-              href="/churches"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
-            >
-              <Church className="h-4 w-4" />
-              Campuses
-            </Link>
-            <Link
-              href="/clergy"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
-            >
-              <Users className="h-4 w-4" />
-              Pastors
-            </Link>
-            {isAdmin && (
-              <Link
-                href="/admin/users"
-                className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Admin
-              </Link>
+          <div className="flex flex-1 ml-auto justify-end w-fit items-center gap-2">
+            {showActions && (
+              <>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    type="text"
+                    placeholder={searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-10"
+                  />
+                </div>
+                {filterButton}
+                {addButton}
+              </>
             )}
-            {session && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                    <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56" align="end">
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href="/churches"
+                    onClick={() => setIsPopoverOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                  >
+                    <Church className="h-4 w-4" />
+                    Campuses
+                  </Link>
+                  <Link
+                    href="/clergy"
+                    onClick={() => setIsPopoverOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                  >
+                    <Users className="h-4 w-4" />
+                    Pastors
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setIsPopoverOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  )}
+                  {session && (
+                    <>
+                      <div className="h-px bg-border my-1" />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="flex items-center gap-2 px-3 py-2 justify-start h-auto font-medium"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Logout
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                            <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -103,77 +146,102 @@ export default function NavBar() {
 
           {title && <h1 className="text-xl font-bold truncate mx-2">{title}</h1>}
 
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="ml-auto">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-4">
-              <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col gap-4 mt-6">
-                {/* Navigation Links */}
-                <div className="flex flex-col gap-2">
-                  <Link
-                    href="/churches"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
-                  >
-                    <Church className="h-5 w-5" />
-                    Campuses
-                  </Link>
-                  <Link
-                    href="/clergy"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
-                  >
-                    <Users className="h-5 w-5" />
-                    Pastors
-                  </Link>
-                  {isAdmin && (
+          <div className="flex items-center gap-2">
+            {showActions && (
+              <div className="flex items-center gap-2">
+                {filterButton}
+                {addButton}
+              </div>
+            )}
+
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] p-4">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-6">
+                  {/* Navigation Links */}
+                  <div className="flex flex-col gap-2">
                     <Link
-                      href="/admin/users"
+                      href="/churches"
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
                     >
-                      <ShieldCheck className="h-5 w-5" />
-                      Admin
+                      <Church className="h-5 w-5" />
+                      Campuses
                     </Link>
-                  )}
-                  {session && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-2 px-4 py-3 ml-1.5 justify-start">
-                          <LogOut className="h-5 w-5" />
-                          Logout
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                          <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => {
-                              setIsOpen(false);
-                              handleLogout();
-                            }}
-                          >
+                    <Link
+                      href="/clergy"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
+                    >
+                      <Users className="h-5 w-5" />
+                      Pastors
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin/users"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
+                      >
+                        <ShieldCheck className="h-5 w-5" />
+                        Admin
+                      </Link>
+                    )}
+                    {session && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" className="flex items-center gap-2 px-4 py-3 ml-1.5 justify-start">
+                            <LogOut className="h-5 w-5" />
                             Logout
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                            <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => {
+                                setIsOpen(false);
+                                handleLogout();
+                              }}
+                            >
+                              Logout
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
+
+        {/* Mobile Search Bar */}
+        {showActions && (
+          <div className="lg:hidden pb-3 pt-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
