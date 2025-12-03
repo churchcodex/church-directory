@@ -52,7 +52,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         "Contact Number": "+233244000000",
         "Church ID": "",
         "Profile Image URL": "",
-        Status: "Active",
+        Function: "N/A",
       },
     ];
 
@@ -72,6 +72,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     ];
 
     const ministryOptions = [
+      { "Council Options - Ministries": "Greater Love Club" },
       { "Council Options - Ministries": "GLGC" },
       { "Council Options - Ministries": "Film Stars" },
       { "Council Options - Ministries": "Dancing Stars" },
@@ -272,8 +273,8 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const genderData = [{ Gender: "Male" }, { Gender: "Female" }];
     const genderSheet = XLSX.utils.json_to_sheet(genderData);
 
-    const statusData = [{ Status: "Active" }, { Status: "Inactive" }];
-    const statusSheet = XLSX.utils.json_to_sheet(statusData);
+    const functionData = [{ Function: "Governor" }, { Function: "Overseer" }, { Function: "N/A" }];
+    const functionSheet = XLSX.utils.json_to_sheet(functionData);
 
     // Append all sheets to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pastors");
@@ -288,7 +289,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     XLSX.utils.book_append_sheet(workbook, clergyTypesSheet, "Titles");
     XLSX.utils.book_append_sheet(workbook, maritalStatusSheet, "Marital Status");
     XLSX.utils.book_append_sheet(workbook, genderSheet, "Gender");
-    XLSX.utils.book_append_sheet(workbook, statusSheet, "Status");
+    XLSX.utils.book_append_sheet(workbook, functionSheet, "Function");
 
     // Set column widths
     worksheet["!cols"] = [
@@ -308,7 +309,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 18 }, // Contact Number
       { wch: 25 }, // Church ID
       { wch: 30 }, // Profile Image URL
-      { wch: 10 }, // Status
+      { wch: 12 }, // Function
     ];
 
     // Set column widths for reference sheets
@@ -323,7 +324,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     clergyTypesSheet["!cols"] = [{ wch: 20 }, { wch: 50 }];
     maritalStatusSheet["!cols"] = [{ wch: 20 }];
     genderSheet["!cols"] = [{ wch: 15 }];
-    statusSheet["!cols"] = [{ wch: 15 }];
+    functionSheet["!cols"] = [{ wch: 15 }];
 
     // Add data validations for dropdowns
     if (!worksheet["!dataValidation"]) worksheet["!dataValidation"] = [];

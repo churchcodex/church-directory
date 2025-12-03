@@ -19,7 +19,17 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Building2 } from "lucide-react";
 import { toast } from "sonner";
-import { Pastor, ClergyType, MaritalStatus, Gender, Council, Area, Status, Occupation } from "@/types/entities";
+import {
+  Pastor,
+  ClergyType,
+  MaritalStatus,
+  Gender,
+  Council,
+  Area,
+  Status,
+  Occupation,
+  PastorFunction,
+} from "@/types/entities";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
 import ReactSelect from "react-select";
 
@@ -41,6 +51,7 @@ const areas: Area[] = [
   "None",
 ];
 const statuses: Status[] = ["Active", "Inactive"];
+const pastorFunctions: PastorFunction[] = ["Governor", "Overseer", "N/A"];
 const occupations: Occupation[] = [
   "Full Time Pastor",
   "Medical Doctor",
@@ -60,6 +71,7 @@ const councils: Council[] = [
   "Anagkazo",
   "Ephesians",
   "Signs and Wonders HGE",
+  "Greater Love Club",
   "GLGC",
   "Film Stars",
   "Dancing Stars",
@@ -233,6 +245,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     email: pastor?.email || "",
     contact_number: pastor?.contact_number || "",
     status: pastor?.status || "Active",
+    function: pastor?.function || "N/A",
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
     pastor?.occupation && occupations.includes(pastor.occupation as Occupation)
@@ -336,6 +349,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         email: pastor.email || "",
         contact_number: pastor.contact_number || "",
         status: pastor.status || "Active",
+        function: pastor.function || "N/A",
       });
     }
   }, [open, pastor]);
@@ -384,6 +398,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             email: "",
             contact_number: "",
             status: "Active",
+            function: "N/A",
           });
           setOccupationType("Medical Doctor");
           setCustomOccupation("");
@@ -702,6 +717,15 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label htmlFor="function">Function</Label>
+                <SearchableSelect
+                  options={pastorFunctions.map((f) => ({ value: f, label: f }))}
+                  value={formData.function}
+                  onValueChange={(value) => setFormData({ ...formData, function: value as PastorFunction })}
+                  placeholder="Select function"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="contact_number">Contact Number</Label>
                 <Input
                   id="contact_number"
@@ -750,17 +774,30 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               )}
             </div>
 
-            {pastor && (
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="function">Function *</Label>
                 <SearchableSelect
-                  options={statuses.map((s) => ({ value: s, label: s }))}
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
-                  placeholder="Select status"
+                  options={pastorFunctions.map((f) => ({ value: f, label: f }))}
+                  value={formData.function}
+                  onValueChange={(value) => setFormData({ ...formData, function: value as PastorFunction })}
+                  placeholder="Select function"
+                  required
                 />
               </div>
-            )}
+
+              {pastor && (
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <SearchableSelect
+                    options={statuses.map((s) => ({ value: s, label: s }))}
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
+                    placeholder="Select status"
+                  />
+                </div>
+              )}
+            </div>
 
             <ImageUpload
               label="Profile Image"

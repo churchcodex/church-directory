@@ -11,6 +11,12 @@ interface PageActionsContextType {
   setAddButton: (button: ReactNode | null) => void;
   searchPlaceholder: string;
   setSearchPlaceholder: (placeholder: string) => void;
+  resultsCount: number | null;
+  setResultsCount: (count: number | null) => void;
+  totalCount: number | null;
+  setTotalCount: (count: number | null) => void;
+  activeFilters: string[];
+  setActiveFilters: (filters: string[]) => void;
   clearActions: () => void;
 }
 
@@ -23,6 +29,12 @@ const PageActionsContext = createContext<PageActionsContextType>({
   setAddButton: () => {},
   searchPlaceholder: "",
   setSearchPlaceholder: () => {},
+  resultsCount: null,
+  setResultsCount: () => {},
+  totalCount: null,
+  setTotalCount: () => {},
+  activeFilters: [],
+  setActiveFilters: () => {},
   clearActions: () => {},
 });
 
@@ -31,12 +43,18 @@ export function PageActionsProvider({ children }: { children: ReactNode }) {
   const [filterButton, setFilterButton] = useState<ReactNode | null>(null);
   const [addButton, setAddButton] = useState<ReactNode | null>(null);
   const [searchPlaceholder, setSearchPlaceholder] = useState("");
+  const [resultsCount, setResultsCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const clearActions = useCallback(() => {
     setSearchQuery("");
     setFilterButton(null);
     setAddButton(null);
     setSearchPlaceholder("");
+    setResultsCount(null);
+    setTotalCount(null);
+    setActiveFilters([]);
   }, []);
 
   return (
@@ -50,6 +68,12 @@ export function PageActionsProvider({ children }: { children: ReactNode }) {
         setAddButton,
         searchPlaceholder,
         setSearchPlaceholder,
+        resultsCount,
+        setResultsCount,
+        totalCount,
+        setTotalCount,
+        activeFilters,
+        setActiveFilters,
         clearActions,
       }}
     >

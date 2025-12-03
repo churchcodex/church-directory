@@ -25,6 +25,9 @@ function ClergyPageContent() {
     setSearchPlaceholder,
     setFilterButton,
     setAddButton,
+    setResultsCount,
+    setTotalCount,
+    setActiveFilters,
     clearActions,
   } = usePageActions();
   const [pastors, setPastors] = useState<Pastor[]>([]);
@@ -38,6 +41,7 @@ function ClergyPageContent() {
     area: [],
     country: [],
     occupation: [],
+    function: [],
     minAge: "",
     maxAge: "",
   });
@@ -48,8 +52,14 @@ function ClergyPageContent() {
       const response = await fetch("/api/pastors");
       const data = await response.json();
       if (data.success) {
-        setPastors(data.data);
-        setFilteredPastors(data.data);
+        // Sort pastors alphabetically by first name, then last name
+        const sortedPastors = data.data.sort((a: Pastor, b: Pastor) => {
+          const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+          const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        setPastors(sortedPastors);
+        setFilteredPastors(sortedPastors);
       }
     } catch (error) {
       console.error("Failed to fetch pastors:", error);
@@ -59,7 +69,7 @@ function ClergyPageContent() {
   }, []);
 
   useEffect(() => {
-    setTitle("Pastors' Directory");
+    setTitle("Directory");
     setSearchPlaceholder("Search by name or type...");
     fetchPastors();
 
@@ -67,6 +77,17 @@ function ClergyPageContent() {
       clearActions();
     };
   }, [setTitle, setSearchPlaceholder, fetchPastors, clearActions]);
+
+  // Initialize filters from URL parameters
+  useEffect(() => {
+    const clergyTypeParam = searchParams.get("clergyType");
+    if (clergyTypeParam) {
+      setFilters((prev) => ({
+        ...prev,
+        clergyType: [clergyTypeParam as ClergyType],
+      }));
+    }
+  }, [searchParams]);
 
   // Get unique values for filters - memoized to prevent infinite re-renders
   const clergyTypes = useMemo(
@@ -213,6 +234,11 @@ function ClergyPageContent() {
       filtered = filtered.filter((pastor) => filters.occupation.includes(pastor.occupation || ""));
     }
 
+    // Function (multiple selection)
+    if (filters.function.length > 0) {
+      filtered = filtered.filter((pastor) => filters.function.includes(pastor.function || ""));
+    }
+
     // Filter by age range
     if (filters.minAge || filters.maxAge) {
       filtered = filtered.filter((pastor) => {
@@ -224,7 +250,43 @@ function ClergyPageContent() {
     }
 
     setFilteredPastors(filtered);
-  }, [searchQuery, filters, pastors]);
+    setResultsCount(filtered.length);
+    setTotalCount(pastors.length);
+
+    // Build active filters list
+    const activeFiltersList: string[] = [];
+    if (filters.clergyType.length > 0) {
+      activeFiltersList.push(...filters.clergyType);
+    }
+    if (filters.maritalStatus.length > 0) {
+      activeFiltersList.push(...filters.maritalStatus);
+    }
+    if (filters.gender !== "all") {
+      activeFiltersList.push(filters.gender);
+    }
+    if (filters.council.length > 0) {
+      activeFiltersList.push(...filters.council);
+    }
+    if (filters.area.length > 0) {
+      activeFiltersList.push(...filters.area.map((a) => (a === "none" ? "No Area" : a)));
+    }
+    if (filters.country.length > 0) {
+      activeFiltersList.push(...filters.country);
+    }
+    if (filters.occupation.length > 0) {
+      activeFiltersList.push(...filters.occupation);
+    }
+    if (filters.function.length > 0) {
+      activeFiltersList.push(...filters.function);
+    }
+    if (filters.minAge || filters.maxAge) {
+      const ageRange = [filters.minAge && `Min: ${filters.minAge}`, filters.maxAge && `Max: ${filters.maxAge}`]
+        .filter(Boolean)
+        .join(", ");
+      activeFiltersList.push(ageRange);
+    }
+    setActiveFilters(activeFiltersList);
+  }, [searchQuery, filters, pastors, setResultsCount, setTotalCount, setActiveFilters]);
 
   useEffect(() => {
     applyFilters();
@@ -311,6 +373,18 @@ function ClergyPageContent() {
           value: occupation,
           key: "occupation",
           filterValue: occupation,
+        });
+      });
+    }
+
+    // Function (array)
+    if (filters.function.length > 0) {
+      filters.function.forEach((func) => {
+        activeFilters.push({
+          label: "Function",
+          value: func,
+          key: "function",
+          filterValue: func,
         });
       });
     }
@@ -405,38 +479,6 @@ function ClergyPageContent() {
           <PastorFormDialog onSuccess={fetchPastors} />
         </div>
       </div>
-
-      {hasActiveFilters && (
-        <div className="fixed top-20 right-4 z-50 max-w-xs">
-          <div className="p-2 bg-background/95 backdrop-blur-sm rounded-md border shadow-lg ring-1 ring-ring">
-            <p className="text-xs font-medium mb-1.5">
-              {filteredPastors.length} of {pastors.length} result{pastors.length !== 1 ? "s" : ""}
-            </p>
-
-            <div className="flex flex-wrap gap-1">
-              {searchQuery && (
-                <Badge variant="secondary" className="text-xs py-0 px-1.5 gap-1">
-                  "{searchQuery}"
-                  <button onClick={() => clearActions()} className="hover:bg-background/20 rounded-full p-0.5">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </Badge>
-              )}
-              {activeFilters.map((filter, index) => (
-                <Badge key={index} variant="outline" className="text-xs py-0 px-1.5 gap-1">
-                  {filter.value}
-                  <button
-                    onClick={() => removeFilter(filter.key, filter.filterValue)}
-                    className="hover:bg-background/20 rounded-full p-0.5"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="mx-auto">
         {filteredPastors.length === 0 ? (

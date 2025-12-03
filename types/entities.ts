@@ -173,6 +173,7 @@ export type Council =
   | "Anagkazo"
   | "Ephesians"
   | "Signs and Wonders HGE"
+  | "Greater Love Club"
   | "GLGC"
   | "Film Stars"
   | "Dancing Stars"
@@ -337,6 +338,8 @@ export type Occupation =
   | "Student"
   | "Other";
 
+export type PastorFunction = "Governor" | "Overseer" | "N/A";
+
 export interface Pastor {
   id: string;
   first_name: string;
@@ -356,4 +359,5 @@ export interface Pastor {
   email?: string;
   contact_number?: string;
   status?: Status;
+  function: PastorFunction;
 }

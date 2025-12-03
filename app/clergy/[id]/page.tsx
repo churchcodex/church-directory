@@ -194,7 +194,7 @@ export default function ClergyDetailsPage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             <p className="hidden md:block">Back</p>
@@ -213,8 +213,8 @@ export default function ClergyDetailsPage() {
 
         <Card className="overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/4">
-              <div className="relative h-48 md:h-full w-full min-h-[300px]">
+            <div className="md:w-1/3">
+              <div className="relative h-96 md:h-full w-full">
                 {pastor.profile_image ? (
                   <Image
                     src={pastor.profile_image}
@@ -235,7 +235,7 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-4 md:w-3/4">
+            <div className="p-4 md:w-2/3">
               <div className="mb-6 flex flex-col items-center text-center">
                 <h1 className="text-2xl lg:text-5xl font-bold text-center mb-2 ">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
@@ -251,7 +251,7 @@ export default function ClergyDetailsPage() {
                 })()}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2  gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
                   <span className="text-sm font-semibold">{calculateAge(pastor.date_of_birth || "")} years</span>
                 </div>
@@ -312,6 +312,12 @@ export default function ClergyDetailsPage() {
                     >
                       {pastor.contact_number}
                     </a>
+                  </div>
+                )}
+
+                {pastor.function && pastor.function !== "N/A" && (
+                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                    <span className="text-sm font-semibold">{pastor.function}</span>
                   </div>
                 )}
               </div>

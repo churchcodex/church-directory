@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Filter, X } from "lucide-react";
-import { ClergyType, MaritalStatus, Gender, Council, Area, Status } from "@/types/entities";
+import { ClergyType, MaritalStatus, Gender, Council, Area, Status, PastorFunction } from "@/types/entities";
 
 interface PastorFilterDialogProps {
   onApplyFilters: (filters: FilterState) => void;
@@ -36,12 +36,14 @@ export interface FilterState {
   area: string[];
   country: string[];
   occupation: string[];
+  function: string[];
   minAge: string;
   maxAge: string;
 }
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
+const pastorFunctions: PastorFunction[] = ["Governor", "Overseer", "N/A"];
 
 export default function PastorFilterDialog({
   onApplyFilters,
@@ -74,6 +76,7 @@ export default function PastorFilterDialog({
       area: [],
       country: [],
       occupation: [],
+      function: [],
       minAge: "",
       maxAge: "",
     };
@@ -182,6 +185,16 @@ export default function PastorFilterDialog({
               value={filters.occupation}
               onValueChange={(value) => setFilters({ ...filters, occupation: value })}
               placeholder="Select occupation(s)"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filter-function">Function</Label>
+            <MultiSelect
+              options={pastorFunctions.map((func) => ({ value: func, label: func }))}
+              value={filters.function}
+              onValueChange={(value) => setFilters({ ...filters, function: value })}
+              placeholder="Select function(s)"
             />
           </div>
 

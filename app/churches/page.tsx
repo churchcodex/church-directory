@@ -14,8 +14,16 @@ import { usePageActions } from "@/contexts/PageActionsContext";
 
 export default function ChurchesPage() {
   const { setTitle } = usePageTitle();
-  const { searchQuery, setSearchQuery, searchPlaceholder, setSearchPlaceholder, setAddButton, clearActions } =
-    usePageActions();
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchPlaceholder,
+    setSearchPlaceholder,
+    setAddButton,
+    setResultsCount,
+    setTotalCount,
+    clearActions,
+  } = usePageActions();
   const [churches, setChurches] = useState<Church[]>([]);
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,10 +89,14 @@ export default function ChurchesPage() {
           church.head_pastor.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredChurches(filtered);
+      setResultsCount(filtered.length);
+      setTotalCount(churches.length);
     } else {
       setFilteredChurches(churches);
+      setResultsCount(churches.length);
+      setTotalCount(churches.length);
     }
-  }, [searchQuery, churches]);
+  }, [searchQuery, churches, setResultsCount, setTotalCount]);
 
   if (loading) {
     return (
@@ -93,8 +105,6 @@ export default function ChurchesPage() {
       </div>
     );
   }
-
-  const hasSearch = searchQuery.trim() !== "";
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-12 px-4 sm:px-6 lg:px-8">
@@ -133,28 +143,6 @@ export default function ChurchesPage() {
             <ChurchFormDialog onSuccess={fetchChurches} />
           </div>
         </div>
-
-        {hasSearch && (
-          <div className="mb-8 max-w-md mx-auto">
-            <div className="p-4 bg-muted/50 rounded-lg border">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium">
-                  Showing {filteredChurches.length} of {churches.length} campus{churches.length !== 1 ? "es" : ""}
-                </p>
-                <Button variant="ghost" size="sm" onClick={() => clearActions()} className="text-xs">
-                  Clear Search
-                </Button>
-              </div>
-
-              <Badge variant="secondary" className="gap-1">
-                Search: "{searchQuery}"
-                <button onClick={() => clearActions()} className="ml-1 hover:bg-background/20 rounded-full p-0.5">
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            </div>
-          </div>
-        )}
 
         {filteredChurches.length === 0 ? (
           <div className="text-center py-12">

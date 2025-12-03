@@ -6,6 +6,7 @@ import { Church, Users, Menu, LogOut, ShieldCheck, MoreVertical, Search } from "
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -25,13 +26,15 @@ import {
 
 export default function NavBar() {
   const { title } = usePageTitle();
-  const { searchQuery, setSearchQuery, filterButton, addButton, searchPlaceholder } = usePageActions();
+  const { searchQuery, setSearchQuery, filterButton, addButton, searchPlaceholder, resultsCount, totalCount, activeFilters } =
+    usePageActions();
   const [isOpen, setIsOpen] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { data: session } = useSession();
 
   const showActions = searchPlaceholder !== "";
   const isAdmin = (session?.user as any)?.role === "admin";
+  const hasActiveFiltersOrSearch = (searchQuery || resultsCount !== null) && resultsCount !== totalCount;
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
@@ -43,8 +46,8 @@ export default function NavBar() {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex justify-between items-center gap-4 relative">
           <div className="flex items-center">
-            <Link href="/" className="items-center space-x-2 block">
-              <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={120} height={120} />
+            <Link href="/" className="items-center block">
+              <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={100} height={120} />
             </Link>
           </div>
 
@@ -53,7 +56,7 @@ export default function NavBar() {
               className={
                 title === "First Love Church"
                   ? "absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                  : "flex items-center mx-auto"
+                  : "flex items-center mx-auto gap-3"
               }
             >
               <h1
@@ -65,6 +68,27 @@ export default function NavBar() {
               >
                 {title}
               </h1>
+              {hasActiveFiltersOrSearch && resultsCount !== null && totalCount !== null && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-sm">
+                    {resultsCount} of {totalCount}
+                  </Badge>
+                  {activeFilters.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap max-w-md">
+                      {activeFilters.slice(0, 3).map((filter, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {filter}
+                        </Badge>
+                      ))}
+                      {activeFilters.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{activeFilters.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -167,15 +191,29 @@ export default function NavBar() {
           </Link>
 
           {title && (
-            <h1
-              className={`text-xl md:text-3xl font-bold mx-2 ${
-                title === "First Love Church"
-                  ? "bg-linear-to-r from-purple-500 via-blue-500 to-cyan-500 bg-clip-text text-transparent "
-                  : "truncate"
-              }`}
-            >
-              {title}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                className={`text-xl md:text-3xl font-bold ${
+                  title === "First Love Church"
+                    ? "bg-linear-to-r from-purple-500 via-blue-500 to-cyan-500 bg-clip-text text-transparent "
+                    : "truncate"
+                }`}
+              >
+                {title}
+              </h1>
+              {hasActiveFiltersOrSearch && resultsCount !== null && totalCount !== null && (
+                <div className="flex items-center gap-1">
+                  <Badge variant="secondary" className="text-xs shrink-0">
+                    {resultsCount}/{totalCount}
+                  </Badge>
+                  {activeFilters.length > 0 && (
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {activeFilters.length} {activeFilters.length === 1 ? "filter" : "filters"}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           <div className="flex items-center gap-2 shrink-0">

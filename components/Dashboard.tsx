@@ -12,6 +12,9 @@ import Link from "next/link";
 interface DashboardStats {
   totalChurches: number;
   totalClergy: number;
+  totalSisters: number;
+  totalReverends: number;
+  totalGovernors: number;
   totalMembers: number;
   totalIncome: number;
   inactiveClergy: number;
@@ -24,6 +27,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalChurches: 0,
     totalClergy: 0,
+    totalSisters: 0,
+    totalReverends: 0,
+    totalGovernors: 0,
     totalMembers: 0,
     totalIncome: 0,
     inactiveClergy: 0,
@@ -48,9 +54,28 @@ export default function Dashboard() {
         const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
         const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
 
+        // Count clergy by type
+        const totalSisters = clergy.filter((p) => {
+          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+          return types.includes("Sister");
+        }).length;
+
+        const totalReverends = clergy.filter((p) => {
+          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+          return types.includes("Reverend");
+        }).length;
+
+        const totalGovernors = clergy.filter((p) => {
+          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+          return types.includes("Governor");
+        }).length;
+
         setStats({
           totalChurches: churches.length,
           totalClergy: clergy.length,
+          totalSisters,
+          totalReverends,
+          totalGovernors,
           totalMembers,
           totalIncome,
           inactiveClergy: 0,
@@ -71,7 +96,7 @@ export default function Dashboard() {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <Card key={i} className="border-muted">
               <CardHeader className="h-24 bg-muted/20" />
               <CardContent className="h-16 bg-muted/10" />
@@ -96,6 +121,27 @@ export default function Dashboard() {
       icon: Users,
       gradient: "from-blue-500 to-blue-700",
       href: "/clergy",
+    },
+    {
+      title: "Total Sisters",
+      value: formatNumber(stats.totalSisters),
+      icon: Users,
+      gradient: "from-pink-500 to-pink-700",
+      href: "/clergy?clergyType=Sister",
+    },
+    {
+      title: "Total Reverends",
+      value: formatNumber(stats.totalReverends),
+      icon: Users,
+      gradient: "from-indigo-500 to-indigo-700",
+      href: "/clergy?clergyType=Reverend",
+    },
+    {
+      title: "Total Governors",
+      value: formatNumber(stats.totalGovernors),
+      icon: Users,
+      gradient: "from-emerald-500 to-emerald-700",
+      href: "/clergy?clergyType=Governor",
     },
     {
       title: "Total Members",

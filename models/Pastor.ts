@@ -79,6 +79,7 @@ const PastorSchema = new Schema<PastorDocument>(
         "Anagkazo",
         "Ephesians",
         "Signs and Wonders HGE",
+        "Greater Love Club",
         "GLGC",
         "Film Stars",
         "Dancing Stars",
@@ -260,6 +261,12 @@ const PastorSchema = new Schema<PastorDocument>(
       enum: ["Active", "Inactive"],
       default: "Active",
       required: false,
+    },
+    function: {
+      type: String,
+      enum: ["Governor", "Overseer", "N/A"],
+      default: "N/A",
+      required: [true, "Please select a function"],
     },
   },
   {

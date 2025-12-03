@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
           email: row["Email"] || row["email"] || undefined,
           contact_number: row["Contact Number"] || row["contact_number"] || undefined,
           status: row["Status"] || row["status"] || "Active",
+          function: row["Function"] || row["function"] || "N/A",
         };
 
         // Handle clergy_type which can be comma-separated
