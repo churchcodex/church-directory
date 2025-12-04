@@ -715,28 +715,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="function">Function</Label>
-                <SearchableSelect
-                  options={pastorFunctions.map((f) => ({ value: f, label: f }))}
-                  value={formData.function}
-                  onValueChange={(value) => setFormData({ ...formData, function: value as PastorFunction })}
-                  placeholder="Select function"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact_number">Contact Number</Label>
-                <Input
-                  id="contact_number"
-                  type="tel"
-                  value={formData.contact_number}
-                  onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
-                  placeholder="+233 123 456 789"
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="church">Campus</Label>
               {loadingChurches ? (
@@ -786,18 +764,29 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 />
               </div>
 
-              {pastor && (
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <SearchableSelect
-                    options={statuses.map((s) => ({ value: s, label: s }))}
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
-                    placeholder="Select status"
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="contact_number">Contact Number</Label>
+                <Input
+                  id="contact_number"
+                  type="tel"
+                  value={formData.contact_number}
+                  onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
+                  placeholder="+233 123 456 789"
+                />
+              </div>
             </div>
+
+            {pastor && (
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <SearchableSelect
+                  options={statuses.map((s) => ({ value: s, label: s }))}
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value as Status })}
+                  placeholder="Select status"
+                />
+              </div>
+            )}
 
             <ImageUpload
               label="Profile Image"

@@ -193,7 +193,7 @@ export default function ClergyDetailsPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto">
         <div className="flex justify-between items-center mb-2">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />

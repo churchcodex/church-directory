@@ -12,6 +12,8 @@ import Link from "next/link";
 interface DashboardStats {
   totalChurches: number;
   totalClergy: number;
+  totalBishops: number;
+  totalMothers: number;
   totalSisters: number;
   totalReverends: number;
   totalGovernors: number;
@@ -27,6 +29,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalChurches: 0,
     totalClergy: 0,
+    totalBishops: 0,
+    totalMothers: 0,
     totalSisters: 0,
     totalReverends: 0,
     totalGovernors: 0,
@@ -55,6 +59,16 @@ export default function Dashboard() {
         const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
 
         // Count clergy by type
+        const totalBishops = clergy.filter((p) => {
+          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+          return types.includes("Bishop");
+        }).length;
+
+        const totalMothers = clergy.filter((p) => {
+          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+          return types.includes("Mother");
+        }).length;
+
         const totalSisters = clergy.filter((p) => {
           const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
           return types.includes("Sister");
@@ -73,6 +87,8 @@ export default function Dashboard() {
         setStats({
           totalChurches: churches.length,
           totalClergy: clergy.length,
+          totalBishops,
+          totalMothers,
           totalSisters,
           totalReverends,
           totalGovernors,
@@ -121,6 +137,20 @@ export default function Dashboard() {
       icon: Users,
       gradient: "from-blue-500 to-blue-700",
       href: "/clergy",
+    },
+    {
+      title: "Total Bishops",
+      value: formatNumber(stats.totalBishops),
+      icon: Users,
+      gradient: "from-violet-500 to-violet-700",
+      href: "/clergy?clergyType=Bishop",
+    },
+    {
+      title: "Total Mothers",
+      value: formatNumber(stats.totalMothers),
+      icon: Users,
+      gradient: "from-rose-500 to-rose-700",
+      href: "/clergy?clergyType=Mother",
     },
     {
       title: "Total Sisters",
