@@ -26,8 +26,16 @@ import {
 
 export default function NavBar() {
   const { title } = usePageTitle();
-  const { searchQuery, setSearchQuery, filterButton, addButton, searchPlaceholder, resultsCount, totalCount, activeFilters } =
-    usePageActions();
+  const {
+    searchQuery,
+    setSearchQuery,
+    filterButton,
+    addButton,
+    searchPlaceholder,
+    resultsCount,
+    totalCount,
+    activeFilters,
+  } = usePageActions();
   const [isOpen, setIsOpen] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { data: session } = useSession();
@@ -70,18 +78,18 @@ export default function NavBar() {
               </h1>
               {hasActiveFiltersOrSearch && resultsCount !== null && totalCount !== null && (
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-sm">
+                  <Badge variant="secondary" className="text-base px-3 py-1">
                     {resultsCount} of {totalCount}
                   </Badge>
                   {activeFilters.length > 0 && (
                     <div className="flex items-center gap-1 flex-wrap max-w-md">
                       {activeFilters.slice(0, 3).map((filter, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge key={index} variant="outline" className="text-sm px-2.5 py-0.5">
                           {filter}
                         </Badge>
                       ))}
                       {activeFilters.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-sm px-2.5 py-0.5">
                           +{activeFilters.length - 3} more
                         </Badge>
                       )}

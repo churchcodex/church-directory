@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import Image from "next/image";
 
 function LoginForm() {
   const router = useRouter();
@@ -59,11 +60,15 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      <Image src="/background-image.webp" alt="Background" fill className="object-cover" priority />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your credentials to access the church directory</CardDescription>
+          <CardDescription className="text-white">
+            Enter your credentials to access the church directory
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {showTimeoutMessage && (
@@ -110,8 +115,10 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-          <Card className="w-full max-w-md">
+        <div className="min-h-screen flex items-center justify-center px-4 relative">
+          <Image src="/background-image.webp" alt="Background" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <Card className="w-full max-w-md relative z-10 bg-background/80 backdrop-blur-md border-white/20">
             <CardHeader>
               <CardTitle className="text-2xl">Login</CardTitle>
               <CardDescription>Enter your credentials to access the church directory</CardDescription>

@@ -24,6 +24,7 @@ import {
   MapPin,
   Sparkles,
   ImageIcon,
+  Download,
 } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
@@ -213,7 +214,7 @@ export default function ClergyDetailsPage() {
 
         <Card className="overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/3">
+            <div className="md:w-3/7">
               <div className="relative h-96 md:h-full w-full">
                 {pastor.profile_image ? (
                   <Image
@@ -235,7 +236,7 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-4 md:w-2/3">
+            <div className="p-4 md:w-4/7">
               <div className="mb-6 flex flex-col items-center text-center">
                 <h1 className="text-2xl lg:text-5xl font-bold text-center mb-2 ">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
@@ -251,7 +252,7 @@ export default function ClergyDetailsPage() {
                 })()}
               </div>
 
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-2 max-w-md mx-auto">
                 <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
                   <span className="text-sm font-semibold">{calculateAge(pastor.date_of_birth || "")} years</span>
                 </div>
