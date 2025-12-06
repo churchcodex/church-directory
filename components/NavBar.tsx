@@ -76,11 +76,17 @@ export default function NavBar() {
               >
                 {title}
               </h1>
-              {hasActiveFiltersOrSearch && resultsCount !== null && totalCount !== null && (
+              {resultsCount !== null && totalCount !== null && (
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-base px-3 py-1">
-                    {resultsCount} of {totalCount}
-                  </Badge>
+                  {hasActiveFiltersOrSearch ? (
+                    <Badge variant="secondary" className="text-base px-2 py-1">
+                      {resultsCount} of {totalCount}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-sm lg:text-base px-2 lg:px-3 py-0.5 lg:py-1">
+                      {totalCount}
+                    </Badge>
+                  )}
                   {activeFilters.length > 0 && (
                     <div className="flex items-center gap-1 flex-wrap max-w-md">
                       {activeFilters.slice(0, 3).map((filter, index) => (
@@ -209,10 +215,10 @@ export default function NavBar() {
               >
                 {title}
               </h1>
-              {hasActiveFiltersOrSearch && resultsCount !== null && totalCount !== null && (
+              {resultsCount !== null && totalCount !== null && (
                 <div className="flex items-center gap-1">
                   <Badge variant="secondary" className="text-xs shrink-0">
-                    {resultsCount}/{totalCount}
+                    {hasActiveFiltersOrSearch ? `${resultsCount}/${totalCount}` : totalCount}
                   </Badge>
                   {activeFilters.length > 0 && (
                     <Badge variant="outline" className="text-xs shrink-0">

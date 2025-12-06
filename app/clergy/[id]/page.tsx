@@ -194,7 +194,7 @@ export default function ClergyDetailsPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto">
+      <div className="mx-auto max-w-[1600px]">
         <div className="flex justify-between items-center mb-2">
           <Button variant="ghost" onClick={() => router.push("/clergy")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -213,9 +213,9 @@ export default function ClergyDetailsPage() {
         </div>
 
         <Card className="overflow-hidden">
-          <div className="md:flex">
-            <div className="md:w-3/7">
-              <div className="relative h-96 md:h-full w-full">
+          <div className="lg:grid lg:grid-cols-2 lg:min-h-screen">
+            <div className="lg:p-8">
+              <div className="relative h-96 lg:h-full w-full">
                 {pastor.profile_image ? (
                   <Image
                     src={pastor.profile_image}
@@ -236,7 +236,7 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-4 md:w-4/7">
+            <div className="p-4 lg:p-8 lg:overflow-y-auto lg:flex lg:flex-col lg:justify-center">
               <div className="mb-6 flex flex-col items-center text-center">
                 <h1 className="text-2xl lg:text-5xl font-bold text-center mb-2 ">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
@@ -252,53 +252,57 @@ export default function ClergyDetailsPage() {
                 })()}
               </div>
 
-              <div className="grid grid-cols-1 gap-2 max-w-md mx-auto">
-                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                  <span className="text-sm font-semibold">{calculateAge(pastor.date_of_birth || "")} years</span>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4 mx-auto">
+                <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                  <span className="text-sm lg:text-lg font-semibold">
+                    {calculateAge(pastor.date_of_birth || "")} years
+                  </span>
                 </div>
 
                 {pastor.date_of_appointment && (
-                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                    <span className="text-sm font-semibold">{formatDate(pastor.date_of_appointment)}</span>
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                    <span className="text-sm lg:text-lg font-semibold">{formatDate(pastor.date_of_appointment)}</span>
                   </div>
                 )}
 
-                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                  <span className="text-sm font-semibold">{pastor.gender}</span>
+                <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                  <span className="text-sm lg:text-lg font-semibold">{pastor.gender}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                  <span className="text-sm font-semibold">{pastor.marital_status}</span>
+                <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                  <span className="text-sm lg:text-lg font-semibold">{pastor.marital_status}</span>
                 </div>
 
-                <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                  <span className="text-sm font-semibold">{pastor.occupation}</span>
-                </div>
+                {pastor.occupation && (
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                    <span className="text-sm lg:text-lg font-semibold">{pastor.occupation}</span>
+                  </div>
+                )}
 
                 {pastor.council && pastor.council !== "None" && pastor.council !== "N/A" && (
-                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                    <span className="text-sm font-semibold">{pastor.council} Council</span>
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                    <span className="text-sm lg:text-lg font-semibold">{pastor.council} Council</span>
                   </div>
                 )}
-                <div className="flex flex-col items-center justify-between p-2 bg-muted rounded-lg">
-                  <span className="flex items-center text-xs mb-2">
-                    <Church className="mr-2 h-4 w-4" />
+                <div className="flex flex-col items-center justify-between p-2 lg:p-4 bg-muted rounded-lg">
+                  <span className="flex items-center text-xs lg:text-sm mb-2">
+                    <Church className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
                     Campus
                   </span>
-                  <span className="text-sm font-semibold">{churchName}</span>
+                  <span className="text-sm lg:text-lg font-semibold">{churchName}</span>
                 </div>
 
                 {pastor.area && pastor.area !== "None" && (
-                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                    <span className="text-sm font-semibold">{pastor.area}</span>
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                    <span className="text-sm lg:text-lg font-semibold">{pastor.area}</span>
                   </div>
                 )}
 
                 {pastor.email && (
-                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
                     <a
                       href={`mailto:${pastor.email}`}
-                      className="text-sm font-semibold text-primary hover:underline cursor-pointer truncate"
+                      className="text-sm lg:text-lg font-semibold text-primary hover:underline cursor-pointer truncate"
                     >
                       {pastor.email}
                     </a>
@@ -306,10 +310,10 @@ export default function ClergyDetailsPage() {
                 )}
 
                 {pastor.contact_number && (
-                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
                     <a
                       href={`tel:${pastor.contact_number}`}
-                      className="text-sm font-semibold text-primary hover:underline cursor-pointer"
+                      className="text-sm lg:text-lg font-semibold text-primary hover:underline cursor-pointer"
                     >
                       {pastor.contact_number}
                     </a>
@@ -317,8 +321,8 @@ export default function ClergyDetailsPage() {
                 )}
 
                 {pastor.function && pastor.function !== "N/A" && (
-                  <div className="flex items-center justify-center p-2 bg-muted rounded-lg">
-                    <span className="text-sm font-semibold">{pastor.function}</span>
+                  <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
+                    <span className="text-sm lg:text-lg font-semibold">{pastor.function}</span>
                   </div>
                 )}
               </div>

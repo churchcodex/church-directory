@@ -84,9 +84,14 @@ export default function Dashboard() {
           return types.includes("Governor");
         }).length;
 
+        const totalPastors = clergy.filter((p) => {
+          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+          return types.includes("Pastor");
+        }).length;
+
         setStats({
           totalChurches: churches.length,
-          totalClergy: clergy.length,
+          totalClergy: totalPastors,
           totalBishops,
           totalMothers,
           totalSisters,
@@ -136,7 +141,7 @@ export default function Dashboard() {
       value: formatNumber(stats.totalClergy),
       icon: Users,
       gradient: "from-blue-500 to-blue-700",
-      href: "/clergy",
+      href: "/clergy?clergyType=Pastor",
     },
     {
       title: "Total Bishops",

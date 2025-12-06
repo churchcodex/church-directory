@@ -8,12 +8,12 @@ interface PageTitleContextType {
 }
 
 const PageTitleContext = createContext<PageTitleContextType>({
-  title: "Church Directory",
+  title: "Directory",
   setTitle: () => {},
 });
 
 export function PageTitleProvider({ children }: { children: ReactNode }) {
-  const [title, setTitle] = useState("Church Directory");
+  const [title, setTitle] = useState(" Directory");
 
   return <PageTitleContext.Provider value={{ title, setTitle }}>{children}</PageTitleContext.Provider>;
 }
