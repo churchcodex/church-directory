@@ -25,6 +25,8 @@ import {
   Sparkles,
   ImageIcon,
   Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
@@ -36,6 +38,8 @@ export default function ClergyDetailsPage() {
   const [pastor, setPastor] = useState<Pastor | null>(null);
   const [churchName, setChurchName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [allPastors, setAllPastors] = useState<Pastor[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const { setTitle } = usePageTitle();
 
   useEffect(() => {
@@ -45,10 +49,31 @@ export default function ClergyDetailsPage() {
     // Clear page title for detail page
     setTitle("");
 
+    // Fetch all pastors for navigation
+    fetchAllPastors();
+
     if (params.id) {
       fetchPastor(params.id as string);
     }
   }, [params.id, setTitle]);
+
+  const fetchAllPastors = async () => {
+    try {
+      const response = await fetch("/api/pastors");
+      const data = await response.json();
+      if (data.success) {
+        // Sort pastors alphabetically by first name, then last name (same as list page)
+        const sortedPastors = data.data.sort((a: Pastor, b: Pastor) => {
+          const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+          const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        setAllPastors(sortedPastors);
+      }
+    } catch (error) {
+      console.error("Failed to fetch pastors:", error);
+    }
+  };
 
   const fetchPastor = async (id: string) => {
     try {
@@ -82,6 +107,32 @@ export default function ClergyDetailsPage() {
       setChurchName("Unknown Church");
     }
   };
+
+  // Update current index when pastor or allPastors changes
+  useEffect(() => {
+    if (pastor && allPastors.length > 0) {
+      const index = allPastors.findIndex((p) => p.id === pastor.id);
+      setCurrentIndex(index);
+    }
+  }, [pastor, allPastors]);
+
+  // Navigation functions
+  const goToPrevious = () => {
+    if (currentIndex > 0) {
+      const previousPastor = allPastors[currentIndex - 1];
+      router.push(`/clergy/${previousPastor.id}`);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentIndex < allPastors.length - 1) {
+      const nextPastor = allPastors[currentIndex + 1];
+      router.push(`/clergy/${nextPastor.id}`);
+    }
+  };
+
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex < allPastors.length - 1 && currentIndex !== -1;
 
   if (loading) {
     return (
@@ -196,10 +247,34 @@ export default function ClergyDetailsPage() {
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1600px]">
         <div className="flex justify-between items-center mb-2">
-          <Button variant="ghost" onClick={() => router.push("/clergy")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            <p className="hidden md:block">Back</p>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => router.push("/clergy")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              <p className="hidden md:block">Back</p>
+            </Button>
+            <div className="flex items-center gap-1 border rounded-md">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToPrevious}
+                disabled={!hasPrevious}
+                className="rounded-r-none"
+                title="Previous pastor"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToNext}
+                disabled={!hasNext}
+                className="rounded-l-none"
+                title="Next pastor"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           {pastor && (
             <div className="flex gap-2">
               <PastorFormDialog pastor={pastor} onSuccess={() => fetchPastor(params.id as string)} />
