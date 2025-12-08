@@ -213,7 +213,7 @@ export default function ClergyDetailsPage() {
         </div>
 
         <Card className="overflow-hidden">
-          <div className="lg:grid lg:grid-cols-2 lg:min-h-screen">
+          <div className="lg:grid lg:grid-cols-3 lg:min-h-screen">
             <div className="lg:p-8">
               <div className="relative h-96 lg:h-full w-full">
                 {pastor.profile_image ? (
@@ -236,7 +236,7 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-4 lg:p-8 lg:overflow-y-auto lg:flex lg:flex-col lg:justify-center">
+            <div className="p-4 lg:p-12 lg:col-span-2 lg:overflow-y-auto lg:flex lg:flex-col ">
               <div className="mb-6 flex flex-col items-center text-center">
                 <h1 className="text-2xl lg:text-5xl font-bold text-center mb-2 ">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
@@ -252,7 +252,7 @@ export default function ClergyDetailsPage() {
                 })()}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4 mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-6 w-full">
                 <div className="flex items-center justify-center p-2 lg:p-4 bg-muted rounded-lg">
                   <span className="text-sm lg:text-lg font-semibold">
                     {calculateAge(pastor.date_of_birth || "")} years
