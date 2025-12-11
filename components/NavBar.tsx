@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,10 +40,12 @@ export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { data: session } = useSession();
+  const pathname = usePathname();
 
   const showActions = searchPlaceholder !== "";
   const isAdmin = (session?.user as any)?.role === "admin";
   const hasActiveFiltersOrSearch = (searchQuery || resultsCount !== null) && resultsCount !== totalCount;
+  const isAdminRoute = pathname?.startsWith("/admin");
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
@@ -59,7 +62,7 @@ export default function NavBar() {
             </Link>
           </div>
 
-          {title && (
+          {title && !isAdminRoute && (
             <div
               className={
                 title === "First Love Church"
@@ -166,32 +169,28 @@ export default function NavBar() {
                       Admin
                     </Link>
                   )}
-                  {session && (
-                    <>
-                      <div className="h-px bg-border my-1" />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="flex items-center gap-2 px-3 py-2 justify-start h-auto font-medium"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            Logout
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                            <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </>
-                  )}
+                  <div className="h-px bg-border my-1" />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="flex items-center gap-2 px-3 py-2 justify-start h-auto font-medium"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                        <AlertDialogDescription>You will be redirected to the login page.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </PopoverContent>
             </Popover>
@@ -204,7 +203,7 @@ export default function NavBar() {
             <Image src="/FL-Logo.webp" alt="Church Directory Logo" width={80} height={80} />
           </Link>
 
-          {title && (
+          {title && !isAdminRoute && (
             <div className="flex items-center gap-2">
               <h1
                 className={`text-xl md:text-3xl font-bold ${

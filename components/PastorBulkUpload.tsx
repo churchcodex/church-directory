@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +31,29 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fieldOptions, setFieldOptions] = useState<any>(null);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      fetchFieldOptions();
+    }
+  }, [open]);
+
+  const fetchFieldOptions = async () => {
+    try {
+      setLoadingOptions(true);
+      const response = await fetch("/api/pastor-fields");
+      const data = await response.json();
+      if (response.ok && data.data) {
+        setFieldOptions(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch field options:", error);
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
 
   const downloadTemplate = () => {
     // Create a sample Excel template with column headers
@@ -59,232 +82,67 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const worksheet = XLSX.utils.json_to_sheet(templateData);
     const workbook = XLSX.utils.book_new();
 
-    // Create reference sheet for council options (all options in one place)
-    const councilData = [
-      { "Council Options - Original Councils": "Philippians" },
-      { "Council Options - Original Councils": "Galatians" },
-      { "Council Options - Original Councils": "Colossians" },
-      { "Council Options - Original Councils": "2 Corinthians" },
-      { "Council Options - Original Councils": "Anagkazo" },
-      { "Council Options - Original Councils": "Ephesians" },
-      { "Council Options - Original Councils": "Signs and Wonders HGE" },
-      { "Council Options - Original Councils": "None" },
+    // Create reference sheet for council options (using dynamic data from API)
+    const councils = fieldOptions?.councils?.options || [
+      "Philippians",
+      "Galatians",
+      "Colossians",
+      "2 Corinthians",
+      "Anagkazo",
+      "Ephesians",
+      "Signs and Wonders HGE",
+      "None",
     ];
+    const councilData = councils.map((council: string) => ({ "Council Options": council }));
 
-    const ministryOptions = [
-      { "Council Options - Ministries": "Greater Love Club" },
-      { "Council Options - Ministries": "GLGC" },
-      { "Council Options - Ministries": "Film Stars" },
-      { "Council Options - Ministries": "Dancing Stars" },
-      { "Council Options - Ministries": "Praise and Worship" },
-    ];
-
-    const glgcGroupOptions = [
-      { "Council Options - GLGC Groups": "Many Are Called" },
-      { "Council Options - GLGC Groups": "Love is Large" },
-      { "Council Options - GLGC Groups": "Peace and Love" },
-      { "Council Options - GLGC Groups": "True Love" },
-      { "Council Options - GLGC Groups": "Love Never Fails" },
-      { "Council Options - GLGC Groups": "Abundant Love" },
-      { "Council Options - GLGC Groups": "Steadfast Love" },
-      { "Council Options - GLGC Groups": "Perfect Love" },
-      { "Council Options - GLGC Groups": "Unfeigned Love" },
-      { "Council Options - GLGC Groups": "Love Is Patient" },
-      { "Council Options - GLGC Groups": "Everlasting Love" },
-      { "Council Options - GLGC Groups": "God So Loved" },
-    ];
-
-    const dancingStarsGroupOptions = [
-      { "Council Options - Dancing Stars Groups": "Eels on wheels" },
-      { "Council Options - Dancing Stars Groups": "Spiders" },
-      { "Council Options - Dancing Stars Groups": "Doves" },
-      { "Council Options - Dancing Stars Groups": "Lizardos" },
-      { "Council Options - Dancing Stars Groups": "Butterflies" },
-      { "Council Options - Dancing Stars Groups": "Kangaroos" },
-      { "Council Options - Dancing Stars Groups": "Impalas" },
-      { "Council Options - Dancing Stars Groups": "Unicorns" },
-      { "Council Options - Dancing Stars Groups": "Gazelles" },
-      { "Council Options - Dancing Stars Groups": "Camels" },
-      { "Council Options - Dancing Stars Groups": "Eagles" },
-      { "Council Options - Dancing Stars Groups": "Lions" },
-      { "Council Options - Dancing Stars Groups": "Dolphins" },
-    ];
-
-    const filmStarsGroupOptions = [
-      { "Council Options - Film Stars Groups": "Actors Ministry" },
-      { "Council Options - Film Stars Groups": "Props Ministry" },
-      { "Council Options - Film Stars Groups": "Costume ministry" },
-      { "Council Options - Film Stars Groups": "Make up" },
-      { "Council Options - Film Stars Groups": "Protocol" },
-      { "Council Options - Film Stars Groups": "Script writers" },
-      { "Council Options - Film Stars Groups": "Social media" },
-      { "Council Options - Film Stars Groups": "Technical" },
-      { "Council Options - Film Stars Groups": "Love theatre company" },
-    ];
-
-    const praiseWorshipGroupOptions = [
-      { "Council Options - Praise & Worship Groups": "Praise Stars" },
-      { "Council Options - Praise & Worship Groups": "Worship Stars" },
-    ];
-
-    const basontaOptions = [
-      "Backstage Hostesses",
-      "Backstage Hosts",
-      "Engedi Food Team",
-      "Mood Changing Food Team",
-      "Marriage Counseling",
-      "Sheep seeking September",
-      "Sheep seeking October",
-      "Sheep seeking November",
-      "Sheep seeking December",
-      "Sheep seeking January",
-      "Sheep seeking February",
-      "Sheep seeking March",
-      "Sheep seeking April",
-      "Sheep seeking May",
-      "Sheep seeking June",
-      "Sheep seeking July",
-      "Sheep seeking August",
-      "School of Solid Foundation",
-      "School of Victorious Living",
-      "School of Evangelism",
-      "School of the Word",
-      "School of Apologetics",
-      "Addictions and substance abuse Counsellors",
-      "Grief and Trauma Counsellors",
-      "Relationship and love related issues Counsellors",
-      "Career and financial management Counsellors",
-      "Business Community",
-      "Music mixers",
-      "Salvation corner ushers",
-      "Podcast corner ushers",
-      "Balcony ushers",
-      "Left wing ushers",
-      "Right wing ushers",
-      "Middle ground ushers",
-      "Photography Team",
-      "Vox Team",
-      "Video Clip Cutters Team",
-      "YouTube & Graphics Team",
-      "X Team",
-      "TikTok & Snapchat Team",
-      "Videography team",
-      "Meta Team",
-      "FLOC Production and editing Team",
-      "Clap nighters",
-      "Sunday intercessors",
-      "Soul winning intercessors",
-      "Testimony Maestros",
-      "Mood changing Campus control",
-      "External Campus control",
-      "Cross Car Park Campus control",
-      "Office block Car Park Campus control",
-      "Revival street Campus control",
-      "Lord's Tower- Praise and Worship",
-      "Lord's Tower- Preaching and solo team",
-      "Lord's Tower- Film stars",
-      "Lord's Tower- Choir",
-      "Lord's Tower- Dance",
-      "Choir Telepastors",
-      "Dancing stars Telepastors",
-      "Film stars Telepastors",
-      "Basonta Telepastors",
-      "Philippians Telepastors",
-      "Galatians Telepastors",
-      "Ephesians Telepastors",
-      "Anagkazo Telepastors",
-      "Hostesses of the Offices",
-      "Hostesses of the First timers",
-      "Hostesses of the Greater lovers & Special Visitors",
-      "Balcony Security",
-      "Stage Security",
-      "Ground Security",
-      "I - church",
-      "J - Church",
-      "K - Church",
-      "B - Church",
-      "Y - Church",
-      "Lovelets Check in",
-      "Smiles on arrival airport stars",
-      "First Offering airport stars",
-      "Second offering airport stars",
-      "Bus welcomers airport stars",
-      "Car welcomers airport stars",
-      "Car confirmers",
-      "Bus confirmers",
-      "Payments",
-      "Treasurers",
-      "Fragrance",
-      "Governors lounge",
-      "The Lord's garden",
-      "HGE Telepastors",
-      "HGE Understanding campaign",
-      "HGE Sheep seeking",
-      "HGE Airport Stars",
-      "HGE Intimate counseling",
-      "HGE Lord's tower",
-      "HGE Ushers",
-      "HGE Hostesses",
-      "HGE Hearing and seeing",
-    ];
-
-    // Convert all options to sheet format
+    // Convert council options to sheet format
     const councilSheet = XLSX.utils.json_to_sheet(councilData);
-    const ministrySheet = XLSX.utils.json_to_sheet(ministryOptions);
-    const glgcGroupSheet = XLSX.utils.json_to_sheet(glgcGroupOptions);
-    const dancingStarsGroupSheet = XLSX.utils.json_to_sheet(dancingStarsGroupOptions);
-    const filmStarsGroupSheet = XLSX.utils.json_to_sheet(filmStarsGroupOptions);
-    const praiseWorshipGroupSheet = XLSX.utils.json_to_sheet(praiseWorshipGroupOptions);
-    const basontaData = basontaOptions.map((b) => ({ "Council Options - Basonta": b }));
-    const basontaSheet = XLSX.utils.json_to_sheet(basontaData);
 
-    // Create reference sheets for other fields
-    const areasData = [
-      { Area: "HGE Area 1" },
-      { Area: "HGE Area 2" },
-      { Area: "HGE Area 3" },
-      { Area: "HGE Area 4" },
-      { Area: "Experience Area 1" },
-      { Area: "Experience Area 2" },
-      { Area: "Experience Area 3" },
-      { Area: "Experience Area 4" },
-      { Area: "None" },
+    // Create reference sheets for other fields using dynamic data
+    const areas = fieldOptions?.areas?.options || [
+      "HGE Area 1",
+      "HGE Area 2",
+      "HGE Area 3",
+      "HGE Area 4",
+      "Experience Area 1",
+      "Experience Area 2",
+      "Experience Area 3",
+      "Experience Area 4",
+      "None",
     ];
+    const areasData = areas.map((area: string) => ({ Area: area }));
     const areasSheet = XLSX.utils.json_to_sheet(areasData);
 
-    const clergyTypesData = [
-      { "Clergy Type": "Bishop", Description: "Can be combined with Governor (max 2 titles)" },
-      { "Clergy Type": "Mother", Description: "Can be combined with Governor (max 2 titles)" },
-      { "Clergy Type": "Sister", Description: "Can be combined with Governor (max 2 titles)" },
-      { "Clergy Type": "Reverend", Description: "Can be combined with Governor (max 2 titles)" },
-      { "Clergy Type": "Pastor", Description: "Can be combined with Governor (max 2 titles)" },
-      { "Clergy Type": "Governor", Description: "Can be combined with any other title" },
+    const clergyTypes = fieldOptions?.clergyTypes?.options || [
+      "Bishop",
+      "Mother",
+      "Sister",
+      "Reverend",
+      "Pastor",
+      "Governor",
     ];
+    const clergyTypesData = clergyTypes.map((type: string) => ({
+      "Clergy Type": type,
+      Description:
+        type === "Governor" ? "Can be combined with any other title" : "Can be combined with Governor (max 2 titles)",
+    }));
     const clergyTypesSheet = XLSX.utils.json_to_sheet(clergyTypesData);
 
-    const maritalStatusData = [
-      { "Marital Status": "Single" },
-      { "Marital Status": "Married" },
-      { "Marital Status": "Divorced" },
-      { "Marital Status": "Widowed" },
-    ];
+    const maritalStatuses = fieldOptions?.maritalStatuses?.options || ["Single", "Married", "Divorced", "Widowed"];
+    const maritalStatusData = maritalStatuses.map((status: string) => ({ "Marital Status": status }));
     const maritalStatusSheet = XLSX.utils.json_to_sheet(maritalStatusData);
 
-    const genderData = [{ Gender: "Male" }, { Gender: "Female" }];
+    const genders = fieldOptions?.genders?.options || ["Male", "Female"];
+    const genderData = genders.map((gender: string) => ({ Gender: gender }));
     const genderSheet = XLSX.utils.json_to_sheet(genderData);
 
-    const functionData = [{ Function: "Governor" }, { Function: "Overseer" }, { Function: "N/A" }];
+    const functions = fieldOptions?.pastorFunctions?.options || ["Governor", "Overseer", "N/A"];
+    const functionData = functions.map((func: string) => ({ Function: func }));
     const functionSheet = XLSX.utils.json_to_sheet(functionData);
 
     // Append all sheets to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pastors");
-    XLSX.utils.book_append_sheet(workbook, councilSheet, "Council-Original");
-    XLSX.utils.book_append_sheet(workbook, ministrySheet, "Council-Ministries");
-    XLSX.utils.book_append_sheet(workbook, glgcGroupSheet, "Council-GLGC");
-    XLSX.utils.book_append_sheet(workbook, dancingStarsGroupSheet, "Council-DancingStars");
-    XLSX.utils.book_append_sheet(workbook, filmStarsGroupSheet, "Council-FilmStars");
-    XLSX.utils.book_append_sheet(workbook, praiseWorshipGroupSheet, "Council-PraiseWorship");
-    XLSX.utils.book_append_sheet(workbook, basontaSheet, "Council-Basonta");
+    XLSX.utils.book_append_sheet(workbook, councilSheet, "Councils");
     XLSX.utils.book_append_sheet(workbook, areasSheet, "Areas");
     XLSX.utils.book_append_sheet(workbook, clergyTypesSheet, "Titles");
     XLSX.utils.book_append_sheet(workbook, maritalStatusSheet, "Marital Status");
@@ -313,13 +171,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     ];
 
     // Set column widths for reference sheets
-    councilSheet["!cols"] = [{ wch: 40 }];
-    ministrySheet["!cols"] = [{ wch: 40 }];
-    glgcGroupSheet["!cols"] = [{ wch: 40 }];
-    dancingStarsGroupSheet["!cols"] = [{ wch: 40 }];
-    filmStarsGroupSheet["!cols"] = [{ wch: 40 }];
-    praiseWorshipGroupSheet["!cols"] = [{ wch: 40 }];
-    basontaSheet["!cols"] = [{ wch: 50 }];
+    councilSheet["!cols"] = [{ wch: 50 }];
     areasSheet["!cols"] = [{ wch: 25 }];
     clergyTypesSheet["!cols"] = [{ wch: 20 }, { wch: 50 }];
     maritalStatusSheet["!cols"] = [{ wch: 20 }];
@@ -328,9 +180,6 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
 
     // Add data validations for dropdowns
     if (!worksheet["!dataValidation"]) worksheet["!dataValidation"] = [];
-
-    // Clergy Type - Note: This shows all options, user can type comma-separated values
-    const clergyTypes = "Bishop,Mother,Sister,Reverend,Pastor,Governor";
 
     // Marital Status dropdown (column G, row 2 onwards)
     worksheet["!dataValidation"].push({
@@ -484,8 +333,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
                 </li>
                 <li>For Title, separate multiple types with commas (e.g., "Pastor,Governor")</li>
                 <li>
-                  <strong>Ministry Group:</strong> Check the "Ministry Groups Reference" sheet to see which groups
-                  belong to each ministry
+                  <strong>Council:</strong> Check the "Councils" sheet for all available council options
                 </li>
                 <li>
                   <strong>Occupation:</strong> You can type any occupation - not limited to dropdown options

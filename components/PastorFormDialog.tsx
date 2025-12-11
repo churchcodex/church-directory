@@ -38,8 +38,9 @@ interface PastorFormDialogProps {
   onSuccess?: () => void;
 }
 
-const clergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
-const areas: Area[] = [
+// Default values - will be replaced by API data
+const defaultClergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
+const defaultAreas: Area[] = [
   "HGE Area 1",
   "HGE Area 2",
   "HGE Area 3",
@@ -50,9 +51,9 @@ const areas: Area[] = [
   "Experience Area 4",
   "None",
 ];
-const statuses: Status[] = ["Active", "Inactive"];
-const pastorFunctions: PastorFunction[] = ["Governor", "Overseer", "N/A"];
-const occupations: Occupation[] = [
+const defaultStatuses: Status[] = ["Active", "Inactive"];
+const defaultPastorFunctions: PastorFunction[] = ["Governor", "Overseer", "N/A"];
+const defaultOccupations: Occupation[] = [
   "Full Time Pastor",
   "Medical Doctor",
   "Lawyer",
@@ -63,7 +64,7 @@ const occupations: Occupation[] = [
   "Other",
 ];
 
-const councils: Council[] = [
+const defaultCouncils: Council[] = [
   "Philippians",
   "Galatians",
   "Colossians",
@@ -214,8 +215,8 @@ const councils: Council[] = [
   "None",
 ];
 
-const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
-const genders: Gender[] = ["Male", "Female"];
+const defaultMaritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
+const defaultGenders: Gender[] = ["Male", "Female"];
 
 export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialogProps) {
   const router = useRouter();
@@ -248,21 +249,33 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     function: pastor?.function || "N/A",
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
-    pastor?.occupation && occupations.includes(pastor.occupation as Occupation)
+    pastor?.occupation && defaultOccupations.includes(pastor.occupation as Occupation)
       ? (pastor.occupation as Occupation)
       : pastor?.occupation
       ? "Other"
       : "Medical Doctor"
   );
   const [customOccupation, setCustomOccupation] = useState(
-    pastor?.occupation && !occupations.includes(pastor.occupation as Occupation) ? pastor.occupation : ""
+    pastor?.occupation && !defaultOccupations.includes(pastor.occupation as Occupation) ? pastor.occupation : ""
   );
 
-  // Fetch churches when dialog opens
+  // Dynamic field options state
+  const [clergyTypes, setClergyTypes] = useState<string[]>(defaultClergyTypes);
+  const [areas, setAreas] = useState<string[]>(defaultAreas);
+  const [councils, setCouncils] = useState<string[]>(defaultCouncils);
+  const [statuses, setStatuses] = useState<string[]>(defaultStatuses);
+  const [pastorFunctions, setPastorFunctions] = useState<string[]>(defaultPastorFunctions);
+  const [occupations, setOccupations] = useState<string[]>(defaultOccupations);
+  const [maritalStatuses, setMaritalStatuses] = useState<string[]>(defaultMaritalStatuses);
+  const [genders, setGenders] = useState<string[]>(defaultGenders);
+  const [loadingFieldOptions, setLoadingFieldOptions] = useState(true);
+
+  // Fetch churches and field options when dialog opens
   useEffect(() => {
     if (open) {
       fetchChurches();
       fetchCountries();
+      fetchFieldOptions();
     }
   }, [open]);
 
@@ -319,6 +332,30 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       ]);
     } finally {
       setLoadingCountries(false);
+    }
+  };
+
+  const fetchFieldOptions = async () => {
+    try {
+      setLoadingFieldOptions(true);
+      const response = await fetch("/api/pastor-fields");
+      const data = await response.json();
+      if (response.ok && data.data) {
+        // Update field options with API data
+        setClergyTypes(data.data.clergyTypes?.options || defaultClergyTypes);
+        setAreas(data.data.areas?.options || defaultAreas);
+        setCouncils(data.data.councils?.options || defaultCouncils);
+        setStatuses(data.data.statuses?.options || defaultStatuses);
+        setPastorFunctions(data.data.pastorFunctions?.options || defaultPastorFunctions);
+        setOccupations(data.data.occupations?.options || defaultOccupations);
+        setMaritalStatuses(data.data.maritalStatuses?.options || defaultMaritalStatuses);
+        setGenders(data.data.genders?.options || defaultGenders);
+      }
+    } catch (error) {
+      console.error("Failed to fetch field options:", error);
+      // Continue with default values
+    } finally {
+      setLoadingFieldOptions(false);
     }
   };
 

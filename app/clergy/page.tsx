@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pastor, ClergyType } from "@/types/entities";
+import { Pastor, ClergyType, Council, Area } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
@@ -48,6 +48,10 @@ function ClergyPageContent() {
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
+  // Dynamic field options from API (using string arrays to allow dynamic values)
+  const [availableClergyTypes, setAvailableClergyTypes] = useState<string[]>([]);
+  const [availableCouncils, setAvailableCouncils] = useState<string[]>([]);
+  const [availableAreas, setAvailableAreas] = useState<string[]>([]);
   const fetchPastors = useCallback(async () => {
     try {
       const response = await fetch("/api/pastors");
@@ -69,15 +73,30 @@ function ClergyPageContent() {
     }
   }, []);
 
+  const fetchFieldOptions = useCallback(async () => {
+    try {
+      const response = await fetch("/api/pastor-fields");
+      const data = await response.json();
+      if (response.ok && data.data) {
+        setAvailableClergyTypes(data.data.clergyTypes?.options || []);
+        setAvailableCouncils(data.data.councils?.options || []);
+        setAvailableAreas(data.data.areas?.options || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch field options:", error);
+    }
+  }, []);
+
   useEffect(() => {
     setTitle("Directory");
     setSearchPlaceholder("Search by name or type...");
     fetchPastors();
+    fetchFieldOptions();
 
     return () => {
       clearActions();
     };
-  }, [setTitle, setSearchPlaceholder, fetchPastors, clearActions]);
+  }, [setTitle, setSearchPlaceholder, fetchPastors, fetchFieldOptions, clearActions]);
 
   // Set total count when no filters are applied to show badge in navbar
   useEffect(() => {
@@ -114,30 +133,33 @@ function ClergyPageContent() {
     }
   }, [searchParams]);
 
-  // Get unique values for filters - memoized to prevent infinite re-renders
-  const clergyTypes = useMemo(
-    () =>
-      Array.from(new Set(pastors.flatMap((p) => p.clergy_type || []))).filter(
-        (type): type is NonNullable<typeof type> => type !== undefined
-      ),
-    [pastors]
-  );
+  // Get unique values for filters - combine API options with actual data
+  const clergyTypes = useMemo(() => {
+    const fromPastors = Array.from(new Set(pastors.flatMap((p) => p.clergy_type || []))).filter(
+      (type): type is NonNullable<typeof type> => type !== undefined
+    );
+    // Merge with API options, prioritizing API
+    const combined = [...new Set([...availableClergyTypes, ...fromPastors])];
+    return combined;
+  }, [pastors, availableClergyTypes]);
 
-  const councils = useMemo(
-    () =>
-      Array.from(new Set(pastors.map((p) => p.council))).filter(
-        (council): council is NonNullable<typeof council> => council !== undefined
-      ),
-    [pastors]
-  );
+  const councils = useMemo(() => {
+    const fromPastors = Array.from(new Set(pastors.map((p) => p.council))).filter(
+      (council): council is NonNullable<typeof council> => council !== undefined
+    );
+    // Merge with API options, prioritizing API
+    const combined = [...new Set([...availableCouncils, ...fromPastors])];
+    return combined;
+  }, [pastors, availableCouncils]);
 
-  const areas = useMemo(
-    () =>
-      Array.from(new Set(pastors.map((p) => p.area)))
-        .filter((area): area is NonNullable<typeof area> => area !== undefined)
-        .sort(),
-    [pastors]
-  );
+  const areas = useMemo(() => {
+    const fromPastors = Array.from(new Set(pastors.map((p) => p.area)))
+      .filter((area): area is NonNullable<typeof area> => area !== undefined)
+      .sort();
+    // Merge with API options, prioritizing API
+    const combined = [...new Set([...availableAreas, ...fromPastors])].sort();
+    return combined;
+  }, [pastors, availableAreas]);
 
   const countries = useMemo(
     () =>

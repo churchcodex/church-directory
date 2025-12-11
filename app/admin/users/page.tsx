@@ -189,6 +189,9 @@ export default function AdminUsersPage() {
           <Button variant="outline" onClick={() => router.push("/admin/inactive-pastors")}>
             View Inactive Pastors
           </Button>
+          <Button variant="outline" onClick={() => router.push("/admin/pastor-fields")}>
+            Manage Pastor Fields
+          </Button>
           <Button onClick={generateInviteToken} disabled={generatingToken}>
             {generatingToken ? "Generating..." : "Generate Invite Link"}
           </Button>
