@@ -188,12 +188,7 @@ const defaultFieldValues: Record<string, string[]> = {
 // GET all field options
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    // Allow public access to GET field options for signup
     await dbConnect();
 
     // Get all field options or return defaults

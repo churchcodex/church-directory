@@ -4,6 +4,7 @@ export interface IUser extends mongoose.Document {
   email: string;
   password: string;
   role: "admin" | "user";
+  council?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -27,6 +28,12 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ["admin", "user"],
       default: "user",
+    },
+    council: {
+      type: String,
+      required: function () {
+        return this.role === "user";
+      },
     },
     isActive: {
       type: Boolean,

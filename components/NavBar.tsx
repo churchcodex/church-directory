@@ -143,14 +143,16 @@ export default function NavBar() {
               </PopoverTrigger>
               <PopoverContent className="w-56" align="end">
                 <div className="flex flex-col gap-1">
-                  <Link
-                    href="/churches"
-                    onClick={() => setIsPopoverOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
-                  >
-                    <Church className="h-4 w-4" />
-                    Campuses
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/churches"
+                      onClick={() => setIsPopoverOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted transition-colors"
+                    >
+                      <Church className="h-4 w-4" />
+                      Campuses
+                    </Link>
+                  )}
                   <Link
                     href="/clergy"
                     onClick={() => setIsPopoverOpen(false)}
@@ -243,14 +245,16 @@ export default function NavBar() {
                 <div className="flex flex-col gap-4 mt-6">
                   {/* Navigation Links */}
                   <div className="flex flex-col gap-2">
-                    <Link
-                      href="/churches"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
-                    >
-                      <Church className="h-5 w-5" />
-                      Campuses
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/churches"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium hover:bg-muted transition-colors m-0"
+                      >
+                        <Church className="h-5 w-5" />
+                        Campuses
+                      </Link>
+                    )}
                     <Link
                       href="/clergy"
                       onClick={() => setIsOpen(false)}

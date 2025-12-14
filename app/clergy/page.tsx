@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Pastor, ClergyType, Council, Area } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
@@ -16,6 +17,7 @@ import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 
 function ClergyPageContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const { setTitle } = usePageTitle();
   const {
@@ -58,11 +60,17 @@ function ClergyPageContent() {
       const data = await response.json();
       if (data.success) {
         // Sort pastors alphabetically by first name, then last name
-        const sortedPastors = data.data.sort((a: Pastor, b: Pastor) => {
+        let sortedPastors = data.data.sort((a: Pastor, b: Pastor) => {
           const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
           const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
           return nameA.localeCompare(nameB);
         });
+
+        // Filter by council if user is not admin
+        if (session?.user?.role === "user" && session?.user?.council) {
+          sortedPastors = sortedPastors.filter((pastor: Pastor) => pastor.council === session.user.council);
+        }
+
         setPastors(sortedPastors);
         setFilteredPastors(sortedPastors);
       }
@@ -71,7 +79,7 @@ function ClergyPageContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session]);
 
   const fetchFieldOptions = useCallback(async () => {
     try {
@@ -212,11 +220,15 @@ function ClergyPageContent() {
             <List className="h-4 w-4" />
           </Button>
         </div>
-        <PastorBulkUpload onSuccess={fetchPastors} />
-        <PastorFormDialog onSuccess={fetchPastors} />
+        {session?.user?.role === "admin" && (
+          <>
+            <PastorBulkUpload onSuccess={fetchPastors} />
+            <PastorFormDialog onSuccess={fetchPastors} />
+          </>
+        )}
       </>
     );
-  }, [setAddButton, viewMode, fetchPastors]);
+  }, [setAddButton, viewMode, fetchPastors, session]);
 
   const applyFilters = useCallback(() => {
     setIsFiltering(true);
@@ -530,8 +542,12 @@ function ClergyPageContent() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-          <PastorBulkUpload onSuccess={fetchPastors} />
-          <PastorFormDialog onSuccess={fetchPastors} />
+          {session?.user?.role === "admin" && (
+            <>
+              <PastorBulkUpload onSuccess={fetchPastors} />
+              <PastorFormDialog onSuccess={fetchPastors} />
+            </>
+          )}
         </div>
       </div>
 

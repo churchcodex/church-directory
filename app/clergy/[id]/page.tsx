@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Pastor } from "@/types/entities";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PastorFormDialog from "@/components/PastorFormDialog";
@@ -13,6 +14,7 @@ import { calculateAge } from "@/lib/utils";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export default function ClergyDetailsPage() {
+  const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
   const [pastor, setPastor] = useState<Pastor | null>(null);
@@ -255,7 +257,7 @@ export default function ClergyDetailsPage() {
               </Button>
             </div>
           </div>
-          {pastor && (
+          {pastor && session?.user?.role === "admin" && (
             <div className="flex gap-2">
               <PastorFormDialog pastor={pastor} onSuccess={() => fetchPastor(params.id as string)} />
               <DeleteButton

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Church } from "@/types/entities";
 import { useParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import Image from "next/image";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 
 export default function ChurchDetailsPage() {
+  const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
   const [church, setChurch] = useState<Church | null>(null);
@@ -125,10 +127,12 @@ export default function ChurchDetailsPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <div className="flex gap-2">
-          <ChurchFormDialog church={church} onSuccess={() => fetchChurch(params.id as string)} />
-          <DeleteButton id={church.id} name={church.name} type="campus" />
-        </div>
+        {session?.user?.role === "admin" && (
+          <div className="flex gap-2">
+            <ChurchFormDialog church={church} onSuccess={() => fetchChurch(params.id as string)} />
+            <DeleteButton id={church.id} name={church.name} type="campus" />
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

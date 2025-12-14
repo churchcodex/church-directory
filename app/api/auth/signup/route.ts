@@ -8,28 +8,17 @@ import { authOptions } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, token } = await request.json();
+    const { email, password, council } = await request.json();
 
-    if (!email || !password || !token) {
-      return NextResponse.json({ error: "Email, password, and invite token are required" }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
+
+    if (!council) {
+      return NextResponse.json({ error: "Council selection is required" }, { status: 400 });
     }
 
     await dbConnect();
-
-    // Verify invite token
-    const inviteToken = await InviteToken.findOne({ token });
-
-    if (!inviteToken) {
-      return NextResponse.json({ error: "Invalid invite token" }, { status: 400 });
-    }
-
-    if (inviteToken.isUsed) {
-      return NextResponse.json({ error: "This invite token has already been used" }, { status: 400 });
-    }
-
-    if (new Date() > inviteToken.expiresAt) {
-      return NextResponse.json({ error: "This invite token has expired" }, { status: 400 });
-    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -46,13 +35,9 @@ export async function POST(request: NextRequest) {
       email,
       password: hashedPassword,
       role: "user",
+      council,
       isActive: true,
     });
-
-    // Mark token as used
-    inviteToken.isUsed = true;
-    inviteToken.usedBy = user._id;
-    await inviteToken.save();
 
     return NextResponse.json(
       {

@@ -51,9 +51,13 @@ export default function Dashboard() {
         const clergyData = await clergyRes.json();
 
         // Extract data from the success response structure
-        const churches: ChurchType[] =
-          churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
-        const clergy: Pastor[] = clergyData.success && Array.isArray(clergyData.data) ? clergyData.data : [];
+        let churches: ChurchType[] = churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
+        let clergy: Pastor[] = clergyData.success && Array.isArray(clergyData.data) ? clergyData.data : [];
+
+        // Filter by council if user is not admin
+        if (session?.user?.role === "user" && session?.user?.council) {
+          clergy = clergy.filter((pastor) => pastor.council === session.user.council);
+        }
 
         const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
         const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
@@ -111,7 +115,7 @@ export default function Dashboard() {
     }
 
     fetchData();
-  }, []);
+  }, [session]);
 
   if (loading) {
     return (
@@ -129,13 +133,17 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    {
-      title: "Total Campuses",
-      value: formatNumber(stats.totalChurches),
-      icon: Church,
-      gradient: "from-purple-500 to-purple-700",
-      href: "/churches",
-    },
+    ...(session?.user?.role === "admin"
+      ? [
+          {
+            title: "Total Campuses",
+            value: formatNumber(stats.totalChurches),
+            icon: Church,
+            gradient: "from-purple-500 to-purple-700",
+            href: "/churches",
+          },
+        ]
+      : []),
     {
       title: "Total Pastors",
       value: formatNumber(stats.totalClergy),
@@ -178,18 +186,22 @@ export default function Dashboard() {
       gradient: "from-emerald-500 to-emerald-700",
       href: "/clergy?clergyType=Governor",
     },
-    {
-      title: "Total Members",
-      value: formatNumber(stats.totalMembers),
-      icon: TrendingUp,
-      gradient: "from-cyan-500 to-cyan-700",
-    },
-    {
-      title: "Total Income",
-      value: formatCurrency(stats.totalIncome),
-      icon: DollarSign,
-      gradient: "from-orange-500 to-orange-700",
-    },
+    ...(session?.user?.role === "admin"
+      ? [
+          {
+            title: "Total Members",
+            value: formatNumber(stats.totalMembers),
+            icon: TrendingUp,
+            gradient: "from-cyan-500 to-cyan-700",
+          },
+          {
+            title: "Total Income",
+            value: formatCurrency(stats.totalIncome),
+            icon: DollarSign,
+            gradient: "from-orange-500 to-orange-700",
+          },
+        ]
+      : []),
   ];
 
   // Format clergy types in the correct order
@@ -240,40 +252,42 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className={`grid gap-6 ${session?.user?.role === "admin" ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
         {/* Recent Campuses */}
-        <Card className="border-muted">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Church className="h-5 w-5 text-purple-500" />
-              Recent Campuses
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.recentChurches.map((church) => (
-                <Link
-                  key={church.id}
-                  href={`/churches/${church.id}`}
-                  className="block p-3 rounded-lg border border-muted hover:border-primary/50 transition-all duration-300 hover:shadow-md hover:shadow-primary/10"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold">{church.name}</h3>
-                      <p className="text-sm text-muted-foreground">{church.location}</p>
+        {session?.user?.role === "admin" && (
+          <Card className="border-muted">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Church className="h-5 w-5 text-purple-500" />
+                Recent Campuses
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats.recentChurches.map((church) => (
+                  <Link
+                    key={church.id}
+                    href={`/churches/${church.id}`}
+                    className="block p-3 rounded-lg border border-muted hover:border-primary/50 transition-all duration-300 hover:shadow-md hover:shadow-primary/10"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold">{church.name}</h3>
+                        <p className="text-sm text-muted-foreground">{church.location}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {formatNumber(church.members)} members
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {formatNumber(church.members)} members
-                    </Badge>
-                  </div>
-                </Link>
-              ))}
-              {stats.recentChurches.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">No churches yet</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  </Link>
+                ))}
+                {stats.recentChurches.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No churches yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Clergy */}
         <Card className="border-muted">

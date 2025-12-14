@@ -1,36 +1,45 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import SearchableSelect from "@/components/ui/searchable-select";
 import { toast } from "sonner";
+import Image from "next/image";
 
 function SignupForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [token, setToken] = useState("");
+  const [council, setCouncil] = useState("");
+  const [councils, setCouncils] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const tokenFromUrl = searchParams.get("token");
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-    } else {
-      toast.error("No invite token provided");
-    }
-  }, [searchParams]);
+    const fetchCouncils = async () => {
+      try {
+        const response = await fetch("/api/pastor-fields");
+        const data = await response.json();
+        if (response.ok && data.data?.councils?.options) {
+          setCouncils(data.data.councils.options);
+        }
+      } catch (error) {
+        console.error("Failed to fetch councils:", error);
+      }
+    };
+
+    fetchCouncils();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!token) {
-      toast.error("Invalid or missing invite token");
+    if (!council) {
+      toast.error("Please select a council");
       return;
     }
 
@@ -52,7 +61,7 @@ function SignupForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, token }),
+        body: JSON.stringify({ email, password, council }),
       });
 
       const data = await response.json();
@@ -72,11 +81,13 @@ function SignupForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      <Image src="/background-image.webp" alt="Background" fill className="object-cover" priority />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
         <CardHeader>
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up with your invite token to access the church directory</CardDescription>
+          <CardDescription className="text-white">Sign up to access the church directory</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,15 +127,13 @@ function SignupForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="token">Invite Token</Label>
-              <Input
-                id="token"
-                type="text"
-                placeholder="Your invite token"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                required
-                readOnly
+              <Label htmlFor="council">Council *</Label>
+              <SearchableSelect
+                value={council}
+                onValueChange={setCouncil}
+                options={councils.map((c) => ({ value: c, label: c }))}
+                placeholder="Select your council"
+                className="w-full"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -141,8 +150,24 @@ export default function SignupPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <p>Loading...</p>
+        <div className="min-h-screen flex items-center justify-center px-4 relative">
+          <Image src="/background-image.webp" alt="Background" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <Card className="w-full max-w-md relative z-10 bg-background/80 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-2xl">Create Account</CardTitle>
+              <CardDescription>Sign up to access the church directory</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 animate-pulse">
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       }
     >
