@@ -134,6 +134,7 @@ function SignupForm() {
                 options={councils.map((c) => ({ value: c, label: c }))}
                 placeholder="Select your council"
                 className="w-full"
+                menuPlacement="top"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

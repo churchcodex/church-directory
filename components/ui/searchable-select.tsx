@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ReactSelect, { Props as SelectProps, StylesConfig } from "react-select";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ interface SearchableSelectProps
   placeholder?: string;
   className?: string;
   size?: "sm" | "default";
+  menuPlacement?: "auto" | "top" | "bottom";
 }
 
 export default function SearchableSelect({
@@ -26,24 +27,36 @@ export default function SearchableSelect({
   placeholder = "Select...",
   className,
   size = "default",
+  menuPlacement = "auto",
   ...props
 }: SearchableSelectProps) {
   const selectedOption = options.find((option) => option.value === value) || null;
 
-  // Get computed colors from CSS variables
-  const getComputedColor = (variable: string) => {
-    if (typeof window !== "undefined") {
+  // Compute colors only on client side to avoid hydration mismatch
+  const [colors, setColors] = useState({
+    primary: undefined as string | undefined,
+    background: undefined as string | undefined,
+    destructive: undefined as string | undefined,
+  });
+
+  useEffect(() => {
+    const getComputedColor = (variable: string) => {
       const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
       return value ? `hsl(${value})` : undefined;
-    }
-    return undefined;
-  };
+    };
+
+    setColors({
+      primary: getComputedColor("--primary"),
+      background: getComputedColor("--background"),
+      destructive: getComputedColor("--destructive"),
+    });
+  }, []);
 
   const customStyles: StylesConfig<SearchableSelectOption, false> = {
     control: (base, state) => {
-      const primaryColor = getComputedColor("--primary");
-      const backgroundColor = getComputedColor("--background");
-      const destructiveColor = getComputedColor("--destructive");
+      const primaryColor = colors.primary;
+      const backgroundColor = colors.background;
+      const destructiveColor = colors.destructive;
 
       return {
         ...base,
@@ -80,7 +93,7 @@ export default function SearchableSelect({
       ...base,
       height: size === "sm" ? "2rem" : "2.25rem",
       padding: "0 0.75rem",
-      backgroundColor: "hsl(var(--background))",
+      backgroundColor: "transparent",
     }),
     input: (base) => ({
       ...base,
@@ -94,7 +107,7 @@ export default function SearchableSelect({
     indicatorsContainer: (base) => ({
       ...base,
       height: size === "sm" ? "2rem" : "2.25rem",
-      backgroundColor: "hsl(var(--background))",
+      backgroundColor: "transparent",
     }),
     dropdownIndicator: (base) => ({
       ...base,
@@ -114,11 +127,13 @@ export default function SearchableSelect({
       boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
       zIndex: 50,
       overflow: "hidden",
+      maxHeight: "150px",
     }),
     menuList: (base) => ({
       ...base,
       padding: "0.25rem",
-      maxHeight: "200px",
+      maxHeight: "120px",
+      overflowY: "auto",
       backgroundColor: "var(--popover)",
     }),
     option: (base, state) => ({
@@ -169,6 +184,7 @@ export default function SearchableSelect({
       styles={customStyles}
       isSearchable
       isClearable={false}
+      menuPlacement={menuPlacement}
     />
   );
 }
