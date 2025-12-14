@@ -179,20 +179,28 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage users and invite tokens</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage users and invite tokens</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push("/admin/inactive-pastors")}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/inactive-pastors")}
+            className="w-full sm:w-auto text-sm"
+          >
             View Inactive Pastors
           </Button>
-          <Button variant="outline" onClick={() => router.push("/admin/pastor-fields")}>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/pastor-fields")}
+            className="w-full sm:w-auto text-sm"
+          >
             Manage Pastor Fields
           </Button>
-          <Button onClick={generateInviteToken} disabled={generatingToken}>
+          <Button onClick={generateInviteToken} disabled={generatingToken} className="w-full sm:w-auto">
             {generatingToken ? "Generating..." : "Generate Invite Link"}
           </Button>
         </div>
@@ -210,19 +218,34 @@ export default function AdminUsersPage() {
           ) : (
             <div className="space-y-4">
               {users.map((user) => (
-                <div key={user._id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium">{user.email}</p>
-                    <p className="text-sm text-gray-500">Joined {new Date(user.createdAt).toLocaleDateString()}</p>
+                <div
+                  key={user._id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{user.email}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      Joined {new Date(user.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={user.isActive ? "default" : "secondary"}>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                    <Badge variant={user.isActive ? "default" : "secondary"} className="w-fit">
                       {user.isActive ? "Active" : "Inactive"}
                     </Badge>
-                    <Button variant="outline" size="sm" onClick={() => setUserToToggle(user)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUserToToggle(user)}
+                      className="text-xs sm:text-sm"
+                    >
                       {user.isActive ? "Revoke Access" : "Grant Access"}
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => setUserToDelete(user)}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setUserToDelete(user)}
+                      className="text-xs sm:text-sm"
+                    >
                       Delete
                     </Button>
                   </div>
@@ -247,21 +270,24 @@ export default function AdminUsersPage() {
               {tokens.map((token) => (
                 <div
                   key={token._id}
-                  className="flex flex-col lg:flex-row lg:items-center items-start gap-4 justify-between p-4 border rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 justify-between p-4 border rounded-lg"
                 >
-                  <div className="flex-1">
-                    <p className="font-mono text-sm">{token.token}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-mono text-xs sm:text-sm break-all">{token.token}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Created {new Date(token.createdAt).toLocaleDateString()} • Expires{" "}
                       {new Date(token.expiresAt).toLocaleDateString()}
                     </p>
-                    {token.usedBy && <p className="text-sm text-gray-500">Used by {token.usedBy.email}</p>}
+                    {token.usedBy && (
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">Used by {token.usedBy.email}</p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                     <Badge
                       variant={
                         token.isUsed ? "secondary" : new Date() > new Date(token.expiresAt) ? "destructive" : "default"
                       }
+                      className="w-fit"
                     >
                       {token.isUsed ? "Used" : new Date() > new Date(token.expiresAt) ? "Expired" : "Active"}
                     </Badge>
@@ -274,6 +300,7 @@ export default function AdminUsersPage() {
                           navigator.clipboard.writeText(url);
                           toast.success("Signup link copied to clipboard");
                         }}
+                        className="text-xs sm:text-sm"
                       >
                         Copy Link
                       </Button>
