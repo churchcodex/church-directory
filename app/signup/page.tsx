@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import SearchableSelect from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 import Image from "next/image";
+import FLGlobalIcon from "@/components/assets/fl-global-icon";
 
 function SignupForm() {
   const router = useRouter();
@@ -86,6 +87,9 @@ function SignupForm() {
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
       <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
         <CardHeader>
+          <div className="flex justify-center mb-4">
+            <FLGlobalIcon className="h-8 w-auto" fill="currentColor" />
+          </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
           <CardDescription className="text-white">Sign up to access the church directory</CardDescription>
         </CardHeader>

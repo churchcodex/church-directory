@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import Image from "next/image";
+import FLGlobalIcon from "@/components/assets/fl-global-icon";
 
 function LoginForm() {
   const router = useRouter();
@@ -65,6 +66,9 @@ function LoginForm() {
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
       <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
         <CardHeader>
+          <div className="flex justify-center mb-4">
+            <FLGlobalIcon className="h-8 w-auto" fill="currentColor" />
+          </div>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription className="text-white">
             Enter your credentials to access the church directory
