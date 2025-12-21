@@ -223,6 +223,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Dashboard Title */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-300">
+          {session?.user?.role === "admin" ? "Dashboard" : `${session?.user?.council} Dashboard`}
+        </h1>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, index) => {

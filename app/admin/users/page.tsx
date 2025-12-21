@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import SearchableSelect from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -29,6 +32,8 @@ interface User {
 interface InviteToken {
   _id: string;
   token: string;
+  email: string;
+  council: string;
   isUsed: boolean;
   expiresAt: string;
   createdAt: string;
@@ -45,6 +50,9 @@ export default function AdminUsersPage() {
   const [generatingToken, setGeneratingToken] = useState(false);
   const [userToToggle, setUserToToggle] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [councils, setCouncils] = useState<string[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteCouncil, setInviteCouncil] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -59,8 +67,21 @@ export default function AdminUsersPage() {
     if (status === "authenticated" && (session?.user as any)?.role === "admin") {
       fetchUsers();
       fetchTokens();
+      fetchCouncils();
     }
   }, [status, session]);
+
+  const fetchCouncils = async () => {
+    try {
+      const response = await fetch("/api/pastor-fields");
+      const data = await response.json();
+      if (response.ok && data.data?.councils?.options) {
+        setCouncils(data.data.councils.options);
+      }
+    } catch (error) {
+      console.error("Failed to fetch councils:", error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -89,6 +110,16 @@ export default function AdminUsersPage() {
   };
 
   const generateInviteToken = async () => {
+    if (!inviteEmail.trim()) {
+      toast.error("Please enter an email address");
+      return;
+    }
+
+    if (!inviteCouncil) {
+      toast.error("Please select a council");
+      return;
+    }
+
     setGeneratingToken(true);
     try {
       const response = await fetch("/api/auth/invite", {
@@ -96,7 +127,7 @@ export default function AdminUsersPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ expiresInDays: 7 }),
+        body: JSON.stringify({ email: inviteEmail, council: inviteCouncil, expiresInDays: 7 }),
       });
 
       const data = await response.json();
@@ -105,6 +136,8 @@ export default function AdminUsersPage() {
         toast.success("Invite link generated!");
         navigator.clipboard.writeText(data.signupUrl);
         toast.info("Signup link copied to clipboard");
+        setInviteEmail("");
+        setInviteCouncil("");
         fetchTokens();
       } else {
         toast.error(data.error || "Failed to generate invite token");
@@ -180,7 +213,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage users and invite tokens</p>
@@ -200,11 +233,45 @@ export default function AdminUsersPage() {
           >
             Manage Pastor Fields
           </Button>
-          <Button onClick={generateInviteToken} disabled={generatingToken} className="w-full sm:w-auto">
-            {generatingToken ? "Generating..." : "Generate Invite Link"}
-          </Button>
         </div>
       </div>
+
+      {/* Generate Invite Token Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Generate Invite Link</CardTitle>
+          <CardDescription>Create and send an invitation to a new user</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="inviteEmail">Email Address</Label>
+              <Input
+                id="inviteEmail"
+                type="email"
+                placeholder="user@example.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                disabled={generatingToken}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="inviteCouncil">Council</Label>
+              <SearchableSelect
+                value={inviteCouncil}
+                onValueChange={setInviteCouncil}
+                options={councils.map((c) => ({ value: c, label: c }))}
+                placeholder="Select a council"
+                className="w-full"
+                menuPlacement="top"
+              />
+            </div>
+            <Button onClick={generateInviteToken} disabled={generatingToken} className="w-full">
+              {generatingToken ? "Generating..." : "Generate and Copy Link"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Users Section */}
       <Card>
@@ -273,7 +340,8 @@ export default function AdminUsersPage() {
                   className="flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 justify-between p-4 border rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-mono text-xs sm:text-sm break-all">{token.token}</p>
+                    <p className="font-medium text-sm">{token.email}</p>
+                    <p className="text-xs text-gray-500 mt-1">Council: {token.council}</p>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Created {new Date(token.createdAt).toLocaleDateString()} • Expires{" "}
                       {new Date(token.expiresAt).toLocaleDateString()}

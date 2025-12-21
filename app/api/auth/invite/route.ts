@@ -13,9 +13,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
     }
 
-    const { expiresInDays = 7 } = await request.json();
+    const { email, council, expiresInDays = 7 } = await request.json();
+
+    if (!email || !council) {
+      return NextResponse.json({ error: "Email and council are required" }, { status: 400 });
+    }
 
     await dbConnect();
+
+    // Check if a user with this email already exists
+    const User = require("@/models/User").default;
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    if (existingUser) {
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 });
+    }
+
+    // Check if an unused token already exists for this email
+    const existingToken = await InviteToken.findOne({
+      email: email.toLowerCase(),
+      isUsed: false,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (existingToken) {
+      return NextResponse.json({ error: "An active invite token already exists for this email" }, { status: 400 });
+    }
 
     // Generate unique token
     const token = crypto.randomBytes(32).toString("hex");
@@ -27,6 +50,8 @@ export async function POST(request: NextRequest) {
     // Create invite token
     const inviteToken = await InviteToken.create({
       token,
+      email: email.toLowerCase(),
+      council,
       createdBy: (session.user as any).id,
       expiresAt,
     });

@@ -1,48 +1,53 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import SearchableSelect from "@/components/ui/searchable-select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import Image from "next/image";
+import AuthBackground from "@/components/AuthBackground";
 import FLGlobalIcon from "@/components/assets/fl-global-icon";
 
 function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
+  const [council, setCouncil] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [council, setCouncil] = useState("");
-  const [councils, setCouncils] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCouncils = async () => {
-      try {
-        const response = await fetch("/api/pastor-fields");
-        const data = await response.json();
-        if (response.ok && data.data?.councils?.options) {
-          setCouncils(data.data.councils.options);
-        }
-      } catch (error) {
-        console.error("Failed to fetch councils:", error);
+    const validateToken = async () => {
+      const token = searchParams.get("token");
+
+      if (!token) {
+        setError("No invitation token provided. Please use a valid invitation link.");
+        setIsLoading(false);
+        return;
       }
+
+      // Note: In a real scenario, you'd validate the token on the backend
+      // For now, we'll just check if it exists and looks valid
+      if (token.length > 0) {
+        setTokenValid(true);
+      } else {
+        setError("Invalid invitation token.");
+      }
+
+      setIsLoading(false);
     };
 
-    fetchCouncils();
-  }, []);
+    validateToken();
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!council) {
-      toast.error("Please select a council");
-      return;
-    }
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -57,18 +62,20 @@ function SignupForm() {
     setIsLoading(true);
 
     try {
+      const token = searchParams.get("token");
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, council }),
+        body: JSON.stringify({ password, token }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         toast.error(data.error || "Failed to sign up");
+        setError(data.error);
         return;
       }
 
@@ -76,36 +83,64 @@ function SignupForm() {
       router.push("/login");
     } catch (error) {
       toast.error("An error occurred during signup");
+      setError("An error occurred during signup");
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 relative">
+        <AuthBackground />
+        <Card className="w-full max-w-md relative z-10 bg-background/80 backdrop-blur-md border-white/20">
+          <CardHeader>
+            <CardTitle className="text-2xl">Create Account</CardTitle>
+            <CardDescription>Setting up your account...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 animate-pulse">
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!tokenValid || error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 relative">
+        <AuthBackground />
+        <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
+          <CardHeader>
+            <CardTitle className="text-2xl text-red-500">Invalid Invitation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error || "Your invitation link is invalid or has expired."}</AlertDescription>
+            </Alert>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Please contact your administrator to request a new invitation link.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative">
-      <Image src="/background-image.webp" alt="Background" fill className="object-cover" priority />
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <AuthBackground />
       <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
         <CardHeader>
-          <div className="flex justify-center mb-4">
-            <FLGlobalIcon className="h-8 w-auto" fill="currentColor" />
-          </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription className="text-white">Sign up to access the church directory</CardDescription>
+          <CardDescription className="text-white">Set your password to complete signup</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -130,19 +165,8 @@ function SignupForm() {
                 minLength={6}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="council">Council *</Label>
-              <SearchableSelect
-                value={council}
-                onValueChange={setCouncil}
-                options={councils.map((c) => ({ value: c, label: c }))}
-                placeholder="Select your council"
-                className="w-full"
-                menuPlacement="top"
-              />
-            </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Sign Up"}
+              {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
         </CardContent>
@@ -156,17 +180,17 @@ export default function SignupPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center px-4 relative">
-          <Image src="/background-image.webp" alt="Background" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <AuthBackground />
           <Card className="w-full max-w-md relative z-10 bg-background/80 backdrop-blur-md border-white/20">
+            <div className="flex justify-center mb-4 pt-6">
+              <FLGlobalIcon className="h-8 w-auto" fill="currentColor" />
+            </div>
             <CardHeader>
               <CardTitle className="text-2xl">Create Account</CardTitle>
-              <CardDescription>Sign up to access the church directory</CardDescription>
+              <CardDescription>Setting up your account...</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4 animate-pulse">
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />

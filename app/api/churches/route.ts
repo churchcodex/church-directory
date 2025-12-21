@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Church from "@/models/Church";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +27,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    // Only admins can create churches
+    if (!session || (session.user as any).role !== "admin") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized. Admin access required to create churches.",
+        },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
     const body = await request.json();
     const church: any = await Church.create(body);
