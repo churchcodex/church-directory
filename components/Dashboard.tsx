@@ -235,7 +235,7 @@ export default function Dashboard() {
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           const cardContent = (
-            <Card className="border-muted hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+            <Card className="border-muted hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer bg-muted">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
                 <div className={`p-2 rounded-lg bg-linear-to-br ${stat.gradient}`}>
