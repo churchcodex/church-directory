@@ -14,8 +14,8 @@ function InactivityTracker({ children }: { children: React.ReactNode }) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Only set timeout if user is logged in
-    if (session) {
+    // Only set timeout if user is logged in and did not opt into remember me
+    if (session && !(session.user as any)?.rememberMe) {
       timeoutRef.current = setTimeout(() => {
         signOut({ callbackUrl: "/login?timeout=true" });
       }, INACTIVITY_TIMEOUT);
@@ -24,6 +24,12 @@ function InactivityTracker({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!session) return;
+
+    const rememberMeEnabled = Boolean((session.user as any)?.rememberMe);
+
+    if (rememberMeEnabled) {
+      return;
+    }
 
     // Events that indicate user activity
     const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart", "click", "keydown"];

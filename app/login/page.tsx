@@ -17,6 +17,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
 
@@ -43,6 +44,7 @@ function LoginForm() {
       const result = await signIn("credentials", {
         email,
         password,
+        rememberMe,
         redirect: false,
       });
 
@@ -100,6 +102,18 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
+              />
+              <Label htmlFor="rememberMe" className="text-sm text-foreground">
+                Remember me
+              </Label>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
