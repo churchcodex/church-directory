@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         : undefined;
 
     if (normalizedFunction !== undefined) {
-      const functionValues = Array.from(new Set((normalizedFunction as string[]).filter(Boolean)));
+      const functionValues = Array.from(new Set((normalizedFunction as string[]).filter(Boolean))) as string[];
 
       if (functionValues.length === 0) {
         return NextResponse.json(

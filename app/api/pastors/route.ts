@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const normalizedFunction = Array.isArray(body.function) ? body.function : body.function ? [body.function] : [];
-    const functionValues = Array.from(new Set(normalizedFunction.filter(Boolean)));
+    const functionValues = Array.from(new Set(normalizedFunction.filter(Boolean))) as string[];
 
     // Validate clergy_type
     if (!body.clergy_type || body.clergy_type.length === 0) {
