@@ -65,7 +65,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative">
       <AuthBackground />
-      <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20">
+      <Card className="w-full max-w-md relative z-10 bg-background/20 backdrop-blur-lg border-white/20 landscape:mt-50 landscape:md:mt-6">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription className="text-white">
