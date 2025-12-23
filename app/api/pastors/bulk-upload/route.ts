@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
           email: row["Email"] || row["email"] || undefined,
           contact_number: row["Contact Number"] || row["contact_number"] || undefined,
           status: row["Status"] || row["status"] || "Active",
-          function: row["Function"] || row["function"] || "N/A",
         };
 
         // Handle clergy_type which can be comma-separated
@@ -67,12 +66,51 @@ export async function POST(request: NextRequest) {
             typeof clergyTypeRaw === "string" ? clergyTypeRaw.split(",").map((t: string) => t.trim()) : [clergyTypeRaw];
         }
 
+        // Handle function (comma-separated allowed)
+        const functionRaw = row["Function"] || row["function"];
+        if (functionRaw) {
+          const parsedFunctions =
+            typeof functionRaw === "string"
+              ? functionRaw
+                  .split(",")
+                  .map((value: string) => value.trim())
+                  .filter(Boolean)
+              : [functionRaw].filter(Boolean);
+          pastorData.function = Array.from(new Set(parsedFunctions));
+        } else {
+          pastorData.function = [];
+        }
+
+        const invalidFunctions = (pastorData.function || []).filter(
+          (value: string) => !["Governor", "Overseer"].includes(value)
+        );
+
+        if (invalidFunctions.length > 0) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: `Invalid function value(s): ${invalidFunctions.join(", ")}. Allowed: Governor, Overseer`,
+            data: row,
+          });
+          continue;
+        }
+
         // Validate required fields
         if (!pastorData.first_name || !pastorData.last_name) {
           results.failed++;
           results.errors.push({
             row: rowNumber,
             error: "Missing required fields: first_name and last_name are required",
+            data: row,
+          });
+          continue;
+        }
+
+        if (!pastorData.function || pastorData.function.length === 0) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Missing required field: function must include Governor and/or Overseer",
             data: row,
           });
           continue;

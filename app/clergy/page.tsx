@@ -301,7 +301,14 @@ function ClergyPageContent() {
 
       // Function (multiple selection)
       if (filters.function.length > 0) {
-        filtered = filtered.filter((pastor) => filters.function.includes(pastor.function || ""));
+        filtered = filtered.filter((pastor) => {
+          const functionArray = Array.isArray(pastor.function)
+            ? pastor.function
+            : pastor.function
+            ? [pastor.function]
+            : [];
+          return filters.function.some((func) => functionArray.includes(func));
+        });
       }
 
       // Filter by age range

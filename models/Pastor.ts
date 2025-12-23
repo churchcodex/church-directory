@@ -263,10 +263,22 @@ const PastorSchema = new Schema<PastorDocument>(
       required: false,
     },
     function: {
-      type: String,
-      enum: ["Governor", "Overseer", "N/A"],
-      default: "N/A",
-      required: [true, "Please select a function"],
+      type: [String],
+      enum: ["Governor", "Overseer"],
+      required: [true, "Please select at least one function"],
+      set: (v: string | string[]) => {
+        if (!v) return v;
+        const arr = Array.isArray(v) ? v : [v];
+        return [...new Set(arr.filter(Boolean))];
+      },
+      validate: {
+        validator: function (v: string[]) {
+          if (!Array.isArray(v)) return false;
+          if (v.length === 0 || v.length > 2) return false;
+          return v.every((value) => ["Governor", "Overseer"].includes(value));
+        },
+        message: "A pastor must have 1-2 functions and they must be Governor and/or Overseer",
+      },
     },
   },
   {

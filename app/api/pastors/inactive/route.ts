@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
+      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
     }));
     return NextResponse.json({ success: true, data: transformedPastors });
   } catch (error: any) {

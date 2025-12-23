@@ -197,5 +197,5 @@ export interface Pastor {
   email?: string;
   contact_number?: string;
   status?: Status;
-  function: PastorFunction;
+  function: PastorFunction[];
 }

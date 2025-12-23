@@ -52,7 +52,7 @@ const defaultAreas: Area[] = [
   "None",
 ];
 const defaultStatuses: Status[] = ["Active", "Inactive"];
-const defaultPastorFunctions: PastorFunction[] = ["Governor", "Overseer", "N/A"];
+const defaultPastorFunctions: PastorFunction[] = ["Governor", "Overseer"];
 const defaultOccupations: Occupation[] = [
   "Full Time Pastor",
   "Medical Doctor",
@@ -246,7 +246,14 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     email: pastor?.email || "",
     contact_number: pastor?.contact_number || "",
     status: pastor?.status || "Active",
-    function: pastor?.function || "N/A",
+    function: (() => {
+      const functions = Array.isArray(pastor?.function)
+        ? (pastor.function as PastorFunction[])
+        : pastor?.function
+        ? ([pastor.function] as PastorFunction[])
+        : [];
+      return functions.filter((value) => defaultPastorFunctions.includes(value));
+    })(),
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
     pastor?.occupation && defaultOccupations.includes(pastor.occupation as Occupation)
@@ -346,7 +353,11 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         setAreas(data.data.areas?.options || defaultAreas);
         setCouncils(data.data.councils?.options || defaultCouncils);
         setStatuses(data.data.statuses?.options || defaultStatuses);
-        setPastorFunctions(data.data.pastorFunctions?.options || defaultPastorFunctions);
+        setPastorFunctions(
+          (data.data.pastorFunctions?.options || defaultPastorFunctions).filter((value: string) =>
+            defaultPastorFunctions.includes(value as PastorFunction)
+          )
+        );
         setOccupations(data.data.occupations?.options || defaultOccupations);
         setMaritalStatuses(data.data.maritalStatuses?.options || defaultMaritalStatuses);
         setGenders(data.data.genders?.options || defaultGenders);
@@ -386,13 +397,32 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         email: pastor.email || "",
         contact_number: pastor.contact_number || "",
         status: pastor.status || "Active",
-        function: pastor.function || "N/A",
+        function: (() => {
+          const functions = Array.isArray(pastor.function)
+            ? (pastor.function as PastorFunction[])
+            : pastor.function
+            ? ([pastor.function] as PastorFunction[])
+            : [];
+          return functions.filter((value) => defaultPastorFunctions.includes(value));
+        })(),
       });
     }
   }, [open, pastor]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.function || formData.function.length === 0) {
+      toast.error("Please select at least one function", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -401,6 +431,9 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
       const submissionData = {
         ...formData,
+        function: Array.from(
+          new Set(formData.function.filter((value) => defaultPastorFunctions.includes(value)))
+        ) as PastorFunction[],
         occupation: occupationType === "Other" ? customOccupation : occupationType,
       };
 
@@ -435,7 +468,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             email: "",
             contact_number: "",
             status: "Active",
-            function: "N/A",
+            function: [],
           });
           setOccupationType("Medical Doctor");
           setCustomOccupation("");
@@ -791,13 +824,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="function">Function *</Label>
-                <SearchableSelect
+                <Label htmlFor="function">Function(s) *</Label>
+                <MultiSelect
                   options={pastorFunctions.map((f) => ({ value: f, label: f }))}
                   value={formData.function}
-                  onValueChange={(value) => setFormData({ ...formData, function: value as PastorFunction })}
-                  placeholder="Select function"
-                  required
+                  onValueChange={(value) => setFormData({ ...formData, function: value as PastorFunction[] })}
+                  placeholder="Select function(s)"
                 />
               </div>
 

@@ -36,14 +36,14 @@ export interface FilterState {
   area: string[];
   country: string[];
   occupation: string[];
-  function: string[];
+  function: PastorFunction[];
   minAge: string;
   maxAge: string;
 }
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
-const pastorFunctions: PastorFunction[] = ["Governor", "Overseer", "N/A"];
+const pastorFunctions: PastorFunction[] = ["Governor", "Overseer"];
 
 export default function PastorFilterDialog({
   onApplyFilters,

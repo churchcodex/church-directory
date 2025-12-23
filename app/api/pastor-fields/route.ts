@@ -182,8 +182,10 @@ const defaultFieldValues: Record<string, string[]> = {
   maritalStatuses: ["Single", "Married", "Divorced", "Widowed"],
   genders: ["Male", "Female"],
   statuses: ["Active", "Inactive"],
-  pastorFunctions: ["Governor", "Overseer", "N/A"],
+  pastorFunctions: ["Governor", "Overseer"],
 };
+
+const allowedFunctionValues = ["Governor", "Overseer"];
 
 // GET all field options
 export async function GET(req: NextRequest) {
@@ -196,19 +198,26 @@ export async function GET(req: NextRequest) {
     const fieldOptions: Record<string, any> = {};
 
     for (const fieldName of fieldNames) {
-      let fieldOption = await PastorFieldOptions.findOne({ fieldName });
+      const fieldOption = await PastorFieldOptions.findOne({ fieldName });
+      const rawOptions = fieldOption ? fieldOption.options : defaultFieldValues[fieldName];
+      const sanitizedOptions =
+        fieldName === "pastorFunctions"
+          ? (rawOptions || []).filter((value: string) => allowedFunctionValues.includes(value))
+          : rawOptions;
+      const options =
+        fieldName === "pastorFunctions" && sanitizedOptions.length === 0 ? allowedFunctionValues : sanitizedOptions;
 
       if (!fieldOption) {
         // Return default values if not in database
         fieldOptions[fieldName] = {
           fieldName,
-          options: defaultFieldValues[fieldName],
+          options,
           isDefault: true,
         };
       } else {
         fieldOptions[fieldName] = {
           fieldName: fieldOption.fieldName,
-          options: fieldOption.options,
+          options,
           updatedAt: fieldOption.updatedAt,
           isDefault: false,
         };
@@ -239,6 +248,13 @@ export async function PUT(req: NextRequest) {
 
     if (!defaultFieldValues[fieldName]) {
       return NextResponse.json({ error: "Invalid field name" }, { status: 400 });
+    }
+
+    if (fieldName === "pastorFunctions") {
+      const invalidFunctions = options.filter((value) => !allowedFunctionValues.includes(value));
+      if (invalidFunctions.length > 0) {
+        return NextResponse.json({ error: "Functions must be Governor or Overseer" }, { status: 400 });
+      }
     }
 
     await dbConnect();

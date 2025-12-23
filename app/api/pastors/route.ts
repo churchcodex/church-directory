@@ -4,6 +4,8 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 
+const allowedFunctions = ["Governor", "Overseer"];
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -20,6 +22,9 @@ export async function GET(request: NextRequest) {
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
+      function: (Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : []).filter(
+        (value: string) => allowedFunctions.includes(value)
+      ),
     }));
     return NextResponse.json({ success: true, data: transformedPastors });
   } catch (error: any) {
@@ -52,6 +57,9 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
 
+    const normalizedFunction = Array.isArray(body.function) ? body.function : body.function ? [body.function] : [];
+    const functionValues = Array.from(new Set(normalizedFunction.filter(Boolean)));
+
     // Validate clergy_type
     if (!body.clergy_type || body.clergy_type.length === 0) {
       return NextResponse.json(
@@ -63,9 +71,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (functionValues.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Please select at least one function",
+        },
+        { status: 400 }
+      );
+    }
+
+    const invalidFunctions = functionValues.filter((value: string) => !allowedFunctions.includes(value));
+    if (invalidFunctions.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid function selection. Allowed options are Governor or Overseer",
+        },
+        { status: 400 }
+      );
+    }
+
     // Sanitize empty strings to undefined for optional enum fields only
     const sanitizedData = {
       ...body,
+      function: functionValues,
       church: body.church === "" ? undefined : body.church,
       // Council and Area are now required, so don't sanitize them
     };
@@ -110,6 +140,7 @@ export async function POST(request: NextRequest) {
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
+      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
     };
     return NextResponse.json({ success: true, data: transformedPastor }, { status: 201 });
   } catch (error: any) {

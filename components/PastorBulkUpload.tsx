@@ -75,7 +75,8 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         "Contact Number": "+233244000000",
         "Church ID": "",
         "Profile Image URL": "",
-        Function: "N/A",
+        // Use comma-separated values for multiple functions (e.g., "Governor,Overseer")
+        Function: "Governor",
       },
     ];
 
@@ -136,7 +137,10 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const genderData = genders.map((gender: string) => ({ Gender: gender }));
     const genderSheet = XLSX.utils.json_to_sheet(genderData);
 
-    const functions = fieldOptions?.pastorFunctions?.options || ["Governor", "Overseer", "N/A"];
+    const allowedFunctions = ["Governor", "Overseer"];
+    const functions = (fieldOptions?.pastorFunctions?.options || allowedFunctions).filter((func: string) =>
+      allowedFunctions.includes(func)
+    );
     const functionData = functions.map((func: string) => ({ Function: func }));
     const functionSheet = XLSX.utils.json_to_sheet(functionData);
 
@@ -213,16 +217,6 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         '"HGE Area 1,HGE Area 2,HGE Area 3,HGE Area 4,Experience Area 1,Experience Area 2,Experience Area 3,Experience Area 4,None"',
       showErrorMessage: true,
       errorTitle: "Invalid Area",
-      error: "Please select from the dropdown list",
-    });
-
-    // Status dropdown (column Q)
-    worksheet["!dataValidation"].push({
-      sqref: "Q2:Q1000",
-      type: "list",
-      formula1: '"Active,Inactive"',
-      showErrorMessage: true,
-      errorTitle: "Invalid Status",
       error: "Please select from the dropdown list",
     });
 

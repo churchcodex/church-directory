@@ -225,6 +225,8 @@ export default function ClergyDetailsPage() {
     return sortedTypes;
   };
 
+  const functionList = Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [];
+
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-4 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1600px] md:h-[calc(100vh-4rem)]">
@@ -269,7 +271,7 @@ export default function ClergyDetailsPage() {
           )}
         </div>
 
-        <Card className="overflow-hidden h-[calc(100%-3.5rem)]">
+        <Card className="overflow-hidden h-[calc(100%-2rem)]">
           <div className="lg:grid lg:grid-cols-2 h-full">
             <div className="p-4 lg:p-6 h-[50vh] lg:h-full">
               <div className="relative h-full w-full">
@@ -293,7 +295,7 @@ export default function ClergyDetailsPage() {
               </div>
             </div>
 
-            <div className="p-4 lg:p-8 overflow-y-auto">
+            <div className="p-4 lg:p-8 ">
               <div className="mb-4 flex flex-col items-center text-center">
                 <h1 className="text-xl lg:text-3xl font-bold text-center mb-1">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
@@ -377,9 +379,9 @@ export default function ClergyDetailsPage() {
                   </div>
                 )}
 
-                {pastor.function && pastor.function !== "N/A" && (
+                {functionList.length > 0 && (
                   <div className="flex items-center justify-center p-2 lg:p-3 bg-muted rounded-lg">
-                    <span className="text-sm lg:text-base font-semibold">{pastor.function}</span>
+                    <span className="text-sm lg:text-base font-semibold">{functionList.join(", ")}</span>
                   </div>
                 )}
               </div>

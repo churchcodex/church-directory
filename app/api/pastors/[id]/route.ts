@@ -4,6 +4,8 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 
+const allowedFunctions = ["Governor", "Overseer"];
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
       clergy_type: pastor.clergy_type || [],
+      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
     };
 
     return NextResponse.json({ success: true, data: transformedPastor });
@@ -52,6 +55,42 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
+
+    const normalizedFunction =
+      body.function !== undefined
+        ? Array.isArray(body.function)
+          ? body.function
+          : body.function
+          ? [body.function]
+          : []
+        : undefined;
+
+    if (normalizedFunction !== undefined) {
+      const functionValues = Array.from(new Set((normalizedFunction as string[]).filter(Boolean)));
+
+      if (functionValues.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Please select at least one function",
+          },
+          { status: 400 }
+        );
+      }
+
+      const invalidFunctions = functionValues.filter((value: string) => !allowedFunctions.includes(value));
+      if (invalidFunctions.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid function selection. Allowed options are Governor or Overseer",
+          },
+          { status: 400 }
+        );
+      }
+
+      body.function = functionValues;
+    }
 
     // Validate clergy_type only if it's being updated
     if (body.clergy_type !== undefined) {
@@ -133,6 +172,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
+      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
     };
 
     return NextResponse.json({ success: true, data: transformedPastor });
