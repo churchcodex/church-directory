@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
       errors: [] as Array<{ row: number; error: string; data: any }>,
     };
 
+    // Track created vs updated for reporting
+    let created = 0;
+    let updated = 0;
+
     // Fetch dynamic field options from endpoint (fallback to defaults if request fails)
     let allowedFunctions: string[] = ["Governor", "Overseer"];
     try {
@@ -201,18 +205,19 @@ export async function POST(request: NextRequest) {
         });
 
         if (existingPastor) {
-          results.failed++;
-          results.errors.push({
-            row: rowNumber,
-            error: "Duplicate pastor: A pastor with the same name and date of birth already exists",
-            data: row,
+          // Update existing pastor with new data
+          await Pastor.findByIdAndUpdate(existingPastor._id, pastorData, {
+            runValidators: true,
           });
+          results.successful++;
+          updated++;
           continue;
         }
 
         // Create pastor
         await Pastor.create(pastorData);
         results.successful++;
+        created++;
       } catch (error: any) {
         results.failed++;
         results.errors.push({
@@ -225,7 +230,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: results,
+      data: {
+        ...results,
+        summary: `${created} created, ${updated} updated`,
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
