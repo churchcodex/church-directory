@@ -3,6 +3,36 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import * as XLSX from "xlsx";
 
+// Helper function to parse dates from Excel (handles numbers, strings, and Date objects)
+function parseDate(value: any): Date | undefined {
+  if (!value) return undefined;
+
+  // If it's already a Date, return it
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value;
+  }
+
+  // If it's a number (Excel serial date), convert it
+  if (typeof value === "number") {
+    // Excel serial dates: 1 = Jan 1, 1900 (with leap year bug)
+    const excelEpoch = new Date(1900, 0, 1);
+    const date = new Date(excelEpoch.getTime() + (value - 1) * 24 * 60 * 60 * 1000);
+    return !isNaN(date.getTime()) ? date : undefined;
+  }
+
+  // If it's a string, try to parse it
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    
+    // Try parsing as ISO string (YYYY-MM-DD) or other common formats
+    const date = new Date(trimmed);
+    return !isNaN(date.getTime()) ? date : undefined;
+  }
+
+  return undefined;
+}
+
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
@@ -65,8 +95,8 @@ export async function POST(request: NextRequest) {
           first_name: row["First Name"] || row["first_name"],
           middle_name: row["Middle Name"] || row["middle_name"] || undefined,
           last_name: row["Last Name"] || row["last_name"],
-          date_of_birth: row["Date of Birth"] || row["date_of_birth"] || undefined,
-          date_of_appointment: row["Date of Appointment"] || row["date_of_appointment"] || undefined,
+          date_of_birth: parseDate(row["Date of Birth"] || row["date_of_birth"]),
+          date_of_appointment: parseDate(row["Date of Appointment"] || row["date_of_appointment"]),
           profile_image: row["Profile Image URL"] || row["profile_image"] || undefined,
           marital_status: row["Marital Status"] || row["marital_status"] || undefined,
           church: row["Church ID"] || row["church"] || undefined,
@@ -161,8 +191,6 @@ export async function POST(request: NextRequest) {
         // Sanitize empty strings/whitespace to undefined for select/date fields
         if (typeof pastorData.council === "string" && pastorData.council.trim() === "") pastorData.council = undefined;
         if (typeof pastorData.area === "string" && pastorData.area.trim() === "") pastorData.area = undefined;
-        if (typeof pastorData.date_of_appointment === "string" && pastorData.date_of_appointment.trim() === "") pastorData.date_of_appointment = undefined;
-        if (typeof pastorData.date_of_birth === "string" && pastorData.date_of_birth.trim() === "") pastorData.date_of_birth = undefined;
 
         // Optional: pre-validate council/area against dynamic options
         // When endpoint returns configured options, ensure provided values are recognized
