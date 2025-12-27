@@ -154,9 +154,44 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Sanitize empty strings to undefined for enum fields
-        if (pastorData.council === "") pastorData.council = undefined;
-        if (pastorData.area === "") pastorData.area = undefined;
+        // Sanitize empty strings/whitespace to undefined for select/date fields
+        if (typeof pastorData.council === "string" && pastorData.council.trim() === "") pastorData.council = undefined;
+        if (typeof pastorData.area === "string" && pastorData.area.trim() === "") pastorData.area = undefined;
+        if (typeof pastorData.date_of_appointment === "string" && pastorData.date_of_appointment.trim() === "") pastorData.date_of_appointment = undefined;
+        if (typeof pastorData.date_of_birth === "string" && pastorData.date_of_birth.trim() === "") pastorData.date_of_birth = undefined;
+
+        // Optional: pre-validate council/area against dynamic options
+        // When endpoint returns configured options, ensure provided values are recognized
+        try {
+          const fieldsUrl = new URL(request.url);
+          fieldsUrl.pathname = "/api/pastor-fields";
+          const fieldsResp = await fetch(fieldsUrl.toString(), { method: "GET" });
+          if (fieldsResp.ok) {
+            const fieldsJson = await fieldsResp.json();
+            const allowedCouncils: string[] = fieldsJson?.data?.councils?.options || [];
+            const allowedAreas: string[] = fieldsJson?.data?.areas?.options || [];
+            if (pastorData.council && allowedCouncils.length > 0 && !allowedCouncils.includes(pastorData.council)) {
+              results.failed++;
+              results.errors.push({
+                row: rowNumber,
+                error: `Invalid council: ${pastorData.council}. Allowed values are managed in Admin → Pastor Fields`,
+                data: row,
+              });
+              continue;
+            }
+            if (pastorData.area && allowedAreas.length > 0 && !allowedAreas.includes(pastorData.area)) {
+              results.failed++;
+              results.errors.push({
+                row: rowNumber,
+                error: `Invalid area: ${pastorData.area}. Allowed values are managed in Admin → Pastor Fields`,
+                data: row,
+              });
+              continue;
+            }
+          }
+        } catch (e) {
+          // If the endpoint is unavailable, skip pre-validation and let DB validations handle
+        }
 
         // Check for duplicate pastor
         const existingPastor = await Pastor.findOne({
