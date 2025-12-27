@@ -33,6 +33,23 @@ export async function POST(request: NextRequest) {
       errors: [] as Array<{ row: number; error: string; data: any }>,
     };
 
+    // Fetch dynamic field options from endpoint (fallback to defaults if request fails)
+    let allowedFunctions: string[] = ["Governor", "Overseer"];
+    try {
+      const fieldsUrl = new URL(request.url);
+      fieldsUrl.pathname = "/api/pastor-fields";
+      const fieldsResp = await fetch(fieldsUrl.toString(), { method: "GET" });
+      if (fieldsResp.ok) {
+        const fieldsJson = await fieldsResp.json();
+        const dynamicFunctions = fieldsJson?.data?.pastorFunctions?.options;
+        if (Array.isArray(dynamicFunctions) && dynamicFunctions.length > 0) {
+          allowedFunctions = dynamicFunctions;
+        }
+      }
+    } catch (e) {
+      // Swallow error and continue with default allowedFunctions
+    }
+
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row: any = data[i];
@@ -52,12 +69,33 @@ export async function POST(request: NextRequest) {
           gender: row["Gender"] || row["gender"] || undefined,
           council: row["Council"] || row["council"] || undefined,
           area: row["Area"] || row["area"] || undefined,
-          occupation: row["Occupation"] || row["occupation"] || undefined,
+          // occupation handled below to support "Other Occupation"
           country: row["Country"] || row["country"] || undefined,
           email: row["Email"] || row["email"] || undefined,
           contact_number: row["Contact Number"] || row["contact_number"] || undefined,
           status: row["Status"] || row["status"] || "Active",
         };
+
+        // Handle Occupation + Other Occupation (aligns with Pastor form behavior)
+        const occupationRaw = row["Occupation"] || row["occupation"] || undefined;
+        const otherOccupationRaw = row["Other Occupation"] || row["other_occupation"] || undefined;
+
+        if (typeof occupationRaw === "string" && occupationRaw.trim().toLowerCase() === "other") {
+          const custom = otherOccupationRaw !== undefined ? String(otherOccupationRaw).trim() : "";
+          if (custom) {
+            pastorData.occupation = custom;
+          } else {
+            results.failed++;
+            results.errors.push({
+              row: rowNumber,
+              error: "Occupation is 'Other' but 'Other Occupation' is missing or empty. Provide a specific occupation.",
+              data: row,
+            });
+            continue;
+          }
+        } else {
+          pastorData.occupation = occupationRaw || undefined;
+        }
 
         // Handle clergy_type which can be comma-separated
         const clergyTypeRaw = row["Clergy Type"] || row["clergy_type"];
@@ -82,14 +120,14 @@ export async function POST(request: NextRequest) {
         }
 
         const invalidFunctions = (pastorData.function || []).filter(
-          (value: string) => !["Governor", "Overseer"].includes(value)
+          (value: string) => !allowedFunctions.includes(value)
         );
 
         if (invalidFunctions.length > 0) {
           results.failed++;
           results.errors.push({
             row: rowNumber,
-            error: `Invalid function value(s): ${invalidFunctions.join(", ")}. Allowed: Governor, Overseer`,
+            error: `Invalid function value(s): ${invalidFunctions.join(", ")}. Allowed: ${allowedFunctions.join(", ")}`,
             data: row,
           });
           continue;

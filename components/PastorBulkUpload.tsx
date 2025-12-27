@@ -69,7 +69,8 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         Gender: "Male",
         Council: "Philippians",
         Area: "Experience Area 2",
-        Occupation: "Medical Doctor",
+        Occupation: "Other",
+        "Other Occupation": "Phlebotomist",
         Country: "Ghana",
         Email: "john.doe@example.com",
         "Contact Number": "+233244000000",
@@ -166,6 +167,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 30 }, // Council (expanded to fit longer names)
       { wch: 20 }, // Area
       { wch: 20 }, // Occupation
+      { wch: 22 }, // Other Occupation
       { wch: 15 }, // Country
       { wch: 25 }, // Email
       { wch: 18 }, // Contact Number
@@ -330,7 +332,9 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
                   <strong>Council:</strong> Check the "Councils" sheet for all available council options
                 </li>
                 <li>
-                  <strong>Occupation:</strong> You can type any occupation - not limited to dropdown options
+                  <strong>Occupation:</strong> You can type any occupation. If you enter "Other" in the Occupation
+                  column, fill the "Other Occupation" column with the exact role (e.g., "Phlebotomist"). During upload,
+                  "Other" will be replaced with this value.
                 </li>
                 <li>Date format: YYYY-MM-DD (e.g., 2020-06-01)</li>
                 <li>Leave Church ID blank if you don't have it yet</li>
