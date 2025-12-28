@@ -3,14 +3,13 @@
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Pastor, ClergyType, Council, Area } from "@/types/entities";
+import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
-import { X, Search, LayoutGrid, List, Award } from "lucide-react";
+import { Search, LayoutGrid, List, Award } from "lucide-react";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/contexts/PageTitleContext";
@@ -49,6 +48,7 @@ function ClergyPageContent() {
   });
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Dynamic field options from API (using string arrays to allow dynamic values)
   const [availableClergyTypes, setAvailableClergyTypes] = useState<string[]>([]);

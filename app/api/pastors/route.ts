@@ -71,16 +71,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (functionValues.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Please select at least one function",
-        },
-        { status: 400 }
-      );
-    }
-
     const invalidFunctions = functionValues.filter((value: string) => !allowedFunctions.includes(value));
     if (invalidFunctions.length > 0) {
       return NextResponse.json(

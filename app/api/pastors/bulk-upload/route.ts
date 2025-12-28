@@ -24,7 +24,7 @@ function parseDate(value: any): Date | undefined {
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!trimmed) return undefined;
-    
+
     // Try parsing as ISO string (YYYY-MM-DD) or other common formats
     const date = new Date(trimmed);
     return !isNaN(date.getTime()) ? date : undefined;
@@ -178,16 +178,6 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        if (!pastorData.function || pastorData.function.length === 0) {
-          results.failed++;
-          results.errors.push({
-            row: rowNumber,
-            error: "Missing required field: function must include Governor and/or Overseer",
-            data: row,
-          });
-          continue;
-        }
-
         // Sanitize empty strings/whitespace to undefined for select/date fields
         if (typeof pastorData.council === "string" && pastorData.council.trim() === "") pastorData.council = undefined;
         if (typeof pastorData.area === "string" && pastorData.area.trim() === "") pastorData.area = undefined;
@@ -225,27 +215,26 @@ export async function POST(request: NextRequest) {
           // If the endpoint is unavailable, skip pre-validation and let DB validations handle
         }
 
-        // Check for duplicate pastor
-        const existingPastor = await Pastor.findOne({
+        // Check for duplicate pastor and upsert (update if exists, create if not)
+        // Use findOneAndUpdate with upsert to handle duplicates automatically
+        const query = {
           first_name: pastorData.first_name,
           last_name: pastorData.last_name,
-          ...(pastorData.date_of_birth && { date_of_birth: new Date(pastorData.date_of_birth) }),
+          ...(pastorData.date_of_birth && { date_of_birth: pastorData.date_of_birth }),
+        };
+
+        const existingPastor = await Pastor.findOneAndUpdate(query, pastorData, {
+          new: true,
+          runValidators: true,
+          upsert: true, // Create if not found
         });
 
-        if (existingPastor) {
-          // Update existing pastor with new data
-          await Pastor.findByIdAndUpdate(existingPastor._id, pastorData, {
-            runValidators: true,
-          });
-          results.successful++;
-          updated++;
-          continue;
-        }
-
-        // Create pastor
-        await Pastor.create(pastorData);
         results.successful++;
-        created++;
+        if (existingPastor.wasNew) {
+          created++;
+        } else {
+          updated++;
+        }
       } catch (error: any) {
         results.failed++;
         results.errors.push({

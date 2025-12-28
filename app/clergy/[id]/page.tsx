@@ -26,7 +26,7 @@ export default function ClergyDetailsPage() {
 
   useEffect(() => {
     // Smooth scroll to top when page loads
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // window.scrollTo({ top: 0, behavior: "smooth" });
 
     // Clear page title for detail page
     setTitle("");

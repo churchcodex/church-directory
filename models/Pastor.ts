@@ -106,19 +106,20 @@ const PastorSchema = new Schema<PastorDocument>(
     function: {
       type: [String],
       enum: ["Governor", "Overseer"],
-      required: [true, "Please select at least one function"],
+      required: false,
+      default: [],
       set: (v: string | string[]) => {
-        if (!v) return v;
+        if (!v) return [];
         const arr = Array.isArray(v) ? v : [v];
         return [...new Set(arr.filter(Boolean))];
       },
       validate: {
         validator: function (v: string[]) {
           if (!Array.isArray(v)) return false;
-          if (v.length === 0 || v.length > 2) return false;
+          if (v.length > 2) return false;
           return v.every((value) => ["Governor", "Overseer"].includes(value));
         },
-        message: "A pastor must have 1-2 functions and they must be Governor and/or Overseer",
+        message: "A pastor can have 0-2 functions and they must be Governor and/or Overseer",
       },
     },
   },

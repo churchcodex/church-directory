@@ -30,3 +30,36 @@ export function calculateAge(dateOfBirth: string | Date): number {
 
   return age;
 }
+
+export function convertGoogleDriveUrl(url: string): string {
+  if (!url) return url;
+  
+  // Check if it's a Google Drive URL
+  if (url.includes('drive.google.com')) {
+    // Extract file ID from various Google Drive URL formats
+    let fileId = null;
+    
+    // Format: https://drive.google.com/open?id=FILE_ID
+    if (url.includes('open?id=')) {
+      const match = url.match(/id=([^&]+)/);
+      if (match) fileId = match[1];
+    }
+    // Format: https://drive.google.com/file/d/FILE_ID/view
+    else if (url.includes('/file/d/')) {
+      const match = url.match(/\/file\/d\/([^/]+)/);
+      if (match) fileId = match[1];
+    }
+    // Format: https://drive.google.com/uc?id=FILE_ID
+    else if (url.includes('uc?id=')) {
+      const match = url.match(/id=([^&]+)/);
+      if (match) fileId = match[1];
+    }
+    
+    // Convert to direct image URL if file ID was found
+    if (fileId) {
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+  }
+  
+  return url;
+}
