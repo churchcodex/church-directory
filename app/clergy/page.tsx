@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
@@ -15,9 +15,74 @@ import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 
+// Helper functions to serialize/deserialize filters to/from URL
+function filtersToQueryParams(filters: FilterState): URLSearchParams {
+  const params = new URLSearchParams();
+  
+  if (filters.clergyType.length > 0) {
+    params.set("clergyType", filters.clergyType.join(","));
+  }
+  if (filters.maritalStatus.length > 0) {
+    params.set("maritalStatus", filters.maritalStatus.join(","));
+  }
+  if (filters.gender !== "all") {
+    params.set("gender", filters.gender);
+  }
+  if (filters.council.length > 0) {
+    params.set("council", filters.council.join(","));
+  }
+  if (filters.area.length > 0) {
+    params.set("area", filters.area.join(","));
+  }
+  if (filters.country.length > 0) {
+    params.set("country", filters.country.join(","));
+  }
+  if (filters.occupation.length > 0) {
+    params.set("occupation", filters.occupation.join(","));
+  }
+  if (filters.function.length > 0) {
+    params.set("function", filters.function.join(","));
+  }
+  if (filters.minAge) {
+    params.set("minAge", filters.minAge);
+  }
+  if (filters.maxAge) {
+    params.set("maxAge", filters.maxAge);
+  }
+  
+  return params;
+}
+
+function queryParamsToFilters(searchParams: URLSearchParams): FilterState {
+  const clergyType = searchParams.get("clergyType");
+  const maritalStatus = searchParams.get("maritalStatus");
+  const gender = searchParams.get("gender");
+  const council = searchParams.get("council");
+  const area = searchParams.get("area");
+  const country = searchParams.get("country");
+  const occupation = searchParams.get("occupation");
+  const functionParam = searchParams.get("function");
+  const minAge = searchParams.get("minAge");
+  const maxAge = searchParams.get("maxAge");
+
+  return {
+    clergyType: clergyType ? clergyType.split(",") : [],
+    maritalStatus: maritalStatus ? maritalStatus.split(",") : [],
+    gender: gender || "all",
+    council: council ? council.split(",") : [],
+    area: area ? area.split(",") : [],
+    country: country ? country.split(",") : [],
+    occupation: occupation ? occupation.split(",") : [],
+    function: functionParam ? functionParam.split(",") : [],
+    minAge: minAge || "",
+    maxAge: maxAge || "",
+  };
+}
+
 function ClergyPageContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { setTitle } = usePageTitle();
   const {
     searchQuery,
@@ -34,17 +99,26 @@ function ClergyPageContent() {
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [filters, setFilters] = useState<FilterState>({
-    clergyType: [],
-    maritalStatus: [],
-    gender: "all",
-    council: [],
-    area: [],
-    country: [],
-    occupation: [],
-    function: [],
-    minAge: "",
-    maxAge: "",
+  const [filters, setFilters] = useState<FilterState>(() => {
+    // Initialize from URL parameters
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return queryParamsToFilters(params);
+    } catch {
+      // Fallback to empty filters if URL parsing fails
+      return {
+        clergyType: [],
+        maritalStatus: [],
+        gender: "all",
+        council: [],
+        area: [],
+        country: [],
+        occupation: [],
+        function: [],
+        minAge: "",
+        maxAge: "",
+      };
+    }
   });
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -130,16 +204,13 @@ function ClergyPageContent() {
     }
   }, [pastors.length, searchQuery, filters, setTitle, setResultsCount, setTotalCount]);
 
-  // Initialize filters from URL parameters
+  // Update URL parameters when filters change
   useEffect(() => {
-    const clergyTypeParam = searchParams.get("clergyType");
-    if (clergyTypeParam) {
-      setFilters((prev) => ({
-        ...prev,
-        clergyType: [clergyTypeParam as ClergyType],
-      }));
-    }
-  }, [searchParams]);
+    const params = filtersToQueryParams(filters);
+    const queryString = params.toString();
+    const newUrl = queryString ? `/clergy?${queryString}` : "/clergy";
+    router.push(newUrl);
+  }, [filters, router]);
 
   // Get unique values for filters - combine API options with actual data
   const clergyTypes = useMemo(() => {
