@@ -16,9 +16,12 @@ import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
 
 // Helper functions to serialize/deserialize filters to/from URL
-function filtersToQueryParams(filters: FilterState): URLSearchParams {
+function filtersToQueryParams(filters: FilterState, searchQuery: string): URLSearchParams {
   const params = new URLSearchParams();
-  
+
+  if (searchQuery) {
+    params.set("q", searchQuery);
+  }
   if (filters.clergyType.length > 0) {
     params.set("clergyType", filters.clergyType.join(","));
   }
@@ -49,11 +52,11 @@ function filtersToQueryParams(filters: FilterState): URLSearchParams {
   if (filters.maxAge) {
     params.set("maxAge", filters.maxAge);
   }
-  
+
   return params;
 }
 
-function queryParamsToFilters(searchParams: URLSearchParams): FilterState {
+function queryParamsToFilters(searchParams: URLSearchParams): { filters: FilterState; searchQuery: string } {
   const clergyType = searchParams.get("clergyType");
   const maritalStatus = searchParams.get("maritalStatus");
   const gender = searchParams.get("gender");
@@ -64,19 +67,28 @@ function queryParamsToFilters(searchParams: URLSearchParams): FilterState {
   const functionParam = searchParams.get("function");
   const minAge = searchParams.get("minAge");
   const maxAge = searchParams.get("maxAge");
+  const searchQuery = searchParams.get("q") || "";
 
   return {
-    clergyType: clergyType ? clergyType.split(",") : [],
-    maritalStatus: maritalStatus ? maritalStatus.split(",") : [],
-    gender: gender || "all",
-    council: council ? council.split(",") : [],
-    area: area ? area.split(",") : [],
-    country: country ? country.split(",") : [],
-    occupation: occupation ? occupation.split(",") : [],
-    function: functionParam ? functionParam.split(",") : [],
-    minAge: minAge || "",
-    maxAge: maxAge || "",
+    filters: {
+      clergyType: clergyType ? clergyType.split(",") : [],
+      maritalStatus: maritalStatus ? maritalStatus.split(",") : [],
+      gender: gender || "all",
+      council: council ? council.split(",") : [],
+      area: area ? area.split(",") : [],
+      country: country ? country.split(",") : [],
+      occupation: occupation ? occupation.split(",") : [],
+      function: functionParam ? functionParam.split(",") : [],
+      minAge: minAge || "",
+      maxAge: maxAge || "",
+    },
+    searchQuery,
   };
+}
+
+// Save scroll position before navigating
+function saveScrollPosition() {
+  sessionStorage.setItem("clergyPageScroll", window.scrollY.toString());
 }
 
 function ClergyPageContent() {
@@ -99,13 +111,13 @@ function ClergyPageContent() {
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Initialize filters and search query from URL
   const [filters, setFilters] = useState<FilterState>(() => {
-    // Initialize from URL parameters
     try {
       const params = new URLSearchParams(window.location.search);
-      return queryParamsToFilters(params);
+      return queryParamsToFilters(params).filters;
     } catch {
-      // Fallback to empty filters if URL parsing fails
       return {
         clergyType: [],
         maritalStatus: [],
@@ -120,9 +132,32 @@ function ClergyPageContent() {
       };
     }
   });
+
+  const [initialSearchQuery, setInitialSearchQuery] = useState<string>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return queryParamsToFilters(params).searchQuery;
+    } catch {
+      return "";
+    }
+  });
+
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Scroll position persistence
+  useEffect(() => {
+    // Restore scroll position after loading completes
+    if (!loading && !isFiltering) {
+      const savedScrollPosition = sessionStorage.getItem("clergyPageScroll");
+      if (savedScrollPosition) {
+        const scrollY = parseInt(savedScrollPosition, 10);
+        window.scrollTo(0, scrollY);
+        sessionStorage.removeItem("clergyPageScroll");
+      }
+    }
+  }, [loading, isFiltering]);
 
   // Dynamic field options from API (using string arrays to allow dynamic values)
   const [availableClergyTypes, setAvailableClergyTypes] = useState<string[]>([]);
@@ -172,13 +207,25 @@ function ClergyPageContent() {
   useEffect(() => {
     setTitle("Directory");
     setSearchPlaceholder("Search by name or type...");
+    // Initialize search query from URL if it exists
+    if (initialSearchQuery) {
+      setSearchQuery(initialSearchQuery);
+    }
     fetchPastors();
     fetchFieldOptions();
 
     return () => {
       clearActions();
     };
-  }, [setTitle, setSearchPlaceholder, fetchPastors, fetchFieldOptions, clearActions]);
+  }, [
+    setTitle,
+    setSearchPlaceholder,
+    fetchPastors,
+    fetchFieldOptions,
+    clearActions,
+    initialSearchQuery,
+    setSearchQuery,
+  ]);
 
   // Set total count when no filters are applied to show badge in navbar
   useEffect(() => {
@@ -204,13 +251,13 @@ function ClergyPageContent() {
     }
   }, [pastors.length, searchQuery, filters, setTitle, setResultsCount, setTotalCount]);
 
-  // Update URL parameters when filters change
+  // Update URL parameters when filters or search query change
   useEffect(() => {
-    const params = filtersToQueryParams(filters);
+    const params = filtersToQueryParams(filters, searchQuery);
     const queryString = params.toString();
     const newUrl = queryString ? `/clergy?${queryString}` : "/clergy";
     router.push(newUrl);
-  }, [filters, router]);
+  }, [filters, searchQuery, router]);
 
   // Get unique values for filters - combine API options with actual data
   const clergyTypes = useMemo(() => {
@@ -663,6 +710,7 @@ function ClergyPageContent() {
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
+                onClick={saveScrollPosition}
                 className="group cursor-pointer flex flex-col items-center max-w-24 mx-auto"
               >
                 <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-105">
@@ -690,6 +738,7 @@ function ClergyPageContent() {
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
+                onClick={saveScrollPosition}
                 className="flex items-center gap-4 p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border"
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted shrink-0">
