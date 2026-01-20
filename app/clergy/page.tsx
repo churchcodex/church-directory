@@ -113,38 +113,23 @@ function ClergyPageContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Initialize filters and search query from URL
-  const [filters, setFilters] = useState<FilterState>(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return queryParamsToFilters(params).filters;
-    } catch {
-      return {
-        clergyType: [],
-        maritalStatus: [],
-        gender: "all",
-        council: [],
-        area: [],
-        country: [],
-        occupation: [],
-        function: [],
-        minAge: "",
-        maxAge: "",
-      };
-    }
-  });
-
-  const [initialSearchQuery, setInitialSearchQuery] = useState<string>(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return queryParamsToFilters(params).searchQuery;
-    } catch {
-      return "";
-    }
+  const [filters, setFilters] = useState<FilterState>({
+    clergyType: [],
+    maritalStatus: [],
+    gender: "all",
+    council: [],
+    area: [],
+    country: [],
+    occupation: [],
+    function: [],
+    minAge: "",
+    maxAge: "",
   });
 
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Scroll position persistence
   useEffect(() => {
@@ -207,25 +192,24 @@ function ClergyPageContent() {
   useEffect(() => {
     setTitle("Directory");
     setSearchPlaceholder("Search by name or type...");
-    // Initialize search query from URL if it exists
-    if (initialSearchQuery) {
-      setSearchQuery(initialSearchQuery);
-    }
     fetchPastors();
     fetchFieldOptions();
 
     return () => {
       clearActions();
     };
-  }, [
-    setTitle,
-    setSearchPlaceholder,
-    fetchPastors,
-    fetchFieldOptions,
-    clearActions,
-    initialSearchQuery,
-    setSearchQuery,
-  ]);
+  }, [setTitle, setSearchPlaceholder, fetchPastors, fetchFieldOptions, clearActions]);
+
+  // Hydrate filters/searchQuery from URL on client once, then mark initialized
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const parsed = queryParamsToFilters(params);
+    setFilters(parsed.filters);
+    if (parsed.searchQuery) {
+      setSearchQuery(parsed.searchQuery);
+    }
+    setIsInitialized(true);
+  }, [setSearchQuery]);
 
   // Set total count when no filters are applied to show badge in navbar
   useEffect(() => {
@@ -253,16 +237,22 @@ function ClergyPageContent() {
 
   // Update URL parameters when filters or search query change
   useEffect(() => {
+    // Skip URL update during initialization
+    if (!isInitialized) {
+      return;
+    }
+
     const params = filtersToQueryParams(filters, searchQuery);
     const queryString = params.toString();
-    const newUrl = queryString ? `/clergy?${queryString}` : "/clergy";
+    // Always keep the URL structure, don't reset to plain /clergy
+    const newUrl = `/clergy${queryString ? `?${queryString}` : ""}`;
     router.push(newUrl);
-  }, [filters, searchQuery, router]);
+  }, [filters, searchQuery, router, isInitialized]);
 
   // Get unique values for filters - combine API options with actual data
   const clergyTypes = useMemo(() => {
     const fromPastors = Array.from(new Set(pastors.flatMap((p) => p.clergy_type || []))).filter(
-      (type): type is NonNullable<typeof type> => type !== undefined
+      (type): type is NonNullable<typeof type> => type !== undefined,
     );
     // Merge with API options, prioritizing API
     const combined = [...new Set([...availableClergyTypes, ...fromPastors])];
@@ -271,7 +261,7 @@ function ClergyPageContent() {
 
   const councils = useMemo(() => {
     const fromPastors = Array.from(new Set(pastors.map((p) => p.council))).filter(
-      (council): council is NonNullable<typeof council> => council !== undefined
+      (council): council is NonNullable<typeof council> => council !== undefined,
     );
     // Merge with API options, prioritizing API
     const combined = [...new Set([...availableCouncils, ...fromPastors])];
@@ -292,7 +282,7 @@ function ClergyPageContent() {
       Array.from(new Set(pastors.map((p) => p.country)))
         .filter((country): country is NonNullable<typeof country> => country !== undefined)
         .sort(),
-    [pastors]
+    [pastors],
   );
 
   const occupations = useMemo(
@@ -300,7 +290,7 @@ function ClergyPageContent() {
       Array.from(new Set(pastors.map((p) => p.occupation)))
         .filter((occupation): occupation is NonNullable<typeof occupation> => occupation !== undefined)
         .sort(),
-    [pastors]
+    [pastors],
   );
 
   useEffect(() => {
@@ -313,7 +303,7 @@ function ClergyPageContent() {
         areas={areas}
         countries={countries}
         occupations={occupations}
-      />
+      />,
     );
   }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations]);
 
@@ -344,7 +334,7 @@ function ClergyPageContent() {
             <PastorFormDialog onSuccess={fetchPastors} />
           </>
         )}
-      </>
+      </>,
     );
   }, [setAddButton, viewMode, fetchPastors, session]);
 
@@ -375,8 +365,8 @@ function ClergyPageContent() {
           const clergyTypeArray = Array.isArray(pastor.clergy_type)
             ? pastor.clergy_type
             : pastor.clergy_type
-            ? [pastor.clergy_type]
-            : [];
+              ? [pastor.clergy_type]
+              : [];
           return filters.clergyType.some((type) => clergyTypeArray.includes(type as ClergyType));
         });
       }
@@ -423,8 +413,8 @@ function ClergyPageContent() {
           const functionArray = Array.isArray(pastor.function)
             ? pastor.function
             : pastor.function
-            ? [pastor.function]
-            : [];
+              ? [pastor.function]
+              : [];
           return filters.function.some((func) => functionArray.includes(func));
         });
       }

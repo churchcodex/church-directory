@@ -179,8 +179,8 @@ export default function ClergyDetailsPage() {
     const types = Array.isArray(pastor.clergy_type)
       ? pastor.clergy_type
       : pastor.clergy_type
-      ? [pastor.clergy_type]
-      : [];
+        ? [pastor.clergy_type]
+        : [];
 
     // Check for Bishops, Mothers, or Sisters first (Date of Consecration)
     if (types.includes("Bishop") || types.includes("Mother") || types.includes("Sister")) {
@@ -209,8 +209,8 @@ export default function ClergyDetailsPage() {
     const types = Array.isArray(pastor.clergy_type)
       ? pastor.clergy_type
       : pastor.clergy_type
-      ? [pastor.clergy_type]
-      : [];
+        ? [pastor.clergy_type]
+        : [];
 
     if (types.length === 0) return [];
 
@@ -265,7 +265,7 @@ export default function ClergyDetailsPage() {
               <DeleteButton
                 id={pastor.id}
                 name={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
-                onSuccess={() => router.push("/clergy")}
+                onSuccess={() => router.back()}
               />
             </div>
           )}

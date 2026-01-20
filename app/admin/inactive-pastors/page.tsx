@@ -103,25 +103,27 @@ export default function InactivePastorsPage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-muted/20 py-6 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => router.push("/")}>
+        <div className="flex flex-col gap-2 md:gap-3 mb-6">
+          <div className="flex justify-start">
+            <Button variant="ghost" size="sm" className="w-fit" onClick={() => router.push("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Button>
-            <h1 className="text-3xl font-bold">Inactive Pastors</h1>
           </div>
-          <Badge variant="secondary" className="text-lg px-4 py-2">
-            {pastors.length} Inactive
-          </Badge>
+          <div className="flex items-center justify-between gap-2 md:gap-4">
+            <h1 className="text-2xl md:text-3xl font-bold">Inactive Pastors</h1>
+            <Badge variant="secondary" className="text-sm md:text-base px-3 py-2 md:px-4">
+              {pastors.length} Inactive
+            </Badge>
+          </div>
         </div>
 
         {pastors.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground text-lg">No inactive pastors found</p>
+          <Card className="p-8 sm:p-12 text-center">
+            <p className="text-muted-foreground text-base sm:text-lg">No inactive pastors found</p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {pastors.map((pastor) => (
               <Card key={pastor.id} className="overflow-hidden">
                 <div className="relative h-48 w-full">
@@ -167,10 +169,10 @@ export default function InactivePastorsPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                     <Button
                       variant="outline"
-                      className="flex-1 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
+                      className="w-full sm:flex-1 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
                       onClick={() => handleRestore(pastor.id)}
                       disabled={actionLoading === pastor.id}
                     >
@@ -188,7 +190,7 @@ export default function InactivePastorsPage() {
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="outline"
-                          className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                          className="w-full sm:flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                           disabled={actionLoading === pastor.id}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
