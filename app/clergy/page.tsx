@@ -86,9 +86,10 @@ function queryParamsToFilters(searchParams: URLSearchParams): { filters: FilterS
   };
 }
 
-// Save scroll position before navigating
-function saveScrollPosition() {
+// Save scroll position and filtered pastor IDs before navigating
+function saveScrollPosition(filteredPastorIds: string[]) {
   sessionStorage.setItem("clergyPageScroll", window.scrollY.toString());
+  sessionStorage.setItem("clergyFilteredIds", JSON.stringify(filteredPastorIds));
 }
 
 function ClergyPageContent() {
@@ -700,7 +701,7 @@ function ClergyPageContent() {
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
-                onClick={saveScrollPosition}
+                onClick={() => saveScrollPosition(filteredPastors.map((p) => p.id))}
                 className="group cursor-pointer flex flex-col items-center max-w-24 mx-auto"
               >
                 <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-105">
@@ -728,7 +729,7 @@ function ClergyPageContent() {
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
-                onClick={saveScrollPosition}
+                onClick={() => saveScrollPosition(filteredPastors.map((p) => p.id))}
                 className="flex items-center gap-4 p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border"
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted shrink-0">

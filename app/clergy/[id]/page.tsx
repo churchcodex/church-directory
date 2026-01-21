@@ -41,15 +41,31 @@ export default function ClergyDetailsPage() {
 
   const fetchAllPastors = async () => {
     try {
+      // Check if there are filtered pastor IDs in sessionStorage
+      const filteredIdsJson = sessionStorage.getItem("clergyFilteredIds");
       const response = await fetch("/api/pastors");
       const data = await response.json();
       if (data.success) {
-        // Sort pastors alphabetically by first name, then last name (same as list page)
-        const sortedPastors = data.data.sort((a: Pastor, b: Pastor) => {
+        let sortedPastors = data.data.sort((a: Pastor, b: Pastor) => {
           const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
           const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
           return nameA.localeCompare(nameB);
         });
+
+        // If we have filtered IDs, use them to order and filter the pastors
+        if (filteredIdsJson) {
+          try {
+            const filteredIds = JSON.parse(filteredIdsJson) as string[];
+            // Filter to only include pastors that are in the filtered list
+            const filteredPastorMap = new Map(sortedPastors.map((p: Pastor) => [p.id, p]));
+            sortedPastors = filteredIds
+              .map((id) => filteredPastorMap.get(id))
+              .filter((p): p is Pastor => p !== undefined);
+          } catch (e) {
+            console.error("Failed to parse filtered IDs:", e);
+          }
+        }
+
         setAllPastors(sortedPastors);
       }
     } catch (error) {
