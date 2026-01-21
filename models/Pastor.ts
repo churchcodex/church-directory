@@ -105,7 +105,7 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     function: {
       type: [String],
-      enum: ["Governor", "Overseer"],
+      enum: ["Governor", "Overseer", "Not Applicable"],
       required: false,
       default: [],
       set: (v: string | string[]) => {
@@ -116,16 +116,22 @@ const PastorSchema = new Schema<PastorDocument>(
       validate: {
         validator: function (v: string[]) {
           if (!Array.isArray(v)) return false;
+          // If "Not Applicable" is selected, it must be the only function
+          if (v.includes("Not Applicable")) {
+            return v.length === 1;
+          }
+          // Otherwise, allow up to 2 functions (Governor and/or Overseer)
           if (v.length > 2) return false;
           return v.every((value) => ["Governor", "Overseer"].includes(value));
         },
-        message: "A pastor can have 0-2 functions and they must be Governor and/or Overseer",
+        message:
+          "If 'Not Applicable' is selected, no other functions can be selected. Otherwise, a pastor can have 0-2 functions (Governor and/or Overseer)",
       },
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Add compound index for duplicate checking

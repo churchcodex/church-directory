@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 
-const allowedFunctions = ["Governor", "Overseer"];
+const allowedFunctions = ["Governor", "Overseer", "Not Applicable"];
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           success: false,
           error: "Unauthorized. Admin access required to update pastors.",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -61,8 +61,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         ? Array.isArray(body.function)
           ? body.function
           : body.function
-          ? [body.function]
-          : []
+            ? [body.function]
+            : []
         : undefined;
 
     if (normalizedFunction !== undefined) {
@@ -73,9 +73,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         return NextResponse.json(
           {
             success: false,
-            error: "Invalid function selection. Allowed options are Governor or Overseer",
+            error: "Invalid function selection. Allowed options are Governor, Overseer, or Not Applicable",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -90,7 +90,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             success: false,
             error: "Please select at least one title",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             success: false,
             error: errorMessage,
           },
-          { status: 409 }
+          { status: 409 },
         );
       }
     }
@@ -182,7 +182,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
           success: false,
           error: "Unauthorized. Admin access required to delete pastors.",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 

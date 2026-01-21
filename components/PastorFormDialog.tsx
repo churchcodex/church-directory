@@ -31,7 +31,6 @@ import {
   PastorFunction,
 } from "@/types/entities";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
-import ReactSelect from "react-select";
 
 interface PastorFormDialogProps {
   pastor?: Pastor;
@@ -423,6 +422,18 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       return;
     }
 
+    // Validate that "Not Applicable" is not combined with other functions
+    if (formData.function.includes("Not Applicable") && formData.function.length > 1) {
+      toast.error("If 'Not Applicable' is selected, no other functions can be selected", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -563,6 +574,30 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     }
 
     setFormData({ ...formData, clergy_type: selectedValues as ClergyType[] });
+  };
+
+  // Validate function selection
+  const handleFunctionChange = (selectedValues: string[]) => {
+    // If "Not Applicable" is selected, clear all other functions
+    if (selectedValues.includes("Not Applicable")) {
+      if (selectedValues.length > 1) {
+        setFormData({ ...formData, function: ["Not Applicable"] as PastorFunction[] });
+        toast.info(
+          "'Not Applicable' cannot be combined with other functions. Only 'Not Applicable' has been selected.",
+          {
+            style: {
+              background: "#1e3a8a",
+              border: "1px solid #1e40af",
+              color: "#dbeafe",
+            },
+          },
+        );
+      } else {
+        setFormData({ ...formData, function: selectedValues as PastorFunction[] });
+      }
+    } else {
+      setFormData({ ...formData, function: selectedValues as PastorFunction[] });
+    }
   };
 
   return (
@@ -828,7 +863,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 <MultiSelect
                   options={pastorFunctions.map((f) => ({ value: f, label: f }))}
                   value={formData.function}
-                  onValueChange={(value) => setFormData({ ...formData, function: value as PastorFunction[] })}
+                  onValueChange={handleFunctionChange}
                   placeholder="Select function(s)"
                 />
               </div>

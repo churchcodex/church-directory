@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 
-const allowedFunctions = ["Governor", "Overseer"];
+const allowedFunctions = ["Governor", "Overseer", "Not Applicable"];
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
       function: (Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : []).filter(
-        (value: string) => allowedFunctions.includes(value)
+        (value: string) => allowedFunctions.includes(value),
       ),
     }));
     return NextResponse.json({ success: true, data: transformedPastors });
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: error.message || "Failed to fetch pastors",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Unauthorized. Admin access required to create pastors.",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Please select at least one title",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -76,9 +76,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid function selection. Allowed options are Governor or Overseer",
+          error: "Invalid function selection. Allowed options are Governor, Overseer, or Not Applicable",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: errorMessage,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error.message || "Failed to create pastor",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
