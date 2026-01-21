@@ -226,7 +226,7 @@ export default function Dashboard() {
       {/* Dashboard Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-300">
-          {session?.user?.role === "admin" ? "" : `${session?.user?.council} Dashboard`}
+          {session?.user?.role === "admin" ? "" : `${session?.user?.council} Council`}
         </h1>
       </div>
 
