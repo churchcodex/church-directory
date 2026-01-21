@@ -4,8 +4,6 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 
-const allowedFunctions = ["Governor", "Overseer", "Not Applicable"];
-
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
@@ -67,18 +65,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (normalizedFunction !== undefined) {
       const functionValues = Array.from(new Set((normalizedFunction as string[]).filter(Boolean))) as string[];
-
-      const invalidFunctions = functionValues.filter((value: string) => !allowedFunctions.includes(value));
-      if (invalidFunctions.length > 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Invalid function selection. Allowed options are Governor, Overseer, or Not Applicable",
-          },
-          { status: 400 },
-        );
-      }
-
       body.function = functionValues;
     }
 

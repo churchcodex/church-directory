@@ -38,7 +38,7 @@ interface PastorFormDialogProps {
 }
 
 // Default values - will be replaced by API data
-const defaultClergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
+const defaultClergyTypes: ClergyType[] = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Not Applicable"];
 const defaultAreas: Area[] = [
   "HGE Area 1",
   "HGE Area 2",
@@ -251,7 +251,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         : pastor?.function
           ? ([pastor.function] as PastorFunction[])
           : [];
-      return functions.filter((value) => defaultPastorFunctions.includes(value));
+      return functions;
     })(),
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
@@ -352,11 +352,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         setAreas(data.data.areas?.options || defaultAreas);
         setCouncils(data.data.councils?.options || defaultCouncils);
         setStatuses(data.data.statuses?.options || defaultStatuses);
-        setPastorFunctions(
-          (data.data.pastorFunctions?.options || defaultPastorFunctions).filter((value: string) =>
-            defaultPastorFunctions.includes(value as PastorFunction),
-          ),
-        );
+        setPastorFunctions(data.data.pastorFunctions?.options || defaultPastorFunctions);
         setOccupations(data.data.occupations?.options || defaultOccupations);
         setMaritalStatuses(data.data.maritalStatuses?.options || defaultMaritalStatuses);
         setGenders(data.data.genders?.options || defaultGenders);
@@ -402,7 +398,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             : pastor.function
               ? ([pastor.function] as PastorFunction[])
               : [];
-          return functions.filter((value) => defaultPastorFunctions.includes(value));
+          return functions;
         })(),
       });
     }
@@ -442,9 +438,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
       const submissionData = {
         ...formData,
-        function: Array.from(
-          new Set(formData.function.filter((value) => defaultPastorFunctions.includes(value))),
-        ) as PastorFunction[],
+        function: formData.function as PastorFunction[],
         occupation: occupationType === "Other" ? customOccupation : occupationType,
       };
 
@@ -527,8 +521,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     else if (types.includes("Reverend")) {
       return "Date of Ordination";
     }
-    // Default for Pastor and Governor (Date of Appointment)
-    else if (types.includes("Pastor") || types.includes("Governor")) {
+    // Default for Pastor and Not Applicable (Date of Appointment)
+    else if (types.includes("Pastor") || types.includes("Not Applicable")) {
       return "Date of Appointment";
     }
 
@@ -552,18 +546,6 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     // Allow maximum of 2 titles
     if (selectedValues.length > 2) {
       toast.error("A pastor can have a maximum of 2 titles", {
-        style: {
-          background: "#7f1d1d",
-          border: "1px solid #991b1b",
-          color: "#fef2f2",
-        },
-      });
-      return;
-    }
-
-    // If there are 2 titles, one must be Governor
-    if (selectedValues.length === 2 && !selectedValues.includes("Governor")) {
-      toast.error("If a pastor has 2 titles, one must be Governor", {
         style: {
           background: "#7f1d1d",
           border: "1px solid #991b1b",

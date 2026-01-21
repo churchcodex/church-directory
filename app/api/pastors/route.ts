@@ -4,8 +4,6 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 
-const allowedFunctions = ["Governor", "Overseer", "Not Applicable"];
-
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -22,9 +20,7 @@ export async function GET(request: NextRequest) {
       first_name: pastor.first_name || "",
       middle_name: pastor.middle_name || "",
       last_name: pastor.last_name || "",
-      function: (Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : []).filter(
-        (value: string) => allowedFunctions.includes(value),
-      ),
+      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
     }));
     return NextResponse.json({ success: true, data: transformedPastors });
   } catch (error: any) {
@@ -66,17 +62,6 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: "Please select at least one title",
-        },
-        { status: 400 },
-      );
-    }
-
-    const invalidFunctions = functionValues.filter((value: string) => !allowedFunctions.includes(value));
-    if (invalidFunctions.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid function selection. Allowed options are Governor, Overseer, or Not Applicable",
         },
         { status: 400 },
       );

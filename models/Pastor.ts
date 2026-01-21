@@ -38,7 +38,7 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     clergy_type: {
       type: [String],
-      enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"],
+      enum: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Not Applicable"],
       required: [true, "Please select at least one title"],
       validate: {
         validator: function (v: string[]) {
@@ -46,11 +46,9 @@ const PastorSchema = new Schema<PastorDocument>(
           if (!v || v.length === 0) return false;
           // Allow maximum of 2 titles
           if (v.length > 2) return false;
-          // If there are 2 titles, one must be Governor
-          if (v.length === 2 && !v.includes("Governor")) return false;
           return true;
         },
-        message: "A pastor must have at least one title (maximum of 2), and if there are 2, one must be Governor",
+        message: "A pastor must have at least one title (maximum of 2)",
       },
     },
     marital_status: {
@@ -105,7 +103,6 @@ const PastorSchema = new Schema<PastorDocument>(
     },
     function: {
       type: [String],
-      enum: ["Governor", "Overseer", "Not Applicable"],
       required: false,
       default: [],
       set: (v: string | string[]) => {
@@ -120,12 +117,10 @@ const PastorSchema = new Schema<PastorDocument>(
           if (v.includes("Not Applicable")) {
             return v.length === 1;
           }
-          // Otherwise, allow up to 2 functions (Governor and/or Overseer)
-          if (v.length > 2) return false;
-          return v.every((value) => ["Governor", "Overseer"].includes(value));
+          // Otherwise, allow any number of functions
+          return true;
         },
-        message:
-          "If 'Not Applicable' is selected, no other functions can be selected. Otherwise, a pastor can have 0-2 functions (Governor and/or Overseer)",
+        message: "If 'Not Applicable' is selected, no other functions can be selected",
       },
     },
   },

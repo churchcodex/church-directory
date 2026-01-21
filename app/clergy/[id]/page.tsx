@@ -190,7 +190,7 @@ export default function ClergyDetailsPage() {
     else if (types.includes("Reverend")) {
       return "Date of Ordination";
     }
-    // Default for Pastor and Governor (Date of Appointment)
+    // Default for Pastor and Not Applicable (Date of Appointment)
     return "Date of Appointment";
   };
 
@@ -215,7 +215,7 @@ export default function ClergyDetailsPage() {
     if (types.length === 0) return [];
 
     // Define the display order
-    const order = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"];
+    const order = ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Not Applicable"];
 
     // Sort types according to the defined order
     const sortedTypes = types.sort((a, b) => {

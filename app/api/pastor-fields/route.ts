@@ -7,7 +7,7 @@ import User from "@/models/User";
 
 // Default values for each field
 const defaultFieldValues: Record<string, string[]> = {
-  clergyTypes: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Governor"],
+  clergyTypes: ["Bishop", "Mother", "Sister", "Reverend", "Pastor", "Not Applicable"],
   areas: [
     "HGE Area 1",
     "HGE Area 2",
@@ -199,13 +199,7 @@ export async function GET(req: NextRequest) {
 
     for (const fieldName of fieldNames) {
       const fieldOption = await PastorFieldOptions.findOne({ fieldName });
-      const rawOptions = fieldOption ? fieldOption.options : defaultFieldValues[fieldName];
-      const sanitizedOptions =
-        fieldName === "pastorFunctions"
-          ? (rawOptions || []).filter((value: string) => allowedFunctionValues.includes(value))
-          : rawOptions;
-      const options =
-        fieldName === "pastorFunctions" && sanitizedOptions.length === 0 ? allowedFunctionValues : sanitizedOptions;
+      const options = fieldOption ? fieldOption.options : defaultFieldValues[fieldName];
 
       if (!fieldOption) {
         // Return default values if not in database
@@ -248,13 +242,6 @@ export async function PUT(req: NextRequest) {
 
     if (!defaultFieldValues[fieldName]) {
       return NextResponse.json({ error: "Invalid field name" }, { status: 400 });
-    }
-
-    if (fieldName === "pastorFunctions") {
-      const invalidFunctions = options.filter((value) => !allowedFunctionValues.includes(value));
-      if (invalidFunctions.length > 0) {
-        return NextResponse.json({ error: "Functions must be Governor or Overseer" }, { status: 400 });
-      }
     }
 
     await dbConnect();
