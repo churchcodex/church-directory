@@ -149,6 +149,7 @@ function ClergyPageContent() {
   const [availableClergyTypes, setAvailableClergyTypes] = useState<string[]>([]);
   const [availableCouncils, setAvailableCouncils] = useState<string[]>([]);
   const [availableAreas, setAvailableAreas] = useState<string[]>([]);
+  const [availablePastorFunctions, setAvailablePastorFunctions] = useState<string[]>([]);
   const fetchPastors = useCallback(async () => {
     try {
       const response = await fetch("/api/pastors");
@@ -184,6 +185,7 @@ function ClergyPageContent() {
         setAvailableClergyTypes(data.data.clergyTypes?.options || []);
         setAvailableCouncils(data.data.councils?.options || []);
         setAvailableAreas(data.data.areas?.options || []);
+        setAvailablePastorFunctions(data.data.pastorFunctions?.options || []);
       }
     } catch (error) {
       console.error("Failed to fetch field options:", error);
@@ -294,6 +296,21 @@ function ClergyPageContent() {
     [pastors],
   );
 
+  const pastorFunctions = useMemo(() => {
+    const fromPastors = Array.from(
+      new Set(
+        pastors.flatMap((p) => {
+          if (Array.isArray(p.function)) return p.function;
+          if (p.function) return [p.function];
+          return [];
+        }),
+      ),
+    ).filter((fn): fn is NonNullable<typeof fn> => Boolean(fn));
+
+    const base = availablePastorFunctions.length > 0 ? availablePastorFunctions : [];
+    return [...new Set([...base, ...fromPastors])];
+  }, [pastors, availablePastorFunctions]);
+
   useEffect(() => {
     setFilterButton(
       <PastorFilterDialog
@@ -304,9 +321,10 @@ function ClergyPageContent() {
         areas={areas}
         countries={countries}
         occupations={occupations}
+        pastorFunctions={pastorFunctions}
       />,
     );
-  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations]);
+  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations, pastorFunctions]);
 
   useEffect(() => {
     setAddButton(
@@ -639,6 +657,7 @@ function ClergyPageContent() {
             areas={areas}
             countries={countries}
             occupations={occupations}
+            pastorFunctions={pastorFunctions}
           />
           <div className="flex gap-1 border rounded-md">
             <Button
