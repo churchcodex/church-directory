@@ -232,7 +232,7 @@ export default function ClergyDetailsPage() {
       <div className="mx-auto max-w-[1600px] md:h-[calc(100vh-4rem)]">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => router.push("/clergy")}>
+            <Button variant="ghost" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               <p className="hidden md:block">Back</p>
             </Button>
@@ -302,6 +302,28 @@ export default function ClergyDetailsPage() {
                 </h1>
                 {(() => {
                   const types = formatClergyTypes();
+                  const functionList = Array.isArray(pastor.function)
+                    ? pastor.function
+                    : pastor.function
+                      ? [pastor.function]
+                      : [];
+
+                  // If title is "Not Applicable"
+                  if (types.length === 1 && types[0] === "Not Applicable") {
+                    // If function is not "Not Applicable" and has values, show function instead
+                    if (
+                      functionList.length > 0 &&
+                      !(functionList.length === 1 && functionList[0] === "Not Applicable")
+                    ) {
+                      // If "Both Governor and Overseer" is selected, only show that
+                      if (functionList.includes("Both Governor and Overseer")) {
+                        return <p className="text-base lg:text-xl text-primary">Both Governor and Overseer</p>;
+                      }
+                      return <p className="text-base lg:text-xl text-primary">{functionList.join(" • ")}</p>;
+                    }
+                    // Otherwise show nothing
+                    return null;
+                  }
 
                   if (types.length === 0) {
                     return null;
@@ -379,11 +401,42 @@ export default function ClergyDetailsPage() {
                   </div>
                 )}
 
-                {functionList.length > 0 && (
-                  <div className="flex items-center justify-center p-2 lg:p-3 bg-muted rounded-lg">
-                    <span className="text-sm lg:text-base font-semibold">{functionList.join(", ")}</span>
-                  </div>
-                )}
+                {(() => {
+                  // Don't show if function is "Not Applicable"
+                  if (functionList.length === 1 && functionList[0] === "Not Applicable") {
+                    return null;
+                  }
+
+                  // Don't show if title is "Not Applicable" and function is shown above the name
+                  const types = Array.isArray(pastor.clergy_type)
+                    ? pastor.clergy_type
+                    : pastor.clergy_type
+                      ? [pastor.clergy_type]
+                      : [];
+                  if (types.length === 1 && types[0] === "Not Applicable" && functionList.length > 0) {
+                    return null;
+                  }
+
+                  // If "Both Governor and Overseer" is selected, only show that
+                  if (functionList.includes("Both Governor and Overseer")) {
+                    return (
+                      <div className="flex items-center justify-center p-2 lg:p-3 bg-muted rounded-lg">
+                        <span className="text-sm lg:text-base font-semibold">Both Governor and Overseer</span>
+                      </div>
+                    );
+                  }
+
+                  // Show all functions
+                  if (functionList.length > 0) {
+                    return (
+                      <div className="flex items-center justify-center p-2 lg:p-3 bg-muted rounded-lg">
+                        <span className="text-sm lg:text-base font-semibold">{functionList.join(", ")}</span>
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })()}
               </div>
             </div>
           </div>
