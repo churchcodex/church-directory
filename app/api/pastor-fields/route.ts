@@ -182,10 +182,10 @@ const defaultFieldValues: Record<string, string[]> = {
   maritalStatuses: ["Single", "Married", "Divorced", "Widowed"],
   genders: ["Male", "Female"],
   statuses: ["Active", "Inactive"],
-  pastorFunctions: ["Governor", "Overseer"],
+  pastorFunctions: ["Governor", "Overseer", "Not Applicable"],
 };
 
-const allowedFunctionValues = ["Governor", "Overseer"];
+const allowedFunctionValues = ["Governor", "Overseer", "Not Applicable"];
 
 // GET all field options
 export async function GET(req: NextRequest) {

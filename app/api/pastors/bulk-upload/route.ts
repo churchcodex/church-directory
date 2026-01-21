@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     let updated = 0;
 
     // Fetch dynamic field options from endpoint (fallback to defaults if request fails)
-    let allowedFunctions: string[] = ["Governor", "Overseer"];
+    let allowedFunctions: string[] = ["Governor", "Overseer", "Not Applicable"];
     try {
       const fieldsUrl = new URL(request.url);
       fieldsUrl.pathname = "/api/pastor-fields";

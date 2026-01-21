@@ -138,7 +138,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const genderData = genders.map((gender: string) => ({ Gender: gender }));
     const genderSheet = XLSX.utils.json_to_sheet(genderData);
 
-    const allowedFunctions = ["Governor", "Overseer"];
+    const allowedFunctions = ["Governor", "Overseer", "Not Applicable"];
     const functions = (fieldOptions?.pastorFunctions?.options || allowedFunctions).filter((func: string) =>
       allowedFunctions.includes(func)
     );

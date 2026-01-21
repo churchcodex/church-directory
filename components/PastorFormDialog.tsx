@@ -52,7 +52,7 @@ const defaultAreas: Area[] = [
   "None",
 ];
 const defaultStatuses: Status[] = ["Active", "Inactive"];
-const defaultPastorFunctions: PastorFunction[] = ["Governor", "Overseer"];
+const defaultPastorFunctions: PastorFunction[] = ["Governor", "Overseer", "Not Applicable"];
 const defaultOccupations: Occupation[] = [
   "Full Time Pastor",
   "Medical Doctor",

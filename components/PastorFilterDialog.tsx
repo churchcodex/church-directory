@@ -43,7 +43,7 @@ export interface FilterState {
 
 const maritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const genders: Gender[] = ["Male", "Female"];
-const pastorFunctions: PastorFunction[] = ["Governor", "Overseer"];
+const pastorFunctions: PastorFunction[] = ["Governor", "Overseer", "Not Applicable"];
 
 export default function PastorFilterDialog({
   onApplyFilters,
