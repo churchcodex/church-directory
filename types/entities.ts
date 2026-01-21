@@ -190,7 +190,7 @@ export interface Pastor {
   marital_status?: MaritalStatus;
   church?: string;
   gender?: Gender;
-  council: Council;
+  council: Council[];
   area: Area;
   occupation?: string;
   country?: string;

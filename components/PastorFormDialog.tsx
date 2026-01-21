@@ -238,7 +238,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     marital_status: pastor?.marital_status || "Single",
     church: pastor?.church || "",
     gender: pastor?.gender || "Male",
-    council: pastor?.council || "",
+    council: Array.isArray(pastor?.council) ? (pastor?.council as Council[]) : pastor?.council ? [pastor.council] : [],
     area: pastor?.area || "",
     occupation: pastor?.occupation || "Medical Doctor",
     country: pastor?.country || "",
@@ -385,7 +385,11 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         marital_status: pastor.marital_status || "Single",
         church: pastor.church || "",
         gender: pastor.gender || "Male",
-        council: pastor.council || "",
+        council: Array.isArray(pastor.council)
+          ? (pastor.council as Council[])
+          : pastor.council
+            ? ([pastor.council] as Council[])
+            : [],
         area: pastor.area || "",
         occupation: pastor.occupation || "Medical Doctor",
         country: pastor.country || "",
@@ -406,6 +410,17 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.council || formData.council.length === 0) {
+      toast.error("Please select at least one council", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
+      return;
+    }
 
     if (!formData.function || formData.function.length === 0) {
       toast.error("Please select at least one function", {
@@ -438,6 +453,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
       const submissionData = {
         ...formData,
+        council: formData.council as Council[],
         function: formData.function as PastorFunction[],
         occupation: occupationType === "Other" ? customOccupation : occupationType,
       };
@@ -466,7 +482,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             marital_status: "Single",
             church: "",
             gender: "Male",
-            council: "",
+            council: [],
             area: "",
             occupation: "Medical Doctor",
             country: "",
@@ -731,34 +747,38 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="council">Council *</Label>
-                <SearchableSelect
+                <Label htmlFor="council">Council(s) *</Label>
+                <MultiSelect
                   options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
                   onValueChange={(value) => {
-                    // Auto-select area based on council selection
+                    const deduped = Array.from(new Set(value));
                     let newArea = formData.area;
 
-                    // HGE related councils get HGE Area 1
-                    if (value === "Signs and Wonders HGE" || value.includes("HGE") || value.startsWith("HGE ")) {
-                      newArea = "HGE Area 1";
+                    // Auto-select area based on the first selected council
+                    const primary = deduped[0];
+                    if (primary) {
+                      if (
+                        primary === "Signs and Wonders HGE" ||
+                        primary.includes("HGE") ||
+                        primary.startsWith("HGE ")
+                      ) {
+                        newArea = "HGE Area 1";
+                      } else if (
+                        primary === "Philippians" ||
+                        primary === "Galatians" ||
+                        primary === "Colossians" ||
+                        primary === "2 Corinthians" ||
+                        primary === "Anagkazo" ||
+                        primary === "Ephesians"
+                      ) {
+                        newArea = "Experience Area 2";
+                      }
                     }
-                    // Experience related councils (original councils) get Experience Area 2
-                    else if (
-                      value === "Philippians" ||
-                      value === "Galatians" ||
-                      value === "Colossians" ||
-                      value === "2 Corinthians" ||
-                      value === "Anagkazo" ||
-                      value === "Ephesians"
-                    ) {
-                      newArea = "Experience Area 2";
-                    }
-                    // For None and other councils, keep current area
 
-                    setFormData({ ...formData, council: value as Council, area: newArea });
+                    setFormData({ ...formData, council: deduped as Council[], area: newArea });
                   }}
-                  placeholder="Select council"
+                  placeholder="Select council(s)"
                 />
               </div>
 

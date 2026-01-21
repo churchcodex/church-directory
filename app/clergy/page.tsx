@@ -164,7 +164,14 @@ function ClergyPageContent() {
 
         // Filter by council if user is not admin
         if (session?.user?.role === "user" && session?.user?.council) {
-          sortedPastors = sortedPastors.filter((pastor: Pastor) => pastor.council === session.user.council);
+          sortedPastors = sortedPastors.filter((pastor: Pastor) => {
+            const pastorCouncils = Array.isArray(pastor.council)
+              ? pastor.council
+              : pastor.council
+                ? [pastor.council]
+                : [];
+            return pastorCouncils.includes(session.user!.council as string);
+          });
         }
 
         setPastors(sortedPastors);
@@ -263,9 +270,15 @@ function ClergyPageContent() {
   }, [pastors, availableClergyTypes]);
 
   const councils = useMemo(() => {
-    const fromPastors = Array.from(new Set(pastors.map((p) => p.council))).filter(
-      (council): council is NonNullable<typeof council> => council !== undefined,
-    );
+    const fromPastors = Array.from(
+      new Set(
+        pastors.flatMap((p) => {
+          if (Array.isArray(p.council)) return p.council;
+          if (p.council) return [p.council];
+          return [];
+        }),
+      ),
+    ).filter((council): council is NonNullable<typeof council> => Boolean(council));
     // Merge with API options, prioritizing API
     const combined = [...new Set([...availableCouncils, ...fromPastors])];
     return combined;
@@ -403,8 +416,14 @@ function ClergyPageContent() {
       // Council (multiple selection)
       if (filters.council.length > 0) {
         filtered = filtered.filter((pastor) => {
-          if (filters.council.includes("None") && pastor.council === "None") return true;
-          return filters.council.includes(pastor.council || "");
+          const pastorCouncils = Array.isArray(pastor.council)
+            ? pastor.council
+            : pastor.council
+              ? [pastor.council]
+              : [];
+
+          if (filters.council.includes("None") && pastorCouncils.includes("None")) return true;
+          return pastorCouncils.some((c) => filters.council.includes(c));
         });
       }
 

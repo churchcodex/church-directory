@@ -376,11 +376,22 @@ export default function ClergyDetailsPage() {
                   </div>
                 )}
 
-                {pastor.council && pastor.council !== "None" && pastor.council !== "N/A" && (
-                  <div className="flex items-center justify-center p-2 lg:p-3 bg-muted rounded-lg">
-                    <span className="text-sm lg:text-base font-semibold">{pastor.council} Council</span>
-                  </div>
-                )}
+                {(() => {
+                  const councils = Array.isArray(pastor.council)
+                    ? pastor.council
+                    : pastor.council
+                      ? [pastor.council]
+                      : [];
+                  const visibleCouncils = councils.filter((c) => c && c !== "None" && c !== "N/A");
+                  if (visibleCouncils.length === 0) return null;
+                  return (
+                    <div className="flex items-center justify-center p-2 lg:p-3 bg-muted rounded-lg">
+                      <span className="text-sm lg:text-base font-semibold">
+                        {visibleCouncils.join(" • ")} Council{visibleCouncils.length > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  );
+                })()}
                 <div className="flex flex-col items-center justify-between p-2 lg:p-3 bg-muted rounded-lg">
                   <span className="flex items-center text-xs mb-1">
                     <Church className="mr-2 h-3 w-3 lg:h-4 lg:w-4" />

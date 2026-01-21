@@ -167,6 +167,17 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        // Normalize council to array (comma-separated allowed)
+        if (pastorData.council !== undefined) {
+          const councilArray = Array.isArray(pastorData.council)
+            ? pastorData.council
+            : String(pastorData.council)
+                .split(",")
+                .map((c) => c.trim())
+                .filter(Boolean);
+          pastorData.council = Array.from(new Set(councilArray));
+        }
+
         // Validate required fields
         if (!pastorData.first_name || !pastorData.last_name) {
           results.failed++;
@@ -178,8 +189,17 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        if (!pastorData.council || !Array.isArray(pastorData.council) || pastorData.council.length === 0) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: "Council is required. Provide one or more councils separated by commas.",
+            data: row,
+          });
+          continue;
+        }
+
         // Sanitize empty strings/whitespace to undefined for select/date fields
-        if (typeof pastorData.council === "string" && pastorData.council.trim() === "") pastorData.council = undefined;
         if (typeof pastorData.area === "string" && pastorData.area.trim() === "") pastorData.area = undefined;
 
         // Optional: pre-validate council/area against dynamic options
@@ -192,14 +212,17 @@ export async function POST(request: NextRequest) {
             const fieldsJson = await fieldsResp.json();
             const allowedCouncils: string[] = fieldsJson?.data?.councils?.options || [];
             const allowedAreas: string[] = fieldsJson?.data?.areas?.options || [];
-            if (pastorData.council && allowedCouncils.length > 0 && !allowedCouncils.includes(pastorData.council)) {
-              results.failed++;
-              results.errors.push({
-                row: rowNumber,
-                error: `Invalid council: ${pastorData.council}. Allowed values are managed in Admin → Pastor Fields`,
-                data: row,
-              });
-              continue;
+            if (Array.isArray(pastorData.council) && allowedCouncils.length > 0) {
+              const invalidCouncils = pastorData.council.filter((c: string) => !allowedCouncils.includes(c));
+              if (invalidCouncils.length > 0) {
+                results.failed++;
+                results.errors.push({
+                  row: rowNumber,
+                  error: `Invalid council(s): ${invalidCouncils.join(", ")}. Allowed values are managed in Admin → Pastor Fields`,
+                  data: row,
+                });
+                continue;
+              }
             }
             if (pastorData.area && allowedAreas.length > 0 && !allowedAreas.includes(pastorData.area)) {
               results.failed++;

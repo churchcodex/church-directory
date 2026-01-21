@@ -164,9 +164,20 @@ export default function InactivePastorsPage() {
                     {pastor.date_of_birth && (
                       <p className="text-muted-foreground">{calculateAge(pastor.date_of_birth)} years old</p>
                     )}
-                    {pastor.council && pastor.council !== "None" && (
-                      <p className="text-muted-foreground">{pastor.council} Council</p>
-                    )}
+                    {(() => {
+                      const councils = Array.isArray(pastor.council)
+                        ? pastor.council
+                        : pastor.council
+                          ? [pastor.council]
+                          : [];
+                      const visibleCouncils = councils.filter((c) => c && c !== "None");
+                      if (visibleCouncils.length === 0) return null;
+                      return (
+                        <p className="text-muted-foreground">
+                          {visibleCouncils.join(" • ")} Council{visibleCouncils.length > 1 ? "s" : ""}
+                        </p>
+                      );
+                    })()}
                   </div>
 
                   <div className="flex flex-col gap-2 pt-2 sm:flex-row">

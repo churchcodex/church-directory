@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       ...pastor,
       id: pastor._id.toString(),
       church: pastor.church ? pastor.church.toString() : "",
+      council: Array.isArray(pastor.council) ? pastor.council : pastor.council ? [pastor.council] : [],
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
       date_of_appointment: pastor.date_of_appointment
         ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
@@ -55,6 +56,18 @@ export async function POST(request: NextRequest) {
 
     const normalizedFunction = Array.isArray(body.function) ? body.function : body.function ? [body.function] : [];
     const functionValues = Array.from(new Set(normalizedFunction.filter(Boolean))) as string[];
+    const normalizedCouncil = Array.isArray(body.council) ? body.council : body.council ? [body.council] : [];
+    const councilValues = Array.from(new Set(normalizedCouncil.filter(Boolean))) as string[];
+
+    if (councilValues.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Please select at least one council",
+        },
+        { status: 400 },
+      );
+    }
 
     // Validate clergy_type
     if (!body.clergy_type || body.clergy_type.length === 0) {
@@ -71,6 +84,7 @@ export async function POST(request: NextRequest) {
     const sanitizedData = {
       ...body,
       function: functionValues,
+      council: councilValues,
       church: body.church === "" ? undefined : body.church,
       // Council and Area are now required, so don't sanitize them
     };
@@ -108,6 +122,7 @@ export async function POST(request: NextRequest) {
       ...pastor.toObject(),
       id: pastor._id.toString(),
       church: pastor.church?.toString() || "",
+      council: Array.isArray(pastor.council) ? pastor.council : pastor.council ? [pastor.council] : [],
       date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
       date_of_appointment: pastor.date_of_appointment
         ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]

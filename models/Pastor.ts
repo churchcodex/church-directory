@@ -68,9 +68,20 @@ const PastorSchema = new Schema<PastorDocument>(
       required: false,
     },
     council: {
-      type: String,
+      type: [String],
       trim: true,
-      required: [true, "Please select a council"],
+      required: [true, "Please select at least one council"],
+      set: (v: string | string[]) => {
+        if (!v) return [];
+        const arr = Array.isArray(v) ? v : [v];
+        return [...new Set(arr.filter(Boolean))];
+      },
+      validate: {
+        validator: function (v: string[]) {
+          return Array.isArray(v) && v.length > 0;
+        },
+        message: "Please select at least one council",
+      },
     },
     area: {
       type: String,

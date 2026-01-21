@@ -56,7 +56,14 @@ export default function Dashboard() {
 
         // Filter by council if user is not admin
         if (session?.user?.role === "user" && session?.user?.council) {
-          clergy = clergy.filter((pastor) => pastor.council === session.user.council);
+          clergy = clergy.filter((pastor) => {
+            const pastorCouncils = Array.isArray(pastor.council)
+              ? pastor.council
+              : pastor.council
+                ? [pastor.council]
+                : [];
+            return pastorCouncils.includes(session.user!.council as string);
+          });
         }
 
         const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
@@ -226,7 +233,9 @@ export default function Dashboard() {
       {/* Dashboard Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-300">
-          {session?.user?.role === "admin" ? "" : `${session?.user?.council} Council`}
+          {session?.user?.role === "admin"
+            ? ""
+            : `${session?.user?.council || (session?.user?.council && session?.user?.council[0])} Council`}
         </h1>
       </div>
 
