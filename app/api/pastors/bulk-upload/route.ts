@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         }
 
         const invalidFunctions = (pastorData.function || []).filter(
-          (value: string) => !allowedFunctions.includes(value)
+          (value: string) => !allowedFunctions.includes(value),
         );
 
         if (invalidFunctions.length > 0) {

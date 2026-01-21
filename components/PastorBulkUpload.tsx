@@ -140,7 +140,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
 
     const allowedFunctions = ["Governor", "Overseer", "Not Applicable"];
     const functions = (fieldOptions?.pastorFunctions?.options || allowedFunctions).filter((func: string) =>
-      allowedFunctions.includes(func)
+      allowedFunctions.includes(func),
     );
     const functionData = functions.map((func: string) => ({ Function: func }));
     const functionSheet = XLSX.utils.json_to_sheet(functionData);

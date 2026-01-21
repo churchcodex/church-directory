@@ -268,7 +268,7 @@ export async function PUT(req: NextRequest) {
     const fieldOption = await PastorFieldOptions.findOneAndUpdate(
       { fieldName },
       { options, updatedBy: user._id },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     return NextResponse.json({

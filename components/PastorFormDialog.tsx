@@ -250,8 +250,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       const functions = Array.isArray(pastor?.function)
         ? (pastor.function as PastorFunction[])
         : pastor?.function
-        ? ([pastor.function] as PastorFunction[])
-        : [];
+          ? ([pastor.function] as PastorFunction[])
+          : [];
       return functions.filter((value) => defaultPastorFunctions.includes(value));
     })(),
   });
@@ -259,11 +259,11 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     pastor?.occupation && defaultOccupations.includes(pastor.occupation as Occupation)
       ? (pastor.occupation as Occupation)
       : pastor?.occupation
-      ? "Other"
-      : "Medical Doctor"
+        ? "Other"
+        : "Medical Doctor",
   );
   const [customOccupation, setCustomOccupation] = useState(
-    pastor?.occupation && !defaultOccupations.includes(pastor.occupation as Occupation) ? pastor.occupation : ""
+    pastor?.occupation && !defaultOccupations.includes(pastor.occupation as Occupation) ? pastor.occupation : "",
   );
 
   // Dynamic field options state
@@ -355,8 +355,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         setStatuses(data.data.statuses?.options || defaultStatuses);
         setPastorFunctions(
           (data.data.pastorFunctions?.options || defaultPastorFunctions).filter((value: string) =>
-            defaultPastorFunctions.includes(value as PastorFunction)
-          )
+            defaultPastorFunctions.includes(value as PastorFunction),
+          ),
         );
         setOccupations(data.data.occupations?.options || defaultOccupations);
         setMaritalStatuses(data.data.maritalStatuses?.options || defaultMaritalStatuses);
@@ -401,8 +401,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
           const functions = Array.isArray(pastor.function)
             ? (pastor.function as PastorFunction[])
             : pastor.function
-            ? ([pastor.function] as PastorFunction[])
-            : [];
+              ? ([pastor.function] as PastorFunction[])
+              : [];
           return functions.filter((value) => defaultPastorFunctions.includes(value));
         })(),
       });
@@ -432,7 +432,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       const submissionData = {
         ...formData,
         function: Array.from(
-          new Set(formData.function.filter((value) => defaultPastorFunctions.includes(value)))
+          new Set(formData.function.filter((value) => defaultPastorFunctions.includes(value))),
         ) as PastorFunction[],
         occupation: occupationType === "Other" ? customOccupation : occupationType,
       };
