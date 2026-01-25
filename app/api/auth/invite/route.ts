@@ -13,10 +13,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
     }
 
-    const { email, council, expiresInDays = 7 } = await request.json();
+    const { email, council, role = "user", expiresInDays = 7 } = await request.json();
 
-    if (!email || !council) {
-      return NextResponse.json({ error: "Email and council are required" }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    if (!["user", "viewer"].includes(role)) {
+      return NextResponse.json({ error: "Role must be either 'user' or 'viewer'" }, { status: 400 });
+    }
+
+    if (role === "user" && !council) {
+      return NextResponse.json({ error: "Council is required for user invites" }, { status: 400 });
     }
 
     await dbConnect();
@@ -51,6 +59,7 @@ export async function POST(request: NextRequest) {
     const inviteToken = await InviteToken.create({
       token,
       email: email.toLowerCase(),
+      role,
       council,
       createdBy: (session.user as any).id,
       expiresAt,
@@ -65,9 +74,11 @@ export async function POST(request: NextRequest) {
         message: "Invite token generated successfully",
         token: inviteToken.token,
         signupUrl,
+        role: inviteToken.role,
+        council: inviteToken.council,
         expiresAt: inviteToken.expiresAt,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     console.error("Generate invite error:", error);

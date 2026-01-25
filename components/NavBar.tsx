@@ -43,7 +43,9 @@ export default function NavBar() {
   const pathname = usePathname();
 
   const showActions = searchPlaceholder !== "";
-  const isAdmin = (session?.user as any)?.role === "admin";
+  const role = (session?.user as any)?.role;
+  const isAdmin = role === "admin";
+  const canSeeCampuses = isAdmin || role === "viewer";
   const hasActiveFiltersOrSearch = (searchQuery || resultsCount !== null) && resultsCount !== totalCount;
   const isAdminRoute = pathname?.startsWith("/admin");
 
@@ -143,7 +145,7 @@ export default function NavBar() {
               </PopoverTrigger>
               <PopoverContent className="w-56" align="end">
                 <div className="flex flex-col gap-1">
-                  {isAdmin && (
+                  {canSeeCampuses && (
                     <Link
                       href="/churches"
                       onClick={() => setIsPopoverOpen(false)}
@@ -245,7 +247,7 @@ export default function NavBar() {
                 <div className="flex flex-col gap-4 mt-6">
                   {/* Navigation Links */}
                   <div className="flex flex-col gap-2">
-                    {isAdmin && (
+                    {canSeeCampuses && (
                       <Link
                         href="/churches"
                         onClick={() => setIsOpen(false)}

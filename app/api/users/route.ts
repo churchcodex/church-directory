@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
 
     await dbConnect();
 
-    const users = await User.find({ role: "user" }).select("-password").sort({ createdAt: -1 });
+    const users = await User.find({ role: { $ne: "admin" } })
+      .select("-password")
+      .sort({ createdAt: -1 });
 
     return NextResponse.json({ users }, { status: 200 });
   } catch (error: any) {

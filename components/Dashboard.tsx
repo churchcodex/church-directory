@@ -26,6 +26,9 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { data: session } = useSession();
+  const role = session?.user?.role;
+  const isAdmin = role === "admin";
+  const canSeeAdminData = isAdmin || role === "viewer";
   const [stats, setStats] = useState<DashboardStats>({
     totalChurches: 0,
     totalClergy: 0,
@@ -140,7 +143,7 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    ...(session?.user?.role === "admin"
+    ...(canSeeAdminData
       ? [
           {
             title: "Total Campuses",
@@ -193,7 +196,7 @@ export default function Dashboard() {
       gradient: "from-emerald-500 to-emerald-700",
       href: "/clergy?clergyType=Governor",
     },
-    ...(session?.user?.role === "admin"
+    ...(canSeeAdminData
       ? [
           {
             title: "Total Members",
@@ -233,7 +236,7 @@ export default function Dashboard() {
       {/* Dashboard Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-300">
-          {session?.user?.role === "admin"
+          {canSeeAdminData
             ? ""
             : `${session?.user?.council || (session?.user?.council && session?.user?.council[0])} Council`}
         </h1>
@@ -268,9 +271,9 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className={`grid gap-6 ${session?.user?.role === "admin" ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
+      <div className={`grid gap-6 ${canSeeAdminData ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
         {/* Recent Campuses */}
-        {session?.user?.role === "admin" && (
+        {canSeeAdminData && (
           <Card className="border-muted">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

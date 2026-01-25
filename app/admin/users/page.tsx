@@ -25,7 +25,7 @@ interface User {
   _id: string;
   email: string;
   isActive: boolean;
-  role: string;
+  role: "user" | "viewer" | "admin";
   createdAt: string;
 }
 
@@ -33,7 +33,8 @@ interface InviteToken {
   _id: string;
   token: string;
   email: string;
-  council: string;
+  council?: string;
+  role?: "user" | "viewer";
   isUsed: boolean;
   expiresAt: string;
   createdAt: string;
@@ -52,6 +53,7 @@ export default function AdminUsersPage() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [councils, setCouncils] = useState<string[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"user" | "viewer">("user");
   const [inviteCouncil, setInviteCouncil] = useState("");
 
   useEffect(() => {
@@ -115,19 +117,29 @@ export default function AdminUsersPage() {
       return;
     }
 
-    if (!inviteCouncil) {
-      toast.error("Please select a council");
+    if (inviteRole === "user" && !inviteCouncil) {
+      toast.error("Please select a council for user role");
       return;
     }
 
     setGeneratingToken(true);
     try {
+      const payload: Record<string, unknown> = {
+        email: inviteEmail,
+        role: inviteRole,
+        expiresInDays: 7,
+      };
+
+      if (inviteRole === "user") {
+        payload.council = inviteCouncil;
+      }
+
       const response = await fetch("/api/auth/invite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: inviteEmail, council: inviteCouncil, expiresInDays: 7 }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -137,6 +149,7 @@ export default function AdminUsersPage() {
         navigator.clipboard.writeText(data.signupUrl);
         toast.info("Signup link copied to clipboard");
         setInviteEmail("");
+        setInviteRole("user");
         setInviteCouncil("");
         fetchTokens();
       } else {
@@ -256,16 +269,34 @@ export default function AdminUsersPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="inviteCouncil">Council</Label>
-              <SearchableSelect
-                value={inviteCouncil}
-                onValueChange={setInviteCouncil}
-                options={councils.map((c) => ({ value: c, label: c }))}
-                placeholder="Select a council"
-                className="w-full"
-                menuPlacement="top"
-              />
+              <Label htmlFor="inviteRole">Role</Label>
+              <select
+                id="inviteRole"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as "user" | "viewer")}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={generatingToken}
+              >
+                <option value="user">Council user (filtered to their council)</option>
+                <option value="viewer">Viewer (read-only, all councils)</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Viewers can see all data but cannot create, edit, or delete.
+              </p>
             </div>
+            {inviteRole === "user" && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCouncil">Council</Label>
+                <SearchableSelect
+                  value={inviteCouncil}
+                  onValueChange={setInviteCouncil}
+                  options={councils.map((c) => ({ value: c, label: c }))}
+                  placeholder="Select a council"
+                  className="w-full"
+                  menuPlacement="top"
+                />
+              </div>
+            )}
             <Button onClick={generateInviteToken} disabled={generatingToken} className="w-full">
               {generatingToken ? "Generating..." : "Generate and Copy Link"}
             </Button>
@@ -296,6 +327,9 @@ export default function AdminUsersPage() {
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                    <Badge variant="outline" className="w-fit capitalize">
+                      {user.role}
+                    </Badge>
                     <Badge variant={user.isActive ? "default" : "secondary"} className="w-fit">
                       {user.isActive ? "Active" : "Inactive"}
                     </Badge>
@@ -341,7 +375,8 @@ export default function AdminUsersPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{token.email}</p>
-                    <p className="text-xs text-gray-500 mt-1">Council: {token.council}</p>
+                    <p className="text-xs text-gray-500 mt-1">Role: {token.role || "user"}</p>
+                    {token.council && <p className="text-xs text-gray-500 mt-1">Council: {token.council}</p>}
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Created {new Date(token.createdAt).toLocaleDateString()} • Expires{" "}
                       {new Date(token.expiresAt).toLocaleDateString()}

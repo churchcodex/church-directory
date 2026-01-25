@@ -3,7 +3,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 export interface IUser extends mongoose.Document {
   email: string;
   password: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "viewer";
   council?: string;
   isActive: boolean;
   createdAt: Date;
@@ -26,7 +26,7 @@ const UserSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
+      enum: ["admin", "user", "viewer"],
       default: "user",
     },
     council: {
@@ -42,7 +42,7 @@ const UserSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const User = models.User || model<IUser>("User", UserSchema);

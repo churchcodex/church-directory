@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { usePageActions } from "@/contexts/PageActionsContext";
+import { useSession } from "next-auth/react";
 
 export default function ChurchesPage() {
+  const { data: session } = useSession();
   const { setTitle } = usePageTitle();
   const {
     searchQuery,
@@ -28,6 +30,7 @@ export default function ChurchesPage() {
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const canManage = session?.user?.role === "admin";
 
   const fetchChurches = useCallback(async () => {
     try {
@@ -75,10 +78,10 @@ export default function ChurchesPage() {
             <List className="h-4 w-4" />
           </Button>
         </div>
-        <ChurchFormDialog onSuccess={fetchChurches} />
-      </>
+        {canManage && <ChurchFormDialog onSuccess={fetchChurches} />}
+      </>,
     );
-  }, [setAddButton, viewMode, fetchChurches]);
+  }, [setAddButton, viewMode, fetchChurches, canManage]);
 
   useEffect(() => {
     if (searchQuery) {
@@ -86,7 +89,7 @@ export default function ChurchesPage() {
         (church) =>
           church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           church.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          church.head_pastor.toLowerCase().includes(searchQuery.toLowerCase())
+          church.head_pastor.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredChurches(filtered);
       setResultsCount(filtered.length);
@@ -140,7 +143,7 @@ export default function ChurchesPage() {
                 <List className="h-4 w-4" />
               </Button>
             </div>
-            <ChurchFormDialog onSuccess={fetchChurches} />
+            {canManage && <ChurchFormDialog onSuccess={fetchChurches} />}
           </div>
         </div>
 

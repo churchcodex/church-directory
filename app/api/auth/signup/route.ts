@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const user = await User.create({
       email: inviteToken.email,
       password: hashedPassword,
-      role: "user",
+      role: (inviteToken as any).role || "user",
       council: inviteToken.council,
       isActive: true,
     });
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
           role: user.role,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     console.error("Signup error:", error);

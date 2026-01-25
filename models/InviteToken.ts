@@ -3,7 +3,8 @@ import mongoose, { Schema, model, models } from "mongoose";
 export interface IInviteToken extends mongoose.Document {
   token: string;
   email: string;
-  council: string;
+  council?: string;
+  role: "user" | "viewer";
   createdBy: mongoose.Types.ObjectId;
   isUsed: boolean;
   usedBy?: mongoose.Types.ObjectId;
@@ -25,9 +26,16 @@ const InviteTokenSchema = new Schema<IInviteToken>(
       lowercase: true,
       trim: true,
     },
+    role: {
+      type: String,
+      enum: ["user", "viewer"],
+      default: "user",
+    },
     council: {
       type: String,
-      required: true,
+      required: function () {
+        return this.role === "user";
+      },
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -49,7 +57,7 @@ const InviteTokenSchema = new Schema<IInviteToken>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const InviteToken = models.InviteToken || model<IInviteToken>("InviteToken", InviteTokenSchema);
