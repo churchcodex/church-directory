@@ -1,7 +1,6 @@
 import mongoose, { Schema, model, models } from "mongoose";
-import { Church } from "@/types/entities";
 
-const ChurchSchema = new Schema<Church>(
+const ChurchSchema = new Schema(
   {
     name: {
       type: String,
@@ -18,8 +17,9 @@ const ChurchSchema = new Schema<Church>(
       default: [],
     },
     head_pastor: {
-      type: String,
-      required: [true, "Please provide the head pastor name"],
+      type: Schema.Types.ObjectId,
+      ref: "Pastor",
+      required: [true, "Please provide the head pastor"],
     },
     members: {
       type: Number,
@@ -34,7 +34,7 @@ const ChurchSchema = new Schema<Church>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export default models.Church || model<Church>("Church", ChurchSchema);
+export default models.Church || model("Church", ChurchSchema);

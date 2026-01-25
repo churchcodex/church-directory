@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ImageUpload from "@/components/ImageUpload";
+import SearchableSelect from "@/components/ui/searchable-select";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Loader2 } from "lucide-react";
-import { Church } from "@/types/entities";
+import { Church, Pastor } from "@/types/entities";
 
 interface ChurchFormDialogProps {
   church?: Church;
@@ -29,6 +30,8 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pastors, setPastors] = useState<Pastor[]>([]);
+  const [pastorsLoading, setPastorsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: church?.name || "",
     location: church?.location || "",
@@ -37,6 +40,27 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
     income: church?.income || 0,
     images: church?.images || [],
   });
+
+  useEffect(() => {
+    if (open) {
+      fetchPastors();
+    }
+  }, [open]);
+
+  const fetchPastors = async () => {
+    setPastorsLoading(true);
+    try {
+      const response = await fetch("/api/pastors");
+      const data = await response.json();
+      if (data.success) {
+        setPastors(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch pastors:", error);
+    } finally {
+      setPastorsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +109,11 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
     }
   };
 
+  const pastorOptions = pastors.map((pastor) => ({
+    value: pastor.id,
+    label: `${pastor.first_name} ${pastor.middle_name || ""} ${pastor.last_name}`.trim(),
+  }));
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -130,12 +159,12 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
 
             <div className="space-y-2">
               <Label htmlFor="head_pastor">Head Pastor *</Label>
-              <Input
-                id="head_pastor"
-                required
+              <SearchableSelect
+                placeholder={pastorsLoading ? "Loading pastors..." : "Select a pastor"}
+                options={pastorOptions}
                 value={formData.head_pastor}
-                onChange={(e) => setFormData({ ...formData, head_pastor: e.target.value })}
-                placeholder="John MacArthur"
+                onValueChange={(value) => setFormData({ ...formData, head_pastor: value })}
+                isDisabled={pastorsLoading}
               />
             </div>
 

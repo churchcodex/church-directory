@@ -18,6 +18,8 @@ export default function ChurchDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const [church, setChurch] = useState<Church | null>(null);
+  const [pastorName, setPastorName] = useState<string>("");
+  const [pastorImage, setPastorImage] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const { setTitle } = usePageTitle();
 
@@ -39,11 +41,32 @@ export default function ChurchDetailsPage() {
       const data = await response.json();
       if (data.success) {
         setChurch(data.data);
+        // Fetch pastor name if head_pastor is a reference ID
+        if (data.data.head_pastor) {
+          fetchPastorName(data.data.head_pastor);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch church:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPastorName = async (pastorId: string) => {
+    try {
+      const response = await fetch(`/api/pastors/${pastorId}`);
+      const data = await response.json();
+      if (data.success) {
+        const pastor = data.data;
+        console.log(pastor);
+
+        const fullName = `${pastor.first_name} ${pastor.middle_name || ""} ${pastor.last_name}`.trim();
+        setPastorName(fullName);
+        setPastorImage(pastor.profile_image || "");
+      }
+    } catch (error) {
+      console.error("Failed to fetch pastor name:", error);
     }
   };
 
@@ -122,17 +145,31 @@ export default function ChurchDetailsPage() {
   return (
     <div className="min-h-screen flex flex-col md:px-6">
       {/* Header */}
-      <div className="my-4 px-4 flex justify-between items-center w-full mx-auto">
+      <div className="my-4 px-4 flex items-center gap-4 w-full mx-auto">
         <Button variant="ghost" onClick={() => router.push("/churches")} className="shadow-lg">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
+        <div className="flex-1 hidden lg:flex lg:flex-row items-center lg:justify-center gap-6 w-fit mx-auto text-center">
+          <h1 className="text-3xl md:text-4xl font-bold">{church.name}</h1>
+          <p className="flex items-center gap-2 text-muted-foreground text-lg md:text-xl w-fit">
+            <MapPin className="h-5 w-5 md:h-6 md:w-6" />
+            {church.location}
+          </p>
+        </div>
         {session?.user?.role === "admin" && (
           <div className="flex gap-2">
             <ChurchFormDialog church={church} onSuccess={() => fetchChurch(params.id as string)} />
             <DeleteButton id={church.id} name={church.name} type="campus" />
           </div>
         )}
+      </div>
+      <div className="flex-1 flex flex-col lg:hidden  items-center lg:justify-center gap-2 w-fit mx-auto text-center my-6">
+        <h1 className="text-3xl md:text-4xl font-bold">{church.name}</h1>
+        <p className="flex items-center gap-2 text-muted-foreground text-lg md:text-xl w-fit">
+          <MapPin className="h-5 w-5 md:h-6 md:w-6" />
+          {church.location}
+        </p>
       </div>
 
       {/* Main Content */}
@@ -167,19 +204,20 @@ export default function ChurchDetailsPage() {
         {/* Right Side - Details */}
         <div className="w-full md:w-1/3 bg-background overflow-y-auto">
           <div className="p-8 md:p-12 space-y-8">
-            {/* Church Name and Location */}
-            <div className="space-y-4 pt-12 md:pt-0">
-              <h1 className="text-4xl md:text-5xl font-bold">{church.name}</h1>
-              <p className="flex items-center gap-2 text-muted-foreground text-xl">
-                <MapPin className="h-6 w-6" />
-                {church.location}
-              </p>
-            </div>
-
             {/* Head Pastor */}
-            <div className="p-6 rounded-xl flex items-center justify-center">
+            <div className="p-6 rounded-xl flex flex-col items-center justify-center gap-4">
+              {pastorImage && (
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary shadow-lg">
+                  <Image src={pastorImage} alt={pastorName} fill className="object-cover" />
+                </div>
+              )}
+              {!pastorImage && pastorName && (
+                <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary shadow-lg">
+                  <User className="h-16 w-16 text-primary" />
+                </div>
+              )}
               <Badge variant="default" className="text-lg px-4 py-2">
-                {church.head_pastor}
+                {pastorName || "No pastor assigned"}
               </Badge>
             </div>
 
