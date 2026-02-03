@@ -742,7 +742,7 @@ function ClergyPageContent() {
                 onClick={() => saveScrollPosition(filteredPastors.map((p) => p.id))}
                 className="group cursor-pointer flex flex-col items-center max-w-24 mx-auto"
               >
-                <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-105">
+                <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-125">
                   {pastor.profile_image ? (
                     <img
                       src={pastor.profile_image}
