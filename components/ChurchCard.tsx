@@ -11,9 +11,10 @@ import { useState } from "react";
 
 interface ChurchCardProps {
   church: Church;
+  pastorName?: string;
 }
 
-export default function ChurchCard({ church }: ChurchCardProps) {
+export default function ChurchCard({ church, pastorName }: ChurchCardProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
@@ -44,7 +45,7 @@ export default function ChurchCard({ church }: ChurchCardProps) {
         <CardContent className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Pastor</span>
-            <Badge variant="secondary">{church.head_pastor}</Badge>
+            <Badge variant="secondary">{pastorName || "Unknown Pastor"}</Badge>
           </div>
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1 text-sm text-muted-foreground">

@@ -30,6 +30,7 @@ export default function ChurchesPage() {
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [pastorNames, setPastorNames] = useState<Record<string, string>>({});
   const canManage = session?.user?.role === "admin";
 
   const fetchChurches = useCallback(async () => {
@@ -39,11 +40,40 @@ export default function ChurchesPage() {
       if (data.success) {
         setChurches(data.data);
         setFilteredChurches(data.data);
+        // Fetch pastor names for all churches
+        fetchPastorNames(data.data);
       }
     } catch (error) {
       console.error("Failed to fetch churches:", error);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchPastorNames = useCallback(async (churchList: Church[]) => {
+    try {
+      const pastorIds = [...new Set(churchList.map((church) => church.head_pastor).filter(Boolean))];
+      const names: Record<string, string> = {};
+
+      for (const pastorId of pastorIds) {
+        try {
+          const response = await fetch(`/api/pastors/${pastorId}`);
+          const data = await response.json();
+          if (data.success) {
+            const pastor = data.data;
+            names[pastorId] = `${pastor.first_name} ${pastor.middle_name || ""} ${pastor.last_name}`.trim();
+          } else {
+            names[pastorId] = "No Pastor assigned";
+          }
+        } catch (error) {
+          console.error(`Failed to fetch pastor ${pastorId}:`, error);
+          names[pastorId] = "No Pastor assigned";
+        }
+      }
+
+      setPastorNames(names);
+    } catch (error) {
+      console.error("Failed to fetch pastor names:", error);
     }
   }, []);
 
@@ -89,7 +119,7 @@ export default function ChurchesPage() {
         (church) =>
           church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           church.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          church.head_pastor.toLowerCase().includes(searchQuery.toLowerCase()),
+          (pastorNames[church.head_pastor] || "").toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredChurches(filtered);
       setResultsCount(filtered.length);
@@ -99,7 +129,7 @@ export default function ChurchesPage() {
       setResultsCount(churches.length);
       setTotalCount(churches.length);
     }
-  }, [searchQuery, churches, setResultsCount, setTotalCount]);
+  }, [searchQuery, churches, pastorNames, setResultsCount, setTotalCount]);
 
   if (loading) {
     return (
@@ -154,7 +184,7 @@ export default function ChurchesPage() {
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredChurches.map((church) => (
-              <ChurchCard key={church.id} church={church} />
+              <ChurchCard key={church.id} church={church} pastorName={pastorNames[church.head_pastor]} />
             ))}
           </div>
         ) : (
@@ -195,7 +225,7 @@ export default function ChurchesPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 shrink-0" />
-                      <p className="truncate">{church.head_pastor}</p>
+                      <p className="truncate">{pastorNames[church.head_pastor] || "Unknown Pastor"}</p>
                     </div>
                   </div>
                 </div>
