@@ -45,6 +45,7 @@ interface InviteToken {
 export default function AdminUsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const userRole = session?.user?.role;
   const [users, setUsers] = useState<User[]>([]);
   const [tokens, setTokens] = useState<InviteToken[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,19 +60,19 @@ export default function AdminUsersPage() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
-    } else if (status === "authenticated" && (session?.user as any)?.role !== "admin") {
+    } else if (status === "authenticated" && userRole !== "admin") {
       router.push("/");
       toast.error("Admin access required");
     }
-  }, [status, session, router]);
+  }, [router, status, userRole]);
 
   useEffect(() => {
-    if (status === "authenticated" && (session?.user as any)?.role === "admin") {
+    if (status === "authenticated" && userRole === "admin") {
       fetchUsers();
       fetchTokens();
       fetchCouncils();
     }
-  }, [status, session]);
+  }, [status, userRole]);
 
   const fetchCouncils = async () => {
     try {
@@ -220,7 +221,7 @@ export default function AdminUsersPage() {
     );
   }
 
-  if ((session?.user as any)?.role !== "admin") {
+  if (userRole !== "admin") {
     return null;
   }
 
@@ -245,6 +246,13 @@ export default function AdminUsersPage() {
             className="w-full sm:w-auto text-sm"
           >
             Manage Pastor Fields
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/tithe-tracking")}
+            className="w-full sm:w-auto text-sm"
+          >
+            Tithe Tracking
           </Button>
         </div>
       </div>

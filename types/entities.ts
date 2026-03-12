@@ -178,6 +178,8 @@ export type Occupation = string;
 
 export type PastorFunction = string;
 
+export type AttendanceSource = "manual" | "bulk-upload";
+
 export interface Pastor {
   id: string;
   first_name: string;
@@ -196,6 +198,45 @@ export interface Pastor {
   country?: string;
   email?: string;
   contact_number?: string;
+  personal_code?: string;
   status?: Status;
   function: PastorFunction[];
+}
+
+export interface AttendanceRecord {
+  id: string;
+  pastorId: string;
+  pastorName: string;
+  pastorCode: string;
+  attendanceDate: string;
+  weekStart: string;
+  weekEnd: string;
+  source: AttendanceSource;
+}
+
+export interface AttendanceDayCell {
+  date: string;
+  label: string;
+  marked: boolean;
+  recordId?: string;
+}
+
+export interface AttendanceWeekRow {
+  pastorId: string;
+  pastorName: string;
+  pastorCode: string;
+  council: string[];
+  area: string;
+  totalMarks: number;
+  dates: AttendanceDayCell[];
+}
+
+export interface AttendanceWeekSummary {
+  weekStart: string;
+  weekEnd: string;
+  days: AttendanceDayCell[];
+  rows: AttendanceWeekRow[];
+  totalPastors: number;
+  markedPastors: number;
+  totalMarks: number;
 }
