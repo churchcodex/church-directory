@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
+import { generateUniquePastorCode } from "@/lib/pastor-code";
 import * as XLSX from "xlsx";
 
 // Helper function to parse dates from Excel (handles numbers, strings, and Date objects)
@@ -35,6 +38,15 @@ function parseDate(value: any): Date | undefined {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || (session.user as any).role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin access required to bulk upload pastors." },
+        { status: 403 },
+      );
+    }
+
     await dbConnect();
 
     const formData = await request.formData();
@@ -69,6 +81,9 @@ export async function POST(request: NextRequest) {
 
     // Fetch dynamic field options from endpoint (fallback to defaults if request fails)
     let allowedFunctions: string[] = ["Governor", "Overseer", "Not Applicable"];
+    let allowedCouncils: string[] = [];
+    let allowedAreas: string[] = [];
+
     try {
       const fieldsUrl = new URL(request.url);
       fieldsUrl.pathname = "/api/pastor-fields";
@@ -76,12 +91,14 @@ export async function POST(request: NextRequest) {
       if (fieldsResp.ok) {
         const fieldsJson = await fieldsResp.json();
         const dynamicFunctions = fieldsJson?.data?.pastorFunctions?.options;
+        allowedCouncils = fieldsJson?.data?.councils?.options || [];
+        allowedAreas = fieldsJson?.data?.areas?.options || [];
         if (Array.isArray(dynamicFunctions) && dynamicFunctions.length > 0) {
           allowedFunctions = dynamicFunctions;
         }
       }
-    } catch (e) {
-      // Swallow error and continue with default allowedFunctions
+    } catch (error) {
+      // Swallow error and continue with fallback values.
     }
 
     // Process each row
@@ -108,6 +125,7 @@ export async function POST(request: NextRequest) {
           email: row["Email"] || row["email"] || undefined,
           contact_number: row["Contact Number"] || row["contact_number"] || undefined,
           status: row["Status"] || row["status"] || "Active",
+          personal_code: undefined,
         };
 
         // Handle Occupation + Other Occupation (aligns with Pastor form behavior)
@@ -202,62 +220,53 @@ export async function POST(request: NextRequest) {
         // Sanitize empty strings/whitespace to undefined for select/date fields
         if (typeof pastorData.area === "string" && pastorData.area.trim() === "") pastorData.area = undefined;
 
-        // Optional: pre-validate council/area against dynamic options
-        // When endpoint returns configured options, ensure provided values are recognized
-        try {
-          const fieldsUrl = new URL(request.url);
-          fieldsUrl.pathname = "/api/pastor-fields";
-          const fieldsResp = await fetch(fieldsUrl.toString(), { method: "GET" });
-          if (fieldsResp.ok) {
-            const fieldsJson = await fieldsResp.json();
-            const allowedCouncils: string[] = fieldsJson?.data?.councils?.options || [];
-            const allowedAreas: string[] = fieldsJson?.data?.areas?.options || [];
-            if (Array.isArray(pastorData.council) && allowedCouncils.length > 0) {
-              const invalidCouncils = pastorData.council.filter((c: string) => !allowedCouncils.includes(c));
-              if (invalidCouncils.length > 0) {
-                results.failed++;
-                results.errors.push({
-                  row: rowNumber,
-                  error: `Invalid council(s): ${invalidCouncils.join(", ")}. Allowed values are managed in Admin → Pastor Fields`,
-                  data: row,
-                });
-                continue;
-              }
-            }
-            if (pastorData.area && allowedAreas.length > 0 && !allowedAreas.includes(pastorData.area)) {
-              results.failed++;
-              results.errors.push({
-                row: rowNumber,
-                error: `Invalid area: ${pastorData.area}. Allowed values are managed in Admin → Pastor Fields`,
-                data: row,
-              });
-              continue;
-            }
+        if (Array.isArray(pastorData.council) && allowedCouncils.length > 0) {
+          const invalidCouncils = pastorData.council.filter((c: string) => !allowedCouncils.includes(c));
+          if (invalidCouncils.length > 0) {
+            results.failed++;
+            results.errors.push({
+              row: rowNumber,
+              error: `Invalid council(s): ${invalidCouncils.join(", ")}. Allowed values are managed in Admin → Pastor Fields`,
+              data: row,
+            });
+            continue;
           }
-        } catch (e) {
-          // If the endpoint is unavailable, skip pre-validation and let DB validations handle
         }
 
-        // Check for duplicate pastor and upsert (update if exists, create if not)
-        // Use findOneAndUpdate with upsert to handle duplicates automatically
+        if (pastorData.area && allowedAreas.length > 0 && !allowedAreas.includes(pastorData.area)) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            error: `Invalid area: ${pastorData.area}. Allowed values are managed in Admin → Pastor Fields`,
+            data: row,
+          });
+          continue;
+        }
+
         const query = {
           first_name: pastorData.first_name,
           last_name: pastorData.last_name,
           ...(pastorData.date_of_birth && { date_of_birth: pastorData.date_of_birth }),
         };
 
-        const existingPastor = await Pastor.findOneAndUpdate(query, pastorData, {
-          new: true,
-          runValidators: true,
-          upsert: true, // Create if not found
-        });
+        const existingPastor = await Pastor.findOne(query);
+
+        if (existingPastor) {
+          existingPastor.set({
+            ...pastorData,
+            personal_code: existingPastor.personal_code || (await generateUniquePastorCode()),
+          });
+          await existingPastor.save();
+          updated++;
+        } else {
+          await Pastor.create({
+            ...pastorData,
+            personal_code: await generateUniquePastorCode(),
+          });
+          created++;
+        }
 
         results.successful++;
-        if (existingPastor.wasNew) {
-          created++;
-        } else {
-          updated++;
-        }
       } catch (error: any) {
         results.failed++;
         results.errors.push({

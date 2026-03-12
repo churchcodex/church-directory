@@ -106,6 +106,14 @@ const PastorSchema = new Schema<PastorDocument>(
       type: String,
       required: false,
     },
+    personal_code: {
+      type: String,
+      required: false,
+      uppercase: true,
+      trim: true,
+      immutable: true,
+      match: [/^FLC-[A-Z]{8}$/, "Pastor code must match FLC-XXXXXXXX"],
+    },
     status: {
       type: String,
       enum: ["Active", "Inactive"],
@@ -142,5 +150,6 @@ const PastorSchema = new Schema<PastorDocument>(
 
 // Add compound index for duplicate checking
 PastorSchema.index({ first_name: 1, last_name: 1, date_of_birth: 1 });
+PastorSchema.index({ personal_code: 1 }, { unique: true, sparse: true });
 
 export default models.Pastor || model<PastorDocument>("Pastor", PastorSchema);

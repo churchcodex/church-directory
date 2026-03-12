@@ -384,9 +384,11 @@ function ClergyPageContent() {
           const clergyTypes = Array.isArray(pastor.clergy_type)
             ? pastor.clergy_type.join(" ")
             : pastor.clergy_type || "";
+          const pastorCode = pastor.personal_code || "";
           return (
             fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            clergyTypes.toLowerCase().includes(searchQuery.toLowerCase())
+            clergyTypes.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            pastorCode.toLowerCase().includes(searchQuery.toLowerCase())
           );
         });
       }
@@ -637,9 +639,8 @@ function ClergyPageContent() {
       // Clear age range
       updatedFilters.minAge = "";
       updatedFilters.maxAge = "";
-    } else {
-      // Reset single select filters to "all"
-      updatedFilters[key] = "all" as any;
+    } else if (key === "gender") {
+      updatedFilters.gender = "all";
     }
 
     setFilters(updatedFilters);
@@ -758,6 +759,9 @@ function ClergyPageContent() {
                 <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </p>
+                {session?.user?.role === "admin" && pastor.personal_code && (
+                  <p className="text-[10px] text-muted-foreground text-center w-24 truncate">{pastor.personal_code}</p>
+                )}
               </Link>
             ))}
           </div>
@@ -784,16 +788,21 @@ function ClergyPageContent() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 flex gap-4">
-                  <h3 className="font-medium text-sm mb-1">
-                    {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
-                  </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Award className="h-3.5 w-3.5 shrink-0" />
-                    <p className="truncate">
-                      {Array.isArray(pastor.clergy_type) && pastor.clergy_type.length > 0
-                        ? pastor.clergy_type.join(" • ")
-                        : pastor.clergy_type || "N/A"}
-                    </p>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-sm mb-1">
+                      {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Award className="h-3.5 w-3.5 shrink-0" />
+                      <p className="truncate">
+                        {Array.isArray(pastor.clergy_type) && pastor.clergy_type.length > 0
+                          ? pastor.clergy_type.join(" • ")
+                          : pastor.clergy_type || "N/A"}
+                      </p>
+                    </div>
+                    {session?.user?.role === "admin" && pastor.personal_code && (
+                      <p className="text-xs text-muted-foreground mt-1">{pastor.personal_code}</p>
+                    )}
                   </div>
                 </div>
               </Link>

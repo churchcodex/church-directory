@@ -622,6 +622,13 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            {pastor?.personal_code && (
+              <div className="space-y-2">
+                <Label htmlFor="personal_code">Pastor Code</Label>
+                <Input id="personal_code" value={pastor.personal_code} readOnly disabled />
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="first_name">First Name *</Label>

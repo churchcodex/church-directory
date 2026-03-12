@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
+import { generateUniquePastorCode } from "@/lib/pastor-code";
+import { serializePastor } from "@/lib/pastor";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -15,19 +17,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const transformedPastor = {
-      ...pastor,
-      id: pastor._id.toString(),
-      church: pastor.church ? pastor.church.toString() : "",
-      council: Array.isArray(pastor.council) ? pastor.council : pastor.council ? [pastor.council] : [],
-      date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
-      date_of_appointment: pastor.date_of_appointment
-        ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
-        : "",
-      first_name: pastor.first_name || "",
-      middle_name: pastor.middle_name || "",
-      last_name: pastor.last_name || "",
+      ...serializePastor(pastor),
       clergy_type: pastor.clergy_type || [],
-      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
     };
 
     return NextResponse.json({ success: true, data: transformedPastor });
@@ -110,6 +101,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const sanitizedData = {
       ...body,
       church: body.church === "" ? undefined : body.church,
+      personal_code: undefined,
       // Council and Area are now required, so don't sanitize them
     };
 
@@ -153,29 +145,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    const pastor: any = await Pastor.findByIdAndUpdate(id, sanitizedData, {
-      new: true,
-      runValidators: true,
-    }).lean();
+    const currentPastor = await Pastor.findById(id);
+
+    if (!currentPastor) {
+      return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
+    }
+
+    const pastor: any = await Pastor.findByIdAndUpdate(
+      id,
+      {
+        ...sanitizedData,
+        ...(currentPastor.personal_code ? {} : { personal_code: await generateUniquePastorCode() }),
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).lean();
 
     if (!pastor) {
       return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
     }
 
-    const transformedPastor = {
-      ...pastor,
-      id: pastor._id.toString(),
-      church: pastor.church?.toString() || "",
-      council: Array.isArray(pastor.council) ? pastor.council : pastor.council ? [pastor.council] : [],
-      date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
-      date_of_appointment: pastor.date_of_appointment
-        ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
-        : "",
-      first_name: pastor.first_name || "",
-      middle_name: pastor.middle_name || "",
-      last_name: pastor.last_name || "",
-      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
-    };
+    const transformedPastor = serializePastor(pastor);
 
     return NextResponse.json({ success: true, data: transformedPastor });
   } catch (error: any) {

@@ -3,26 +3,15 @@ import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
+import { generateUniquePastorCode } from "@/lib/pastor-code";
+import { serializePastor } from "@/lib/pastor";
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     // Exclude pastors with status 'Inactive'
     const pastors = await Pastor.find({ status: { $ne: "Inactive" } }).lean();
-    const transformedPastors = pastors.map((pastor: any) => ({
-      ...pastor,
-      id: pastor._id.toString(),
-      church: pastor.church ? pastor.church.toString() : "",
-      council: Array.isArray(pastor.council) ? pastor.council : pastor.council ? [pastor.council] : [],
-      date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
-      date_of_appointment: pastor.date_of_appointment
-        ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
-        : "",
-      first_name: pastor.first_name || "",
-      middle_name: pastor.middle_name || "",
-      last_name: pastor.last_name || "",
-      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
-    }));
+    const transformedPastors = pastors.map((pastor: any) => serializePastor(pastor));
     return NextResponse.json({ success: true, data: transformedPastors });
   } catch (error: any) {
     console.error("Error fetching pastors:", error);
@@ -86,6 +75,7 @@ export async function POST(request: NextRequest) {
       function: functionValues,
       council: councilValues,
       church: body.church === "" ? undefined : body.church,
+      personal_code: undefined,
       // Council and Area are now required, so don't sanitize them
     };
 
@@ -117,21 +107,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pastor: any = await Pastor.create(sanitizedData);
-    const transformedPastor = {
-      ...pastor.toObject(),
-      id: pastor._id.toString(),
-      church: pastor.church?.toString() || "",
-      council: Array.isArray(pastor.council) ? pastor.council : pastor.council ? [pastor.council] : [],
-      date_of_birth: pastor.date_of_birth ? new Date(pastor.date_of_birth).toISOString().split("T")[0] : "",
-      date_of_appointment: pastor.date_of_appointment
-        ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
-        : "",
-      first_name: pastor.first_name || "",
-      middle_name: pastor.middle_name || "",
-      last_name: pastor.last_name || "",
-      function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
-    };
+    const pastor: any = await Pastor.create({
+      ...sanitizedData,
+      personal_code: await generateUniquePastorCode(),
+    });
+    const transformedPastor = serializePastor(pastor.toObject());
     return NextResponse.json({ success: true, data: transformedPastor }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating pastor:", error);
