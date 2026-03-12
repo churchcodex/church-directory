@@ -759,9 +759,9 @@ function ClergyPageContent() {
                 <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </p>
-                {session?.user?.role === "admin" && pastor.personal_code && (
+                {/* {session?.user?.role === "admin" && pastor.personal_code && (
                   <p className="text-[10px] text-muted-foreground text-center w-24 truncate">{pastor.personal_code}</p>
-                )}
+                )} */}
               </Link>
             ))}
           </div>

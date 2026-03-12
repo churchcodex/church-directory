@@ -311,7 +311,7 @@ export default function AttendanceTrackingPage() {
               <Input
                 value={codeInput}
                 onChange={(event) => setCodeInput(event.target.value.toUpperCase())}
-                placeholder="FLC-ABCDEFGH"
+                placeholder="FLC-A1B2"
               />
               <Button type="submit" className="w-full" disabled={submittingCode || !selectedDate}>
                 {submittingCode ? "Marking..." : "Mark Attendance"}

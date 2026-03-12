@@ -5,7 +5,9 @@ import { authOptions } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import Pastor from "@/models/Pastor";
 
-export async function POST(request: NextRequest) {
+const CODE_FORMAT = /^FLC-[A-Z0-9]{4}$/;
+
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -21,13 +23,18 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
 
-    const pastorsWithoutCodes = await Pastor.find({
-      $or: [{ personal_code: { $exists: false } }, { personal_code: null }, { personal_code: "" }],
+    const pastorsNeedingCodeUpdate = await Pastor.find({
+      $or: [
+        { personal_code: { $exists: false } },
+        { personal_code: null },
+        { personal_code: "" },
+        { personal_code: { $not: CODE_FORMAT } },
+      ],
     });
 
     let updatedCount = 0;
 
-    for (const pastor of pastorsWithoutCodes) {
+    for (const pastor of pastorsNeedingCodeUpdate) {
       const code = await generateUniquePastorCode();
       // Use the raw collection driver to bypass Mongoose's immutable field guard,
       // which silently strips $set operations on immutable paths in updateOne().
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Migration completed. Backfilled ${updatedCount} pastors.`,
+      message: `Migration completed. Normalized ${updatedCount} pastors to FLC-**** codes.`,
       data: { updatedCount },
     });
   } catch (error: any) {

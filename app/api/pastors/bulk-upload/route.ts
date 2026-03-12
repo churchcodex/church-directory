@@ -6,31 +6,68 @@ import Pastor from "@/models/Pastor";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import * as XLSX from "xlsx";
 
+function toUtcDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function normalizeContactNumber(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.replace(/\s+/g, "").trim();
+  return normalized || undefined;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getUtcDayRange(date: Date) {
+  const start = toUtcDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 // Helper function to parse dates from Excel (handles numbers, strings, and Date objects)
-function parseDate(value: any): Date | undefined {
+function parseDate(value: unknown): Date | undefined {
   if (!value) return undefined;
 
-  // If it's already a Date, return it
+  // Normalize Date instances to UTC date-only values.
   if (value instanceof Date && !isNaN(value.getTime())) {
-    return value;
+    return toUtcDate(value.getFullYear(), value.getMonth() + 1, value.getDate());
   }
 
-  // If it's a number (Excel serial date), convert it
+  // If it's a number (Excel serial date), decode using XLSX parser.
   if (typeof value === "number") {
-    // Excel serial dates: 1 = Jan 1, 1900 (with leap year bug)
-    const excelEpoch = new Date(1900, 0, 1);
-    const date = new Date(excelEpoch.getTime() + (value - 1) * 24 * 60 * 60 * 1000);
-    return !isNaN(date.getTime()) ? date : undefined;
+    const parsed = XLSX.SSF.parse_date_code(value);
+    if (!parsed || !parsed.y || !parsed.m || !parsed.d) {
+      return undefined;
+    }
+    return toUtcDate(parsed.y, parsed.m, parsed.d);
   }
 
-  // If it's a string, try to parse it
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!trimmed) return undefined;
 
-    // Try parsing as ISO string (YYYY-MM-DD) or other common formats
+    // ISO date (YYYY-MM-DD)
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      return toUtcDate(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
+    }
+
+    // Slash/hyphen date (DD/MM/YYYY or DD-MM-YYYY)
+    const dmyMatch = trimmed.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+    if (dmyMatch) {
+      return toUtcDate(Number(dmyMatch[3]), Number(dmyMatch[2]), Number(dmyMatch[1]));
+    }
+
+    // Fallback for text dates like "12 Mar 2000"
     const date = new Date(trimmed);
-    return !isNaN(date.getTime()) ? date : undefined;
+    if (!isNaN(date.getTime())) {
+      return toUtcDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    }
+
+    return undefined;
   }
 
   return undefined;
@@ -62,7 +99,7 @@ export async function POST(request: NextRequest) {
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(worksheet);
+    const data = XLSX.utils.sheet_to_json(worksheet, { raw: true });
 
     if (!data || data.length === 0) {
       return NextResponse.json({ success: false, error: "Excel file is empty" }, { status: 400 });
@@ -123,7 +160,7 @@ export async function POST(request: NextRequest) {
           // occupation handled below to support "Other Occupation"
           country: row["Country"] || row["country"] || undefined,
           email: row["Email"] || row["email"] || undefined,
-          contact_number: row["Contact Number"] || row["contact_number"] || undefined,
+          contact_number: normalizeContactNumber(row["Contact Number"] || row["contact_number"] || undefined),
           status: row["Status"] || row["status"] || "Active",
           personal_code: undefined,
         };
@@ -243,20 +280,32 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const query = {
-          first_name: pastorData.first_name,
-          last_name: pastorData.last_name,
-          ...(pastorData.date_of_birth && { date_of_birth: pastorData.date_of_birth }),
+        const duplicateQuery: Record<string, unknown> = {
+          first_name: new RegExp(`^${escapeRegex(String(pastorData.first_name).trim())}$`, "i"),
+          last_name: new RegExp(`^${escapeRegex(String(pastorData.last_name).trim())}$`, "i"),
         };
 
-        const existingPastor = await Pastor.findOne(query);
+        if (pastorData.date_of_birth instanceof Date) {
+          const { start, end } = getUtcDayRange(pastorData.date_of_birth);
+          duplicateQuery.date_of_birth = { $gte: start, $lt: end };
+        }
+
+        if (pastorData.contact_number) {
+          duplicateQuery.contact_number = pastorData.contact_number;
+        }
+
+        const existingPastor = await Pastor.findOne(duplicateQuery);
 
         if (existingPastor) {
-          existingPastor.set({
-            ...pastorData,
-            personal_code: existingPastor.personal_code || (await generateUniquePastorCode()),
-          });
+          existingPastor.set(pastorData);
           await existingPastor.save();
+
+          // Immutable schema fields can be ignored in Mongoose updates for existing docs.
+          if (!existingPastor.personal_code) {
+            const generatedCode = await generateUniquePastorCode();
+            await Pastor.collection.updateOne({ _id: existingPastor._id }, { $set: { personal_code: generatedCode } });
+          }
+
           updated++;
         } else {
           await Pastor.create({

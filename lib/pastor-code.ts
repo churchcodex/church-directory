@@ -2,9 +2,9 @@ import { randomBytes } from "crypto";
 import Pastor from "@/models/Pastor";
 
 const CODE_PREFIX = "FLC-";
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const CODE_LENGTH = 8;
-const MAX_ATTEMPTS = 10;
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const CODE_LENGTH = 4;
+const MAX_ATTEMPTS = 30;
 
 function randomLetters(length: number) {
   const bytes = randomBytes(length);
