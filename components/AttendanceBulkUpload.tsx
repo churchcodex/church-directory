@@ -59,7 +59,7 @@ export default function AttendanceBulkUpload({ attendanceDate, disabled, onSucce
 
   const downloadTemplate = () => {
     const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet([{ Code: "FLC-ABCDEFGH" }, { Code: "FLC-QWERTYUI" }]);
+    const worksheet = XLSX.utils.json_to_sheet([{ Code: "G-0001" }, { Code: "G-0002" }]);
 
     worksheet["!cols"] = [{ wch: 18 }];
 

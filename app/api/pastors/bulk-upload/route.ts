@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
-import { generateUniquePastorCode } from "@/lib/pastor-code";
+import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
+import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/mnotify";
 import * as XLSX from "xlsx";
 
 // Helper function to parse dates from Excel (handles numbers, strings, and Date objects)
@@ -73,6 +74,19 @@ export async function POST(request: NextRequest) {
       successful: 0,
       failed: 0,
       errors: [] as Array<{ row: number; error: string; data: any }>,
+    };
+
+    const smsResults = {
+      attempted: 0,
+      sent: 0,
+      failed: 0,
+      errors: [] as Array<{
+        row: number;
+        pastorName: string;
+        phoneNumber?: string;
+        reason?: string;
+        error: string;
+      }>,
     };
 
     // Track created vs updated for reporting
@@ -151,9 +165,17 @@ export async function POST(request: NextRequest) {
 
         // Handle clergy_type which can be comma-separated
         const clergyTypeRaw = row["Clergy Type"] || row["clergy_type"];
+        let governorSelectedAsTitle = false;
         if (clergyTypeRaw) {
-          pastorData.clergy_type =
-            typeof clergyTypeRaw === "string" ? clergyTypeRaw.split(",").map((t: string) => t.trim()) : [clergyTypeRaw];
+          const parsedClergyTypes =
+            typeof clergyTypeRaw === "string"
+              ? clergyTypeRaw
+                  .split(",")
+                  .map((t: string) => t.trim())
+                  .filter(Boolean)
+              : [clergyTypeRaw].filter(Boolean);
+          governorSelectedAsTitle = parsedClergyTypes.includes("Governor");
+          pastorData.clergy_type = parsedClergyTypes.filter((value: string) => value !== "Governor");
         }
 
         // Handle function (comma-separated allowed)
@@ -169,6 +191,10 @@ export async function POST(request: NextRequest) {
           pastorData.function = Array.from(new Set(parsedFunctions));
         } else {
           pastorData.function = [];
+        }
+
+        if (governorSelectedAsTitle && !pastorData.function.includes("Governor")) {
+          pastorData.function = [...pastorData.function, "Governor"];
         }
 
         const invalidFunctions = (pastorData.function || []).filter(
@@ -251,19 +277,62 @@ export async function POST(request: NextRequest) {
 
         const existingPastor = await Pastor.findOne(query);
 
+        let generatedCode: string | null = null;
+        let pastorWithLatestCode: any = null;
+
         if (existingPastor) {
+          const shouldGenerateCode = !isSequentialPastorCode(existingPastor.personal_code);
+          const nextCode = shouldGenerateCode ? await generateUniquePastorCode() : existingPastor.personal_code;
+
+          if (shouldGenerateCode) {
+            generatedCode = nextCode;
+          }
+
           existingPastor.set({
             ...pastorData,
-            personal_code: existingPastor.personal_code || (await generateUniquePastorCode()),
+            personal_code: nextCode,
           });
           await existingPastor.save();
+          pastorWithLatestCode = existingPastor;
           updated++;
         } else {
-          await Pastor.create({
+          generatedCode = await generateUniquePastorCode();
+
+          pastorWithLatestCode = await Pastor.create({
             ...pastorData,
-            personal_code: await generateUniquePastorCode(),
+            personal_code: generatedCode,
           });
+
           created++;
+        }
+
+        if (generatedCode && pastorWithLatestCode) {
+          smsResults.attempted += 1;
+
+          const pastorName = buildPastorDisplayName(
+            pastorWithLatestCode.first_name,
+            pastorWithLatestCode.middle_name,
+            pastorWithLatestCode.last_name,
+          );
+
+          const sms = await sendPastorCodeSms({
+            phoneNumber: pastorWithLatestCode.contact_number,
+            pastorName,
+            code: generatedCode,
+          });
+
+          if (sms.success) {
+            smsResults.sent += 1;
+          } else {
+            smsResults.failed += 1;
+            smsResults.errors.push({
+              row: rowNumber,
+              pastorName,
+              phoneNumber: pastorWithLatestCode.contact_number,
+              reason: sms.reason,
+              error: sms.error || "Failed to send pastor code SMS.",
+            });
+          }
         }
 
         results.successful++;
@@ -282,6 +351,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...results,
         summary: `${created} created, ${updated} updated`,
+        sms: smsResults,
       },
     });
   } catch (error: any) {

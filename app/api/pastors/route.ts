@@ -5,6 +5,7 @@ import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import { serializePastor } from "@/lib/pastor";
+import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/mnotify";
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,8 +44,20 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
 
+    const normalizedClergyType = Array.isArray(body.clergy_type)
+      ? body.clergy_type
+      : body.clergy_type
+        ? [body.clergy_type]
+        : [];
+    const governorSelectedAsTitle = normalizedClergyType.includes("Governor");
+    const clergyTypeValues = Array.from(
+      new Set(normalizedClergyType.filter((value: string) => Boolean(value) && value !== "Governor")),
+    );
+
     const normalizedFunction = Array.isArray(body.function) ? body.function : body.function ? [body.function] : [];
-    const functionValues = Array.from(new Set(normalizedFunction.filter(Boolean))) as string[];
+    const functionValues = Array.from(
+      new Set([...(normalizedFunction.filter(Boolean) as string[]), ...(governorSelectedAsTitle ? ["Governor"] : [])]),
+    );
     const normalizedCouncil = Array.isArray(body.council) ? body.council : body.council ? [body.council] : [];
     const councilValues = Array.from(new Set(normalizedCouncil.filter(Boolean))) as string[];
 
@@ -59,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate clergy_type
-    if (!body.clergy_type || body.clergy_type.length === 0) {
+    if (clergyTypeValues.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -72,6 +85,7 @@ export async function POST(request: NextRequest) {
     // Sanitize empty strings to undefined for optional enum fields only
     const sanitizedData = {
       ...body,
+      clergy_type: clergyTypeValues,
       function: functionValues,
       council: councilValues,
       church: body.church === "" ? undefined : body.church,
@@ -107,12 +121,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const personalCode = await generateUniquePastorCode();
+
     const pastor: any = await Pastor.create({
       ...sanitizedData,
-      personal_code: await generateUniquePastorCode(),
+      personal_code: personalCode,
     });
+
+    const sms = await sendPastorCodeSms({
+      phoneNumber: pastor.contact_number,
+      pastorName: buildPastorDisplayName(pastor.first_name, pastor.middle_name, pastor.last_name),
+      code: personalCode,
+    });
+
     const transformedPastor = serializePastor(pastor.toObject());
-    return NextResponse.json({ success: true, data: transformedPastor }, { status: 201 });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: transformedPastor,
+        sms,
+      },
+      { status: 201 },
+    );
   } catch (error: any) {
     console.error("Error creating pastor:", error);
     return NextResponse.json(

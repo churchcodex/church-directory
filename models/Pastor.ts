@@ -112,7 +112,7 @@ const PastorSchema = new Schema<PastorDocument>(
       uppercase: true,
       trim: true,
       immutable: true,
-      match: [/^FLC-[A-Z]{8}$/, "Pastor code must match FLC-XXXXXXXX"],
+      match: [/^G-\d{4}$/, "Pastor code must match G-0001"],
     },
     status: {
       type: String,

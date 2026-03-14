@@ -64,7 +64,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         "Last Name": "Doe",
         "Date of Birth": "1990-01-15",
         "Date of Appointment": "2020-06-01",
-        "Clergy Type": "Pastor,Governor",
+        "Clergy Type": "Pastor",
         "Marital Status": "Married",
         Gender: "Male",
         Council: "Philippians",
@@ -115,18 +115,12 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const areasData = areas.map((area: string) => ({ Area: area }));
     const areasSheet = XLSX.utils.json_to_sheet(areasData);
 
-    const clergyTypes = fieldOptions?.clergyTypes?.options || [
-      "Bishop",
-      "Mother",
-      "Sister",
-      "Reverend",
-      "Pastor",
-      "Governor",
-    ];
+    const clergyTypes = (
+      fieldOptions?.clergyTypes?.options || ["Bishop", "Mother", "Sister", "Reverend", "Pastor"]
+    ).filter((type: string) => type !== "Governor");
     const clergyTypesData = clergyTypes.map((type: string) => ({
       "Clergy Type": type,
-      Description:
-        type === "Governor" ? "Can be combined with any other title" : "Can be combined with Governor (max 2 titles)",
+      Description: "Combine up to 2 titles where applicable",
     }));
     const clergyTypesSheet = XLSX.utils.json_to_sheet(clergyTypesData);
 
@@ -327,7 +321,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
                 <li>
                   <strong>Required fields:</strong> First Name, Last Name
                 </li>
-                <li>For Title, separate multiple types with commas (e.g., "Pastor,Governor")</li>
+                <li>For Title, separate multiple types with commas (e.g., "Pastor,Reverend")</li>
                 <li>
                   <strong>Council:</strong> Check the "Councils" sheet for all available council options
                 </li>

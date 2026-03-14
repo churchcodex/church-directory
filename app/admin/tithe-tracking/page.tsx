@@ -195,6 +195,12 @@ export default function AttendanceTrackingPage() {
       }
 
       toast.success(data.message || "Pastor codes generated.");
+
+      const smsSummary = data.data?.sms;
+      if (smsSummary) {
+        toast.info(`SMS sent: ${smsSummary.sent}/${smsSummary.attempted}. Failed: ${smsSummary.failed}.`);
+      }
+
       fetchSummary(weekStart);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to backfill pastor codes."));
@@ -311,7 +317,7 @@ export default function AttendanceTrackingPage() {
               <Input
                 value={codeInput}
                 onChange={(event) => setCodeInput(event.target.value.toUpperCase())}
-                placeholder="FLC-ABCDEFGH"
+                placeholder="G-0001"
               />
               <Button type="submit" className="w-full" disabled={submittingCode || !selectedDate}>
                 {submittingCode ? "Marking..." : "Mark Attendance"}

@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
-import { generateUniquePastorCode } from "@/lib/pastor-code";
+import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
 import { serializePastor } from "@/lib/pastor";
+import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/mnotify";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -46,6 +47,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     const body = await request.json();
 
+    const normalizedClergyType =
+      body.clergy_type !== undefined
+        ? Array.isArray(body.clergy_type)
+          ? body.clergy_type
+          : body.clergy_type
+            ? [body.clergy_type]
+            : []
+        : undefined;
+
+    const governorSelectedAsTitle = Array.isArray(normalizedClergyType) && normalizedClergyType.includes("Governor");
+    const clergyTypeValues =
+      normalizedClergyType !== undefined
+        ? Array.from(new Set(normalizedClergyType.filter((value: string) => Boolean(value) && value !== "Governor")))
+        : undefined;
+
     const normalizedFunction =
       body.function !== undefined
         ? Array.isArray(body.function)
@@ -65,8 +81,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         : undefined;
 
     if (normalizedFunction !== undefined) {
-      const functionValues = Array.from(new Set((normalizedFunction as string[]).filter(Boolean))) as string[];
+      const functionValues = Array.from(
+        new Set([
+          ...((normalizedFunction as string[]).filter(Boolean) as string[]),
+          ...(governorSelectedAsTitle ? ["Governor"] : []),
+        ]),
+      ) as string[];
       body.function = functionValues;
+    } else if (governorSelectedAsTitle) {
+      body.function = ["Governor"];
+    }
+
+    if (clergyTypeValues !== undefined) {
+      body.clergy_type = clergyTypeValues;
     }
 
     if (normalizedCouncil !== undefined) {
@@ -86,7 +113,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Validate clergy_type only if it's being updated
     if (body.clergy_type !== undefined) {
-      if (!body.clergy_type || body.clergy_type.length === 0) {
+      if (!Array.isArray(body.clergy_type) || body.clergy_type.length === 0) {
         return NextResponse.json(
           {
             success: false,
@@ -151,11 +178,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
     }
 
+    const generatedCode = isSequentialPastorCode(currentPastor.personal_code) ? null : await generateUniquePastorCode();
+
     const pastor: any = await Pastor.findByIdAndUpdate(
       id,
       {
         ...sanitizedData,
-        ...(currentPastor.personal_code ? {} : { personal_code: await generateUniquePastorCode() }),
+        ...(generatedCode ? { personal_code: generatedCode } : {}),
       },
       {
         new: true,
@@ -169,7 +198,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const transformedPastor = serializePastor(pastor);
 
-    return NextResponse.json({ success: true, data: transformedPastor });
+    const sms = generatedCode
+      ? await sendPastorCodeSms({
+          phoneNumber: pastor.contact_number,
+          pastorName: buildPastorDisplayName(pastor.first_name, pastor.middle_name, pastor.last_name),
+          code: generatedCode,
+        })
+      : null;
+
+    return NextResponse.json({ success: true, data: transformedPastor, sms });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }

@@ -199,7 +199,11 @@ export async function GET(req: NextRequest) {
 
     for (const fieldName of fieldNames) {
       const fieldOption = await PastorFieldOptions.findOne({ fieldName });
-      const options = fieldOption ? fieldOption.options : defaultFieldValues[fieldName];
+      let options = fieldOption ? fieldOption.options : defaultFieldValues[fieldName];
+
+      if (fieldName === "clergyTypes") {
+        options = options.filter((value: string) => value !== "Governor");
+      }
 
       if (!fieldOption) {
         // Return default values if not in database
@@ -242,6 +246,10 @@ export async function PUT(req: NextRequest) {
 
     if (!defaultFieldValues[fieldName]) {
       return NextResponse.json({ error: "Invalid field name" }, { status: 400 });
+    }
+
+    if (fieldName === "clergyTypes" && options.includes("Governor")) {
+      return NextResponse.json({ error: "Governor is a function, not a clergy type." }, { status: 400 });
     }
 
     await dbConnect();

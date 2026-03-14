@@ -189,7 +189,8 @@ function ClergyPageContent() {
       const response = await fetch("/api/pastor-fields");
       const data = await response.json();
       if (response.ok && data.data) {
-        setAvailableClergyTypes(data.data.clergyTypes?.options || []);
+        const safeClergyTypes = (data.data.clergyTypes?.options || []).filter((value: string) => value !== "Governor");
+        setAvailableClergyTypes(safeClergyTypes);
         setAvailableCouncils(data.data.councils?.options || []);
         setAvailableAreas(data.data.areas?.options || []);
         setAvailablePastorFunctions(data.data.pastorFunctions?.options || []);
@@ -759,9 +760,9 @@ function ClergyPageContent() {
                 <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </p>
-                {session?.user?.role === "admin" && pastor.personal_code && (
+                {/* {session?.user?.role === "admin" && pastor.personal_code && (
                   <p className="text-[10px] text-muted-foreground text-center w-24 truncate">{pastor.personal_code}</p>
-                )}
+                )} */}
               </Link>
             ))}
           </div>

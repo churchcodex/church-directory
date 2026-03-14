@@ -89,7 +89,10 @@ church-directory/
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
    CLOUDINARY_URL=your_cloudinary_url
+   MNOTIFY_API_KEY=your_mnotify_api_key
    ```
+
+   Pastor-code SMS notifications use mNotify with a fixed sender name: `FL Admin`.
 
 4. **Run the development server**
    ```bash
