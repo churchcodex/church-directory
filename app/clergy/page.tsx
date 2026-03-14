@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
@@ -9,6 +9,7 @@ import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog
 import PastorBulkUpload from "@/components/PastorBulkUpload";
 import { Search, LayoutGrid, List, Award } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,7 +95,6 @@ function saveScrollPosition(filteredPastorIds: string[]) {
 
 function ClergyPageContent() {
   const { data: session } = useSession();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { setTitle } = usePageTitle();
   const {
@@ -129,7 +129,6 @@ function ClergyPageContent() {
 
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Scroll position persistence
@@ -515,137 +514,7 @@ function ClergyPageContent() {
     applyFilters();
   }, [applyFilters]);
 
-  // Get active filter labels
-  const getActiveFilters = () => {
-    const activeFilters: { label: string; value: string; key: keyof FilterState; filterValue?: string }[] = [];
-
-    // Clergy type (array)
-    if (filters.clergyType.length > 0) {
-      filters.clergyType.forEach((type) => {
-        activeFilters.push({
-          label: "Title",
-          value: type,
-          key: "clergyType",
-          filterValue: type,
-        });
-      });
-    }
-
-    // Marital status (array)
-    if (filters.maritalStatus.length > 0) {
-      filters.maritalStatus.forEach((status) => {
-        activeFilters.push({
-          label: "Marital Status",
-          value: status,
-          key: "maritalStatus",
-          filterValue: status,
-        });
-      });
-    }
-
-    // Gender (single)
-    if (filters.gender !== "all") {
-      activeFilters.push({
-        label: "Gender",
-        value: filters.gender,
-        key: "gender",
-      });
-    }
-
-    // Council (array)
-    if (filters.council.length > 0) {
-      filters.council.forEach((council) => {
-        activeFilters.push({
-          label: "Council",
-          value: council,
-          key: "council",
-          filterValue: council,
-        });
-      });
-    }
-
-    // Area (array)
-    if (filters.area.length > 0) {
-      filters.area.forEach((area) => {
-        activeFilters.push({
-          label: "Area",
-          value: area === "none" ? "No Area" : area,
-          key: "area",
-          filterValue: area,
-        });
-      });
-    }
-
-    // Country (array)
-    if (filters.country.length > 0) {
-      filters.country.forEach((country) => {
-        activeFilters.push({
-          label: "Country",
-          value: country,
-          key: "country",
-          filterValue: country,
-        });
-      });
-    }
-
-    // Occupation (array)
-    if (filters.occupation.length > 0) {
-      filters.occupation.forEach((occupation) => {
-        activeFilters.push({
-          label: "Occupation",
-          value: occupation,
-          key: "occupation",
-          filterValue: occupation,
-        });
-      });
-    }
-
-    // Function (array)
-    if (filters.function.length > 0) {
-      filters.function.forEach((func) => {
-        activeFilters.push({
-          label: "Function",
-          value: func,
-          key: "function",
-          filterValue: func,
-        });
-      });
-    }
-
-    // Age range
-    if (filters.minAge || filters.maxAge) {
-      activeFilters.push({
-        label: "Age Range",
-        value: [filters.minAge && `Min: ${filters.minAge}`, filters.maxAge && `Max: ${filters.maxAge}`]
-          .filter(Boolean)
-          .join(", "),
-        key: "minAge",
-      });
-    }
-
-    return activeFilters;
-  };
-
-  const activeFilters = getActiveFilters();
-  const hasActiveFilters = activeFilters.length > 0 || searchQuery;
-
-  // Remove individual filter
-  const removeFilter = (key: keyof FilterState, filterValue?: string) => {
-    const updatedFilters = { ...filters };
-
-    if (Array.isArray(updatedFilters[key]) && filterValue) {
-      // Remove specific item from array filters
-      (updatedFilters[key] as string[]) = (updatedFilters[key] as string[]).filter((item) => item !== filterValue);
-    } else if (key === "minAge" || key === "maxAge") {
-      // Clear age range
-      updatedFilters.minAge = "";
-      updatedFilters.maxAge = "";
-    } else if (key === "gender") {
-      updatedFilters.gender = "all";
-    }
-
-    setFilters(updatedFilters);
-  };
+  const filteredPastorIds = useMemo(() => filteredPastors.map((pastor) => pastor.id), [filteredPastors]);
 
   if (loading) {
     return (
@@ -737,19 +606,23 @@ function ClergyPageContent() {
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
-            {filteredPastors.map((pastor) => (
+            {filteredPastors.map((pastor, index) => (
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
-                onClick={() => saveScrollPosition(filteredPastors.map((p) => p.id))}
+                onClick={() => saveScrollPosition(filteredPastorIds)}
                 className="group cursor-pointer flex flex-col items-center max-w-24 mx-auto"
               >
                 <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted mb-1.5 border-2 border-border hover:border-primary transition-all duration-300 hover:scale-125">
                   {pastor.profile_image ? (
-                    <img
+                    <Image
                       src={pastor.profile_image}
                       alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="96px"
+                      quality={60}
+                      priority={index < 8}
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-purple-500 to-blue-600">
@@ -768,19 +641,23 @@ function ClergyPageContent() {
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredPastors.map((pastor) => (
+            {filteredPastors.map((pastor, index) => (
               <Link
                 key={pastor.id}
                 href={`/clergy/${pastor.id}`}
-                onClick={() => saveScrollPosition(filteredPastors.map((p) => p.id))}
+                onClick={() => saveScrollPosition(filteredPastorIds)}
                 className="flex items-center gap-4 p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border"
               >
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted shrink-0">
                   {pastor.profile_image ? (
-                    <img
+                    <Image
                       src={pastor.profile_image}
                       alt={[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="48px"
+                      quality={60}
+                      priority={index < 12}
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-purple-500 to-blue-600">
