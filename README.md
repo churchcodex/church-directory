@@ -89,10 +89,12 @@ church-directory/
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
    CLOUDINARY_URL=your_cloudinary_url
-   MNOTIFY_API_KEY=your_mnotify_api_key
+   BMS_API_KEY=your_codeslawbms_api_key
+   BMS_BASE_URL=https://bms.codeslaw.dev/api/v1
+   BMS_DEFAULT_SENDER_ID=FL Admin
    ```
 
-   Pastor-code SMS notifications use mNotify with a fixed sender name: `FL Admin`.
+   Pastor-code SMS notifications use CodeslawBMS with a default sender ID (`FL Admin` unless overridden by `BMS_DEFAULT_SENDER_ID`).
 
 4. **Run the development server**
    ```bash
@@ -123,6 +125,13 @@ church-directory/
 ### Upload
 
 - `POST /api/upload` - Upload image to Cloudinary (multipart/form-data)
+
+### SMS (Admin)
+
+- `POST /api/sms/send` - Send SMS to one or more recipients
+- `GET /api/sms/balance` - Check remaining SMS credits
+- `GET /api/sms` - Fetch SMS history with optional filters
+- `GET /api/sms/status/[messageId]` - Check delivery status of a specific message
 
 ## Data Models
 
