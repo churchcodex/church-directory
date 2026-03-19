@@ -78,6 +78,9 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         "Profile Image URL": "",
         // Use comma-separated values for multiple functions (e.g., "Governor,Overseer")
         Function: "Governor",
+        // Ministry Group is only required for Area 4 (HGE Area 4 / Experience Area 4).
+        // Separate multiple groups with commas. Check the "Ministry Groups" sheet for valid values.
+        "Ministry Group": "",
       },
     ];
 
@@ -139,6 +142,50 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     const functionData = functions.map((func: string) => ({ Function: func }));
     const functionSheet = XLSX.utils.json_to_sheet(functionData);
 
+    const ministryGroupsList = fieldOptions?.ministryGroups?.options || [
+      "Many Are Called Choir",
+      "Love is Large Choir",
+      "Peace and Love Choir",
+      "True Love Choir",
+      "Love Never Fails Choir",
+      "Abundant Love Choir",
+      "Steadfast Love Choir",
+      "Perfect Love Choir",
+      "Unfeigned Love Choir",
+      "Love Is Patient Choir",
+      "Everlasting Love Choir",
+      "God So Loved Choir",
+      "Actors Ministry",
+      "Props Ministry",
+      "Costume ministry",
+      "Make up",
+      "Protocol",
+      "Script writers",
+      "Social media",
+      "Technical",
+      "Love theatre company",
+      "Eels on wheels",
+      "Spiders",
+      "Doves",
+      "Lizardos",
+      "Butterflies",
+      "Kangaroos",
+      "Impalas",
+      "Unicorns",
+      "Gazelles",
+      "Camels",
+      "Eagles",
+      "Lions",
+      "Dolphins",
+      "Praise Stars",
+      "Worship Stars",
+    ];
+    const ministryGroupsData = ministryGroupsList.map((g: string) => ({
+      "Ministry Group": g,
+      Note: "Only applies to HGE Area 4 / Experience Area 4. Separate multiple groups with commas.",
+    }));
+    const ministryGroupsSheet = XLSX.utils.json_to_sheet(ministryGroupsData);
+
     // Append all sheets to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pastors");
     XLSX.utils.book_append_sheet(workbook, councilSheet, "Councils");
@@ -147,6 +194,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     XLSX.utils.book_append_sheet(workbook, maritalStatusSheet, "Marital Status");
     XLSX.utils.book_append_sheet(workbook, genderSheet, "Gender");
     XLSX.utils.book_append_sheet(workbook, functionSheet, "Function");
+    XLSX.utils.book_append_sheet(workbook, ministryGroupsSheet, "Ministry Groups");
 
     // Set column widths
     worksheet["!cols"] = [
@@ -158,7 +206,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 20 }, // Clergy Type
       { wch: 15 }, // Marital Status
       { wch: 10 }, // Gender
-      { wch: 30 }, // Council (expanded to fit longer names)
+      { wch: 30 }, // Council
       { wch: 20 }, // Area
       { wch: 20 }, // Occupation
       { wch: 22 }, // Other Occupation
@@ -168,6 +216,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 25 }, // Church ID
       { wch: 30 }, // Profile Image URL
       { wch: 12 }, // Function
+      { wch: 30 }, // Ministry Group
     ];
 
     // Set column widths for reference sheets
@@ -177,6 +226,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     maritalStatusSheet["!cols"] = [{ wch: 20 }];
     genderSheet["!cols"] = [{ wch: 15 }];
     functionSheet["!cols"] = [{ wch: 15 }];
+    ministryGroupsSheet["!cols"] = [{ wch: 35 }, { wch: 60 }];
 
     // Add data validations for dropdowns
     if (!worksheet["!dataValidation"]) worksheet["!dataValidation"] = [];

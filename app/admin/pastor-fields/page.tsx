@@ -37,6 +37,7 @@ const fieldLabels: Record<string, string> = {
   genders: "Genders",
   statuses: "Statuses",
   pastorFunctions: "Functions",
+  ministryGroups: "Ministry Groups",
 };
 
 export default function PastorFieldsPage() {

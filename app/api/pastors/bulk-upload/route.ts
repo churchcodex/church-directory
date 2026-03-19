@@ -4,8 +4,20 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
-import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/mnotify";
+import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 import * as XLSX from "xlsx";
+
+// Normalize a phone number to a canonical form for duplicate detection.
+// Strips leading +, spaces, and converts 0XX -> 233XX so that
+// +233244000000, 233244000000 and 0244000000 all compare equal.
+function normalizePhone(raw: any): string | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  const s = String(raw).replace(/\s+/g, "").replace(/^\+/, "");
+  if (!s) return undefined;
+  // 0XXXXXXXXX → 233XXXXXXXXX
+  if (s.startsWith("0")) return "233" + s.slice(1);
+  return s;
+}
 
 // Helper function to parse dates from Excel (handles numbers, strings, and Date objects)
 function parseDate(value: any): Date | undefined {
@@ -97,6 +109,7 @@ export async function POST(request: NextRequest) {
     let allowedFunctions: string[] = ["Governor", "Overseer", "Not Applicable"];
     let allowedCouncils: string[] = [];
     let allowedAreas: string[] = [];
+    let allowedMinistryGroups: string[] = [];
 
     try {
       const fieldsUrl = new URL(request.url);
@@ -107,6 +120,7 @@ export async function POST(request: NextRequest) {
         const dynamicFunctions = fieldsJson?.data?.pastorFunctions?.options;
         allowedCouncils = fieldsJson?.data?.councils?.options || [];
         allowedAreas = fieldsJson?.data?.areas?.options || [];
+        allowedMinistryGroups = fieldsJson?.data?.ministryGroups?.options || [];
         if (Array.isArray(dynamicFunctions) && dynamicFunctions.length > 0) {
           allowedFunctions = dynamicFunctions;
         }
@@ -134,6 +148,7 @@ export async function POST(request: NextRequest) {
           gender: row["Gender"] || row["gender"] || undefined,
           council: row["Council"] || row["council"] || undefined,
           area: row["Area"] || row["area"] || undefined,
+          ministry_group: undefined, // handled below
           // occupation handled below to support "Other Occupation"
           country: row["Country"] || row["country"] || undefined,
           email: row["Email"] || row["email"] || undefined,
@@ -161,6 +176,21 @@ export async function POST(request: NextRequest) {
           }
         } else {
           pastorData.occupation = occupationRaw || undefined;
+        }
+
+        // Handle ministry_group (comma-separated, only relevant for Area 4)
+        const ministryGroupRaw = row["Ministry Group"] || row["ministry_group"];
+        if (ministryGroupRaw) {
+          const parsedGroups =
+            typeof ministryGroupRaw === "string"
+              ? ministryGroupRaw
+                  .split(",")
+                  .map((g: string) => g.trim())
+                  .filter(Boolean)
+              : [String(ministryGroupRaw).trim()].filter(Boolean);
+          pastorData.ministry_group = Array.from(new Set(parsedGroups));
+        } else {
+          pastorData.ministry_group = [];
         }
 
         // Handle clergy_type which can be comma-separated
@@ -269,31 +299,79 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const query = {
+        // Validate ministry_group values (only when provided and allowed list is available)
+        if (
+          Array.isArray(pastorData.ministry_group) &&
+          pastorData.ministry_group.length > 0 &&
+          allowedMinistryGroups.length > 0
+        ) {
+          const invalidGroups = pastorData.ministry_group.filter((g: string) => !allowedMinistryGroups.includes(g));
+          if (invalidGroups.length > 0) {
+            results.failed++;
+            results.errors.push({
+              row: rowNumber,
+              error: `Invalid ministry group(s): ${invalidGroups.join(", ")}. Allowed values are managed in Admin → Pastor Fields`,
+              data: row,
+            });
+            continue;
+          }
+        }
+
+        // Normalize contact numbers for comparison
+        const normalizedIncoming = normalizePhone(pastorData.contact_number);
+
+        // Build idempotency query: match on name + DOB when available, then
+        // fall back to also matching on normalized phone if no DOB is supplied.
+        const nameQuery = {
           first_name: pastorData.first_name,
           last_name: pastorData.last_name,
-          ...(pastorData.date_of_birth && { date_of_birth: pastorData.date_of_birth }),
         };
 
+        let query: any;
+        if (pastorData.date_of_birth) {
+          query = { ...nameQuery, date_of_birth: pastorData.date_of_birth };
+        } else if (normalizedIncoming) {
+          // Try to find an existing pastor whose stored phone normalizes to the same value
+          const existingByPhone = (await Pastor.find(nameQuery).lean()) as any[];
+          const phoneMatch = existingByPhone.find((p: any) => normalizePhone(p.contact_number) === normalizedIncoming);
+          query = phoneMatch ? { _id: phoneMatch._id } : nameQuery;
+        } else {
+          query = nameQuery;
+        }
+
         const existingPastor = await Pastor.findOne(query);
+
+        // If no match yet and we have a phone, try matching by normalized phone across all name variants
+        // (handles cases where name wasn't an exact match but phone is the real unique identifier)
+        let resolvedPastor = existingPastor;
+        if (!resolvedPastor && normalizedIncoming) {
+          const allByName = (await Pastor.find({
+            first_name: pastorData.first_name,
+            last_name: pastorData.last_name,
+          }).lean()) as any[];
+          const phoneMatch = allByName.find((p: any) => normalizePhone(p.contact_number) === normalizedIncoming);
+          if (phoneMatch) {
+            resolvedPastor = await Pastor.findById(phoneMatch._id);
+          }
+        }
 
         let generatedCode: string | null = null;
         let pastorWithLatestCode: any = null;
 
-        if (existingPastor) {
-          const shouldGenerateCode = !isSequentialPastorCode(existingPastor.personal_code);
-          const nextCode = shouldGenerateCode ? await generateUniquePastorCode() : existingPastor.personal_code;
+        if (resolvedPastor) {
+          const shouldGenerateCode = !isSequentialPastorCode(resolvedPastor.personal_code);
+          const nextCode = shouldGenerateCode ? await generateUniquePastorCode() : resolvedPastor.personal_code;
 
           if (shouldGenerateCode) {
             generatedCode = nextCode;
           }
 
-          existingPastor.set({
+          resolvedPastor.set({
             ...pastorData,
             personal_code: nextCode,
           });
-          await existingPastor.save();
-          pastorWithLatestCode = existingPastor;
+          await resolvedPastor.save();
+          pastorWithLatestCode = resolvedPastor;
           updated++;
         } else {
           generatedCode = await generateUniquePastorCode();

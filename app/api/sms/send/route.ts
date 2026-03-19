@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/error";
-import { sendSms } from "@/lib/mnotify";
+import { sendSms } from "@/lib/codeslaw-bms";
 
 type SendPayload = {
   recipients?: string[];

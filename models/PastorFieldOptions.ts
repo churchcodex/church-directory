@@ -22,6 +22,7 @@ const PastorFieldOptionsSchema = new Schema<PastorFieldOptionsDocument>(
         "genders",
         "statuses",
         "pastorFunctions",
+        "ministryGroups",
       ],
     },
     options: {
@@ -36,7 +37,7 @@ const PastorFieldOptionsSchema = new Schema<PastorFieldOptionsDocument>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default models.PastorFieldOptions ||

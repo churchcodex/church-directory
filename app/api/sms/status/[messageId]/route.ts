@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/error";
-import { getSmsMessageStatus } from "@/lib/mnotify";
+import { getSmsMessageStatus } from "@/lib/codeslaw-bms";
 
 function isAdmin(session: Awaited<ReturnType<typeof getServerSession>>) {
   if (!session || typeof session !== "object") {

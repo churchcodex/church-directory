@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/error";
-import { getSmsHistory, SmsHistoryQuery } from "@/lib/mnotify";
+import { getSmsHistory, SmsHistoryQuery } from "@/lib/codeslaw-bms";
 
 const ALLOWED_STATUS = new Set(["PENDING", "SENT", "DELIVERED", "FAILED"]);
 

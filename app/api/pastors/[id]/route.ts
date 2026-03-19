@@ -5,7 +5,7 @@ import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
 import { serializePastor } from "@/lib/pastor";
-import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/mnotify";
+import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

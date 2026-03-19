@@ -142,6 +142,11 @@ const PastorSchema = new Schema<PastorDocument>(
         message: "If 'Not Applicable' is selected, no other functions can be selected",
       },
     },
+    ministry_group: {
+      type: [String],
+      required: false,
+      default: [],
+    },
   },
   {
     timestamps: true,

@@ -7,7 +7,8 @@ import { Pastor, ClergyType } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
-import { Search, LayoutGrid, List, Award } from "lucide-react";
+import * as XLSX from "xlsx";
+import { Search, LayoutGrid, List, Award, Download } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { calculateAge } from "@/lib/utils";
@@ -91,6 +92,79 @@ function queryParamsToFilters(searchParams: URLSearchParams): { filters: FilterS
 function saveScrollPosition(filteredPastorIds: string[]) {
   sessionStorage.setItem("clergyPageScroll", window.scrollY.toString());
   sessionStorage.setItem("clergyFilteredIds", JSON.stringify(filteredPastorIds));
+}
+
+// Export pastors to Excel
+async function exportPastorsToExcel(pastors: Pastor[], filteredCount: number) {
+  // Fetch churches to map IDs to names
+  let churchMap = new Map<string, string>();
+  try {
+    const response = await fetch("/api/churches");
+    const data = await response.json();
+    if (data.success && Array.isArray(data.data)) {
+      churchMap = new Map(data.data.map((church: any) => [church._id, church.name]));
+    }
+  } catch (error) {
+    console.error("Failed to fetch churches:", error);
+  }
+
+  const exportData = pastors.map((pastor) => ({
+    "First Name": pastor.first_name || "",
+    "Middle Name": pastor.middle_name || "",
+    "Last Name": pastor.last_name || "",
+    "Date of Birth": pastor.date_of_birth || "",
+    "Date of Appointment": pastor.date_of_appointment || "",
+    "Clergy Type": Array.isArray(pastor.clergy_type) ? pastor.clergy_type.join(", ") : pastor.clergy_type || "",
+    "Marital Status": pastor.marital_status || "",
+    Gender: pastor.gender || "",
+    Council: Array.isArray(pastor.council) ? pastor.council.join(", ") : pastor.council || "",
+    Area: pastor.area || "",
+    Occupation: pastor.occupation || "",
+    Country: pastor.country || "",
+    Email: pastor.email || "",
+    "Contact Number": pastor.contact_number || "",
+    "Pastor Code": pastor.personal_code || "",
+    Status: pastor.status || "",
+    Campus: pastor.church ? churchMap.get(pastor.church) || pastor.church : "",
+    Function: Array.isArray(pastor.function) ? pastor.function.join(", ") : pastor.function || "",
+    "Ministry Group": Array.isArray(pastor.ministry_group) ? pastor.ministry_group.join(", ") : "",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Pastors");
+
+  // Set column widths for better readability
+  worksheet["!cols"] = [
+    { wch: 15 }, // First Name
+    { wch: 15 }, // Middle Name
+    { wch: 15 }, // Last Name
+    { wch: 15 }, // Date of Birth
+    { wch: 20 }, // Date of Appointment
+    { wch: 20 }, // Clergy Type
+    { wch: 15 }, // Marital Status
+    { wch: 10 }, // Gender
+    { wch: 30 }, // Council
+    { wch: 18 }, // Area
+    { wch: 20 }, // Occupation
+    { wch: 15 }, // Country
+    { wch: 25 }, // Email
+    { wch: 18 }, // Contact Number
+    { wch: 15 }, // Pastor Code
+    { wch: 12 }, // Status
+    { wch: 25 }, // Campus
+    { wch: 20 }, // Function
+    { wch: 25 }, // Ministry Group
+  ];
+
+  // Generate filename with date and filtered/total count info
+  const now = new Date();
+  const dateStr = now.toISOString().split("T")[0];
+  const countInfo =
+    filteredCount < pastors.length ? `_filtered-${filteredCount}-of-${pastors.length}` : `_all-${pastors.length}`;
+  const filename = `pastors_export_${dateStr}${countInfo}.xlsx`;
+
+  XLSX.writeFile(workbook, filename);
 }
 
 function ClergyPageContent() {
@@ -362,13 +436,26 @@ function ClergyPageContent() {
         </div>
         {session?.user?.role === "admin" && (
           <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => await exportPastorsToExcel(filteredPastors, filteredPastors.length)}
+              className="gap-2"
+              title={
+                filteredPastors.length < pastors.length
+                  ? "Download filtered pastors as Excel"
+                  : "Download all pastors as Excel"
+              }
+            >
+              <Download className="h-4 w-4" />
+            </Button>
             <PastorBulkUpload onSuccess={fetchPastors} />
             <PastorFormDialog onSuccess={fetchPastors} />
           </>
         )}
       </>,
     );
-  }, [setAddButton, viewMode, fetchPastors, session]);
+  }, [setAddButton, viewMode, fetchPastors, session, filteredPastors, pastors]);
 
   const applyFilters = useCallback(() => {
     setIsFiltering(true);
@@ -633,9 +720,9 @@ function ClergyPageContent() {
                 <p className="text-xs font-medium text-center text-wrap w-24 px-0.5">
                   {[pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ")}
                 </p>
-                {/* {session?.user?.role === "admin" && pastor.personal_code && (
+                {pastor.personal_code && (
                   <p className="text-[10px] text-muted-foreground text-center w-24 truncate">{pastor.personal_code}</p>
-                )} */}
+                )}
               </Link>
             ))}
           </div>
@@ -678,7 +765,7 @@ function ClergyPageContent() {
                           : pastor.clergy_type || "N/A"}
                       </p>
                     </div>
-                    {session?.user?.role === "admin" && pastor.personal_code && (
+                    {pastor.personal_code && (
                       <p className="text-xs text-muted-foreground mt-1">{pastor.personal_code}</p>
                     )}
                   </div>

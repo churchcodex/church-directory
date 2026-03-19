@@ -29,6 +29,7 @@ import {
   Status,
   Occupation,
   PastorFunction,
+  MinistryGroups,
 } from "@/types/entities";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
 
@@ -98,18 +99,18 @@ const defaultCouncils: Council[] = [
   "Social media",
   "Technical",
   "Love theatre company",
-  "Many Are Called",
-  "Love is Large",
-  "Peace and Love",
-  "True Love",
-  "Love Never Fails",
-  "Abundant Love",
-  "Steadfast Love",
-  "Perfect Love",
-  "Unfeigned Love",
-  "Love Is Patient",
-  "Everlasting Love",
-  "God So Loved",
+  "Many Are Called Choir",
+  "Love is Large Choir",
+  "Peace and Love Choir",
+  "True Love Choir",
+  "Love Never Fails Choir",
+  "Abundant Love Choir",
+  "Steadfast Love Choir",
+  "Perfect Love Choir",
+  "Unfeigned Love Choir",
+  "Love Is Patient Choir",
+  "Everlasting Love Choir",
+  "God So Loved Choir",
   "Praise Stars",
   "Worship Stars",
   "N/A",
@@ -217,6 +218,63 @@ const defaultCouncils: Council[] = [
 const defaultMaritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const defaultGenders: Gender[] = ["Male", "Female"];
 
+const GLGC_GROUPS: MinistryGroups[] = [
+  "Many Are Called Choir",
+  "Love is Large Choir",
+  "Peace and Love Choir",
+  "True Love Choir",
+  "Love Never Fails Choir",
+  "Abundant Love Choir",
+  "Steadfast Love Choir",
+  "Perfect Love Choir",
+  "Unfeigned Love Choir",
+  "Love Is Patient Choir",
+  "Everlasting Love Choir",
+  "God So Loved Choir",
+];
+
+const FILM_STARS_GROUPS: MinistryGroups[] = [
+  "Actors Ministry",
+  "Props Ministry",
+  "Costume ministry",
+  "Make up",
+  "Protocol",
+  "Script writers",
+  "Social media",
+  "Technical",
+  "Love theatre company",
+];
+
+const DANCING_STARS_GROUPS: MinistryGroups[] = [
+  "Eels on wheels",
+  "Spiders",
+  "Doves",
+  "Lizardos",
+  "Butterflies",
+  "Kangaroos",
+  "Impalas",
+  "Unicorns",
+  "Gazelles",
+  "Camels",
+  "Eagles",
+  "Lions",
+  "Dolphins",
+];
+
+const PRAISE_AND_WORSHIP_GROUPS: MinistryGroups[] = ["Praise Stars", "Worship Stars"];
+
+const ALL_MINISTRY_GROUPS: string[] = [
+  ...GLGC_GROUPS,
+  ...FILM_STARS_GROUPS,
+  ...DANCING_STARS_GROUPS,
+  ...PRAISE_AND_WORSHIP_GROUPS,
+];
+
+const GLGC_GROUP_SET = new Set<string>(GLGC_GROUPS);
+const FILM_STARS_GROUP_SET = new Set<string>(FILM_STARS_GROUPS);
+const DANCING_STARS_GROUP_SET = new Set<string>(DANCING_STARS_GROUPS);
+const PRAISE_AND_WORSHIP_GROUP_SET = new Set<string>(PRAISE_AND_WORSHIP_GROUPS);
+
 export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -254,6 +312,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       const hasGovernorTitle = Array.isArray(pastor?.clergy_type) && pastor.clergy_type.includes("Governor");
       return hasGovernorTitle && !functions.includes("Governor") ? [...functions, "Governor"] : functions;
     })(),
+    ministry_group: Array.isArray(pastor?.ministry_group) ? (pastor.ministry_group as MinistryGroups[]) : [],
   });
   const [occupationType, setOccupationType] = useState<Occupation>(
     pastor?.occupation && defaultOccupations.includes(pastor.occupation as Occupation)
@@ -275,7 +334,25 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
   const [occupations, setOccupations] = useState<string[]>(defaultOccupations);
   const [maritalStatuses, setMaritalStatuses] = useState<string[]>(defaultMaritalStatuses);
   const [genders, setGenders] = useState<string[]>(defaultGenders);
+  const [ministryGroups, setMinistryGroups] = useState<string[]>(ALL_MINISTRY_GROUPS);
   const [loadingFieldOptions, setLoadingFieldOptions] = useState(true);
+
+  // Derived: show ministry group only for Area 4
+  const showMinistryGroup = formData.area === "HGE Area 4" || formData.area === "Experience Area 4";
+
+  // Derived: available ministry group options filtered by council, sourced from fetched list
+  const ministryGroupOptions = (() => {
+    const selectedCouncils = formData.council;
+    const result: string[] = [];
+    if (selectedCouncils.includes("GLGC")) result.push(...ministryGroups.filter((g) => GLGC_GROUP_SET.has(g)));
+    if (selectedCouncils.includes("Film Stars"))
+      result.push(...ministryGroups.filter((g) => FILM_STARS_GROUP_SET.has(g)));
+    if (selectedCouncils.includes("Dancing Stars"))
+      result.push(...ministryGroups.filter((g) => DANCING_STARS_GROUP_SET.has(g)));
+    if (selectedCouncils.includes("Praise and Worship"))
+      result.push(...ministryGroups.filter((g) => PRAISE_AND_WORSHIP_GROUP_SET.has(g)));
+    return result.length > 0 ? result : ministryGroups;
+  })();
 
   // Fetch churches and field options when dialog opens
   useEffect(() => {
@@ -360,6 +437,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         setOccupations(data.data.occupations?.options || defaultOccupations);
         setMaritalStatuses(data.data.maritalStatuses?.options || defaultMaritalStatuses);
         setGenders(data.data.genders?.options || defaultGenders);
+        setMinistryGroups(data.data.ministryGroups?.options || ALL_MINISTRY_GROUPS);
       }
     } catch (error) {
       console.error("Failed to fetch field options:", error);
@@ -409,6 +487,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
           const hasGovernorTitle = Array.isArray(pastor.clergy_type) && pastor.clergy_type.includes("Governor");
           return hasGovernorTitle && !functions.includes("Governor") ? [...functions, "Governor"] : functions;
         })(),
+        ministry_group: Array.isArray(pastor.ministry_group) ? (pastor.ministry_group as MinistryGroups[]) : [],
       });
     }
   }, [open, pastor]);
@@ -495,6 +574,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             contact_number: "",
             status: "Active",
             function: [],
+            ministry_group: [],
           });
           setOccupationType("Medical Doctor");
           setCustomOccupation("");
@@ -788,7 +868,13 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                       }
                     }
 
-                    setFormData({ ...formData, council: deduped as Council[], area: newArea });
+                    const isArea4 = newArea === "HGE Area 4" || newArea === "Experience Area 4";
+                    setFormData({
+                      ...formData,
+                      council: deduped as Council[],
+                      area: newArea,
+                      ministry_group: isArea4 ? formData.ministry_group : [],
+                    });
                   }}
                   placeholder="Select council(s)"
                 />
@@ -799,11 +885,30 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
                 <SearchableSelect
                   options={areas.map((a) => ({ value: a, label: a }))}
                   value={formData.area}
-                  onValueChange={(value) => setFormData({ ...formData, area: value as Area })}
+                  onValueChange={(value) => {
+                    const isArea4 = value === "HGE Area 4" || value === "Experience Area 4";
+                    setFormData({
+                      ...formData,
+                      area: value as Area,
+                      ministry_group: isArea4 ? formData.ministry_group : [],
+                    });
+                  }}
                   placeholder="Select area"
                 />
               </div>
             </div>
+
+            {showMinistryGroup && (
+              <div className="space-y-2">
+                <Label htmlFor="ministry_group">Ministry Group</Label>
+                <MultiSelect
+                  options={ministryGroupOptions.map((g) => ({ value: g, label: g }))}
+                  value={formData.ministry_group}
+                  onValueChange={(value) => setFormData({ ...formData, ministry_group: value as MinistryGroups[] })}
+                  placeholder="Select ministry group(s)"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

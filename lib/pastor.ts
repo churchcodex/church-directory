@@ -12,5 +12,10 @@ export function serializePastor(pastor: any) {
     middle_name: pastor.middle_name || "",
     last_name: pastor.last_name || "",
     function: Array.isArray(pastor.function) ? pastor.function : pastor.function ? [pastor.function] : [],
+    ministry_group: Array.isArray(pastor.ministry_group)
+      ? pastor.ministry_group
+      : pastor.ministry_group
+        ? [pastor.ministry_group]
+        : [],
   };
 }

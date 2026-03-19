@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import { authOptions } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import Pastor from "@/models/Pastor";
-import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/mnotify";
+import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function POST(request: NextRequest) {
   try {
