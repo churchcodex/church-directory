@@ -16,7 +16,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Filter, X } from "lucide-react";
-import { ClergyType, MaritalStatus, Gender, Council, Area, Status, PastorFunction } from "@/types/entities";
+import {
+  ClergyType,
+  MaritalStatus,
+  Gender,
+  Council,
+  Area,
+  Status,
+  PastorFunction,
+  MinistryGroups,
+} from "@/types/entities";
 
 interface PastorFilterDialogProps {
   onApplyFilters: (filters: FilterState) => void;
@@ -27,6 +36,7 @@ interface PastorFilterDialogProps {
   countries: string[];
   occupations: string[];
   pastorFunctions: PastorFunction[];
+  ministryGroups: string[];
 }
 
 export interface FilterState {
@@ -38,6 +48,7 @@ export interface FilterState {
   country: string[];
   occupation: string[];
   function: PastorFunction[];
+  ministryGroup: string[];
   minAge: string;
   maxAge: string;
 }
@@ -54,6 +65,7 @@ export default function PastorFilterDialog({
   countries,
   occupations,
   pastorFunctions,
+  ministryGroups,
 }: PastorFilterDialogProps) {
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
@@ -78,6 +90,7 @@ export default function PastorFilterDialog({
       country: [],
       occupation: [],
       function: [],
+      ministryGroup: [],
       minAge: "",
       maxAge: "",
     };
@@ -196,6 +209,16 @@ export default function PastorFilterDialog({
               value={filters.function}
               onValueChange={(value) => setFilters({ ...filters, function: value })}
               placeholder="Select function(s)"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="filter-ministry-group">Ministry Group</Label>
+            <MultiSelect
+              options={ministryGroups.map((group) => ({ value: group, label: group }))}
+              value={filters.ministryGroup}
+              onValueChange={(value) => setFilters({ ...filters, ministryGroup: value })}
+              placeholder="Select ministry group(s)"
             />
           </div>
 

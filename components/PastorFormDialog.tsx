@@ -49,6 +49,7 @@ const defaultAreas: Area[] = [
   "Experience Area 2",
   "Experience Area 3",
   "Experience Area 4",
+  "Jesus Night Area",
   "None",
 ];
 const defaultStatuses: Status[] = ["Active", "Inactive"];
@@ -337,8 +338,14 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
   const [ministryGroups, setMinistryGroups] = useState<string[]>(ALL_MINISTRY_GROUPS);
   const [loadingFieldOptions, setLoadingFieldOptions] = useState(true);
 
-  // Derived: show ministry group only for Area 4
-  const showMinistryGroup = formData.area === "HGE Area 4" || formData.area === "Experience Area 4";
+  // Derived: show ministry group for Area 3, Area 4, Jesus Night Area, or Jesus Night council
+  const showMinistryGroup =
+    formData.area === "HGE Area 4" ||
+    formData.area === "Experience Area 4" ||
+    formData.area === "Jesus Night Area" ||
+    formData.council.includes("Jesus Night") ||
+    formData.area === "HGE Area 3" ||
+    formData.area === "Experience Area 3";
 
   // Derived: available ministry group options filtered by council, sourced from fetched list
   const ministryGroupOptions = (() => {

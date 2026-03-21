@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Pastor, ClergyType } from "@/types/entities";
+import { Pastor, ClergyType, MinistryGroups } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
@@ -48,6 +48,9 @@ function filtersToQueryParams(filters: FilterState, searchQuery: string): URLSea
   if (filters.function.length > 0) {
     params.set("function", filters.function.join(","));
   }
+  if (filters.ministryGroup.length > 0) {
+    params.set("ministryGroup", filters.ministryGroup.join(","));
+  }
   if (filters.minAge) {
     params.set("minAge", filters.minAge);
   }
@@ -67,6 +70,7 @@ function queryParamsToFilters(searchParams: URLSearchParams): { filters: FilterS
   const country = searchParams.get("country");
   const occupation = searchParams.get("occupation");
   const functionParam = searchParams.get("function");
+  const ministryGroupParam = searchParams.get("ministryGroup");
   const minAge = searchParams.get("minAge");
   const maxAge = searchParams.get("maxAge");
   const searchQuery = searchParams.get("q") || "";
@@ -81,6 +85,7 @@ function queryParamsToFilters(searchParams: URLSearchParams): { filters: FilterS
       country: country ? country.split(",") : [],
       occupation: occupation ? occupation.split(",") : [],
       function: functionParam ? functionParam.split(",") : [],
+      ministryGroup: ministryGroupParam ? ministryGroupParam.split(",") : [],
       minAge: minAge || "",
       maxAge: maxAge || "",
     },
@@ -197,6 +202,7 @@ function ClergyPageContent() {
     country: [],
     occupation: [],
     function: [],
+    ministryGroup: [],
     minAge: "",
     maxAge: "",
   });
@@ -223,6 +229,7 @@ function ClergyPageContent() {
   const [availableCouncils, setAvailableCouncils] = useState<string[]>([]);
   const [availableAreas, setAvailableAreas] = useState<string[]>([]);
   const [availablePastorFunctions, setAvailablePastorFunctions] = useState<string[]>([]);
+  const [availableMinistryGroups, setAvailableMinistryGroups] = useState<string[]>([]);
   const fetchPastors = useCallback(async () => {
     try {
       const response = await fetch("/api/pastors");
@@ -267,6 +274,7 @@ function ClergyPageContent() {
         setAvailableCouncils(data.data.councils?.options || []);
         setAvailableAreas(data.data.areas?.options || []);
         setAvailablePastorFunctions(data.data.pastorFunctions?.options || []);
+        setAvailableMinistryGroups(data.data.ministryGroups?.options || []);
       }
     } catch (error) {
       console.error("Failed to fetch field options:", error);
@@ -308,6 +316,7 @@ function ClergyPageContent() {
       filters.country.length === 0 &&
       filters.occupation.length === 0 &&
       filters.function.length === 0 &&
+      filters.ministryGroup.length === 0 &&
       !filters.minAge &&
       !filters.maxAge
     ) {
@@ -398,6 +407,21 @@ function ClergyPageContent() {
     return [...new Set([...base, ...fromPastors])];
   }, [pastors, availablePastorFunctions]);
 
+  const ministryGroups = useMemo(() => {
+    const fromPastors = Array.from(
+      new Set(
+        pastors.flatMap((p) => {
+          if (Array.isArray(p.ministry_group)) return p.ministry_group;
+          if (p.ministry_group) return [p.ministry_group];
+          return [];
+        }),
+      ),
+    ).filter((group): group is NonNullable<typeof group> => Boolean(group));
+
+    const base = availableMinistryGroups.length > 0 ? availableMinistryGroups : [];
+    return [...new Set([...base, ...fromPastors])];
+  }, [pastors, availableMinistryGroups]);
+
   useEffect(() => {
     setFilterButton(
       <PastorFilterDialog
@@ -409,9 +433,10 @@ function ClergyPageContent() {
         countries={countries}
         occupations={occupations}
         pastorFunctions={pastorFunctions}
+        ministryGroups={ministryGroups}
       />,
     );
-  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations, pastorFunctions]);
+  }, [setFilterButton, filters, clergyTypes, councils, areas, countries, occupations, pastorFunctions, ministryGroups]);
 
   useEffect(() => {
     setAddButton(
@@ -546,6 +571,18 @@ function ClergyPageContent() {
         });
       }
 
+      // Ministry Group (multiple selection)
+      if (filters.ministryGroup.length > 0) {
+        filtered = filtered.filter((pastor) => {
+          const ministryGroupArray = Array.isArray(pastor.ministry_group)
+            ? pastor.ministry_group
+            : pastor.ministry_group
+              ? [pastor.ministry_group]
+              : [];
+          return filters.ministryGroup.some((group) => ministryGroupArray.includes(group as MinistryGroups));
+        });
+      }
+
       // Filter by age range
       if (filters.minAge || filters.maxAge) {
         filtered = filtered.filter((pastor) => {
@@ -585,6 +622,9 @@ function ClergyPageContent() {
       }
       if (filters.function.length > 0) {
         activeFiltersList.push(...filters.function);
+      }
+      if (filters.ministryGroup.length > 0) {
+        activeFiltersList.push(...filters.ministryGroup);
       }
       if (filters.minAge || filters.maxAge) {
         const ageRange = [filters.minAge && `Min: ${filters.minAge}`, filters.maxAge && `Max: ${filters.maxAge}`]
@@ -635,6 +675,7 @@ function ClergyPageContent() {
             countries={countries}
             occupations={occupations}
             pastorFunctions={pastorFunctions}
+            ministryGroups={ministryGroups}
           />
           <div className="flex gap-1 border rounded-md">
             <Button
