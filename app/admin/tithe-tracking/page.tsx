@@ -3,12 +3,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { CalendarDays, CheckCircle2, Loader2, RefreshCcw, ScanLine, Trash2, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, Loader2, RefreshCcw, ScanLine, Send, Trash2, Users, X } from "lucide-react";
 import AttendanceBulkUpload from "@/components/AttendanceBulkUpload";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import SearchableSelect from "@/components/ui/searchable-select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { usePageActions } from "@/contexts/PageActionsContext";
 import { usePageTitle } from "@/contexts/PageTitleContext";
 import { getTodayIsoDate, getWeekRange, isDateInWeek, toIsoDateString } from "@/lib/attendance";
@@ -34,6 +43,9 @@ export default function AttendanceTrackingPage() {
   const [selectedDate, setSelectedDate] = useState(getTodayIsoDate());
   const [codeInput, setCodeInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sendSmsDialogOpen, setSendSmsDialogOpen] = useState(false);
+  const [selectedPastorIds, setSelectedPastorIds] = useState<string[]>([]);
+  const [sendingSms, setSendingSms] = useState(false);
 
   useEffect(() => {
     setTitle("Tithe Tracking");
@@ -229,6 +241,65 @@ export default function AttendanceTrackingPage() {
     }
   };
 
+  const handleSendSmsToAll = async () => {
+    setSendingSms(true);
+    try {
+      const response = await fetch("/api/pastors/send-codes-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pastorIds: null }), // null means send to all with codes
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to send SMS.");
+      }
+
+      const summary = data.data?.summary;
+      toast.success(
+        `SMS sent to ${summary?.attempted || 0} pastors. Success: ${summary?.sent || 0}. Failed: ${summary?.failed || 0}.`,
+      );
+      setSendSmsDialogOpen(false);
+      setSelectedPastorIds([]);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to send SMS."));
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
+  const handleSendSmsToSelected = async () => {
+    if (selectedPastorIds.length === 0) {
+      toast.error("Please select at least one pastor.");
+      return;
+    }
+
+    setSendingSms(true);
+    try {
+      const response = await fetch("/api/pastors/send-codes-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pastorIds: selectedPastorIds }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to send SMS.");
+      }
+
+      const summary = data.data?.summary;
+      toast.success(
+        `SMS sent to ${summary?.attempted || 0} pastors. Success: ${summary?.sent || 0}. Failed: ${summary?.failed || 0}.`,
+      );
+      setSendSmsDialogOpen(false);
+      setSelectedPastorIds([]);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to send SMS."));
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
   if (status === "loading" || (status === "authenticated" && loading && !summary)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -240,6 +311,14 @@ export default function AttendanceTrackingPage() {
   if (userRole !== "admin") {
     return null;
   }
+
+  const pastorOptions =
+    summary?.rows
+      .filter((row) => row.pastorCode) // Only show pastors with codes
+      .map((row) => ({
+        value: row.pastorId,
+        label: `${row.pastorName} (${row.pastorCode})`,
+      })) || [];
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
@@ -271,6 +350,10 @@ export default function AttendanceTrackingPage() {
           <Button onClick={handleBackfillCodes} disabled={backfillingCodes} className="gap-2">
             {backfillingCodes ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
             Generate Missing Codes
+          </Button>
+          <Button onClick={() => setSendSmsDialogOpen(true)} className="gap-2">
+            <Send className="h-4 w-4" />
+            Send Codes via SMS
           </Button>
         </div>
       </div>
@@ -422,6 +505,91 @@ export default function AttendanceTrackingPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={sendSmsDialogOpen} onOpenChange={setSendSmsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Pastor Codes via SMS</DialogTitle>
+            <DialogDescription>Send pastor codes to pastors who have codes assigned.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Send to</label>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={handleSendSmsToAll} disabled={sendingSms}>
+                  {sendingSms && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  All Pastors
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    if (selectedPastorIds.length === 0) {
+                      setSelectedPastorIds([]);
+                    }
+                  }}
+                  disabled={selectedPastorIds.length === 0}
+                >
+                  Selected
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Pastors (Optional)</label>
+              <SearchableSelect
+                options={pastorOptions}
+                value={selectedPastorIds.length > 0 ? selectedPastorIds[0] : ""}
+                onValueChange={(value) => {
+                  if (selectedPastorIds.includes(value)) {
+                    setSelectedPastorIds(selectedPastorIds.filter((id) => id !== value));
+                  } else {
+                    setSelectedPastorIds([...selectedPastorIds, value]);
+                  }
+                }}
+                placeholder="Search and select pastors..."
+                menuPlacement="top"
+              />
+              {selectedPastorIds.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  <div className="text-xs font-medium text-muted-foreground">
+                    {selectedPastorIds.length} pastor(s) selected:
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedPastorIds.map((id) => {
+                      const pastor = pastorOptions.find((p) => p.value === id);
+                      return pastor ? (
+                        <div key={id} className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
+                          <span className="truncate">{pastor.label}</span>
+                          <button
+                            onClick={() => setSelectedPastorIds(selectedPastorIds.filter((p) => p !== id))}
+                            className="hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendSmsDialogOpen(false)}>
+              Cancel
+            </Button>
+            {selectedPastorIds.length > 0 ? (
+              <Button onClick={handleSendSmsToSelected} disabled={sendingSms}>
+                {sendingSms && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Send to Selected
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

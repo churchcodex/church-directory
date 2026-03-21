@@ -343,6 +343,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     formData.area === "HGE Area 4" ||
     formData.area === "Experience Area 4" ||
     formData.area === "Jesus Night Area" ||
+    formData.area === "Jesus Night" ||
     formData.council.includes("Jesus Night") ||
     formData.area === "HGE Area 3" ||
     formData.area === "Experience Area 3";
