@@ -392,6 +392,23 @@ export default function ClergyDetailsPage() {
                     </div>
                   );
                 })()}
+                {(() => {
+                  const ministryGroups = Array.isArray(pastor.ministry_group)
+                    ? pastor.ministry_group
+                    : pastor.ministry_group
+                      ? [pastor.ministry_group]
+                      : [];
+                  const visibleGroups = ministryGroups.filter(
+                    (g) => g && (g as string) !== "None" && (g as string) !== "N/A",
+                  );
+                  if (visibleGroups.length === 0) return null;
+                  return (
+                    <div className="flex flex-col items-center justify-between p-2 lg:p-3 bg-muted rounded-lg">
+                      <span className="text-xs mb-1 font-semibold">Ministry Group</span>
+                      <span className="text-sm lg:text-base font-semibold">{visibleGroups.join(" • ")}</span>
+                    </div>
+                  );
+                })()}
                 <div className="flex flex-col items-center justify-between p-2 lg:p-3 bg-muted rounded-lg">
                   <span className="flex items-center text-xs mb-1">
                     <Church className="mr-2 h-3 w-3 lg:h-4 lg:w-4" />
