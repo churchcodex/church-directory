@@ -275,7 +275,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
       ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
       : "",
     profile_image: pastor?.profile_image || "",
-    clergy_type: (pastor?.clergy_type || ["Pastor"]).filter((value) => value !== "Governor"),
+    clergy_type: (Array.isArray(pastor?.clergy_type)
+      ? (pastor?.clergy_type as ClergyType[])
+      : pastor?.clergy_type
+        ? ([pastor.clergy_type] as ClergyType[])
+        : ["Pastor"]
+    ).filter((value) => value !== "Governor"),
     marital_status: pastor?.marital_status || "Single",
     church: pastor?.church || "",
     gender: pastor?.gender || "Male",
@@ -292,7 +297,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         : pastor?.function
           ? ([pastor.function] as PastorFunction[])
           : [];
-      const hasGovernorTitle = Array.isArray(pastor?.clergy_type) && pastor.clergy_type.includes("Governor");
+      const clergyTypes = Array.isArray(pastor?.clergy_type)
+        ? pastor?.clergy_type
+        : pastor?.clergy_type
+          ? [pastor?.clergy_type]
+          : [];
+      const hasGovernorTitle = clergyTypes.includes("Governor");
       return hasGovernorTitle && !functions.includes("Governor") ? [...functions, "Governor"] : functions;
     })(),
     ministry_group: Array.isArray(pastor?.ministry_group) ? (pastor.ministry_group as MinistryGroups[]) : [],
@@ -429,7 +439,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
           ? new Date(pastor.date_of_appointment).toISOString().split("T")[0]
           : "",
         profile_image: pastor.profile_image || "",
-        clergy_type: (pastor.clergy_type || ["Pastor"]).filter((value) => value !== "Governor"),
+        clergy_type: (Array.isArray(pastor.clergy_type)
+          ? (pastor.clergy_type as ClergyType[])
+          : pastor.clergy_type
+            ? ([pastor.clergy_type] as ClergyType[])
+            : ["Pastor"]
+        ).filter((value) => value !== "Governor"),
         marital_status: pastor.marital_status || "Single",
         church: pastor.church || "",
         gender: pastor.gender || "Male",
@@ -450,7 +465,12 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             : pastor.function
               ? ([pastor.function] as PastorFunction[])
               : [];
-          const hasGovernorTitle = Array.isArray(pastor.clergy_type) && pastor.clergy_type.includes("Governor");
+          const clergyTypes = Array.isArray(pastor.clergy_type)
+            ? pastor.clergy_type
+            : pastor.clergy_type
+              ? [pastor.clergy_type]
+              : [];
+          const hasGovernorTitle = clergyTypes.includes("Governor");
           return hasGovernorTitle && !functions.includes("Governor") ? [...functions, "Governor"] : functions;
         })(),
         ministry_group: Array.isArray(pastor.ministry_group) ? (pastor.ministry_group as MinistryGroups[]) : [],
