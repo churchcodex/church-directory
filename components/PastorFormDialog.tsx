@@ -219,7 +219,7 @@ const defaultCouncils: Council[] = [
 const defaultMaritalStatuses: MaritalStatus[] = ["Single", "Married", "Divorced", "Widowed"];
 const defaultGenders: Gender[] = ["Male", "Female"];
 
-const GLGC_GROUPS: MinistryGroups[] = [
+const defaultMinistryGroups: string[] = [
   "Many Are Called Choir",
   "Love is Large Choir",
   "Peace and Love Choir",
@@ -232,9 +232,6 @@ const GLGC_GROUPS: MinistryGroups[] = [
   "Love Is Patient Choir",
   "Everlasting Love Choir",
   "God So Loved Choir",
-];
-
-const FILM_STARS_GROUPS: MinistryGroups[] = [
   "Actors Ministry",
   "Props Ministry",
   "Costume ministry",
@@ -244,9 +241,6 @@ const FILM_STARS_GROUPS: MinistryGroups[] = [
   "Social media",
   "Technical",
   "Love theatre company",
-];
-
-const DANCING_STARS_GROUPS: MinistryGroups[] = [
   "Eels on wheels",
   "Spiders",
   "Doves",
@@ -260,21 +254,9 @@ const DANCING_STARS_GROUPS: MinistryGroups[] = [
   "Eagles",
   "Lions",
   "Dolphins",
+  "Praise Stars",
+  "Worship Stars",
 ];
-
-const PRAISE_AND_WORSHIP_GROUPS: MinistryGroups[] = ["Praise Stars", "Worship Stars"];
-
-const ALL_MINISTRY_GROUPS: string[] = [
-  ...GLGC_GROUPS,
-  ...FILM_STARS_GROUPS,
-  ...DANCING_STARS_GROUPS,
-  ...PRAISE_AND_WORSHIP_GROUPS,
-];
-
-const GLGC_GROUP_SET = new Set<string>(GLGC_GROUPS);
-const FILM_STARS_GROUP_SET = new Set<string>(FILM_STARS_GROUPS);
-const DANCING_STARS_GROUP_SET = new Set<string>(DANCING_STARS_GROUPS);
-const PRAISE_AND_WORSHIP_GROUP_SET = new Set<string>(PRAISE_AND_WORSHIP_GROUPS);
 
 export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialogProps) {
   const router = useRouter();
@@ -335,32 +317,8 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
   const [occupations, setOccupations] = useState<string[]>(defaultOccupations);
   const [maritalStatuses, setMaritalStatuses] = useState<string[]>(defaultMaritalStatuses);
   const [genders, setGenders] = useState<string[]>(defaultGenders);
-  const [ministryGroups, setMinistryGroups] = useState<string[]>(ALL_MINISTRY_GROUPS);
+  const [ministryGroups, setMinistryGroups] = useState<string[]>(defaultMinistryGroups);
   const [loadingFieldOptions, setLoadingFieldOptions] = useState(true);
-
-  // Derived: show ministry group for Area 3, Area 4, Jesus Night Area, or Jesus Night council
-  const showMinistryGroup =
-    formData.area === "HGE Area 4" ||
-    formData.area === "Experience Area 4" ||
-    formData.area === "Jesus Night Area" ||
-    formData.area === "Jesus Night" ||
-    formData.council.includes("Jesus Night") ||
-    formData.area === "HGE Area 3" ||
-    formData.area === "Experience Area 3";
-
-  // Derived: available ministry group options filtered by council, sourced from fetched list
-  const ministryGroupOptions = (() => {
-    const selectedCouncils = formData.council;
-    const result: string[] = [];
-    if (selectedCouncils.includes("GLGC")) result.push(...ministryGroups.filter((g) => GLGC_GROUP_SET.has(g)));
-    if (selectedCouncils.includes("Film Stars"))
-      result.push(...ministryGroups.filter((g) => FILM_STARS_GROUP_SET.has(g)));
-    if (selectedCouncils.includes("Dancing Stars"))
-      result.push(...ministryGroups.filter((g) => DANCING_STARS_GROUP_SET.has(g)));
-    if (selectedCouncils.includes("Praise and Worship"))
-      result.push(...ministryGroups.filter((g) => PRAISE_AND_WORSHIP_GROUP_SET.has(g)));
-    return result.length > 0 ? result : ministryGroups;
-  })();
 
   // Fetch churches and field options when dialog opens
   useEffect(() => {
@@ -445,7 +403,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
         setOccupations(data.data.occupations?.options || defaultOccupations);
         setMaritalStatuses(data.data.maritalStatuses?.options || defaultMaritalStatuses);
         setGenders(data.data.genders?.options || defaultGenders);
-        setMinistryGroups(data.data.ministryGroups?.options || ALL_MINISTRY_GROUPS);
+        setMinistryGroups(data.data.ministryGroups?.options || defaultMinistryGroups);
       }
     } catch (error) {
       console.error("Failed to fetch field options:", error);
@@ -906,17 +864,15 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
             </div>
 
-            {showMinistryGroup && (
-              <div className="space-y-2">
-                <Label htmlFor="ministry_group">Ministry Group</Label>
-                <MultiSelect
-                  options={ministryGroupOptions.map((g) => ({ value: g, label: g }))}
-                  value={formData.ministry_group}
-                  onValueChange={(value) => setFormData({ ...formData, ministry_group: value as MinistryGroups[] })}
-                  placeholder="Select ministry group(s)"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="ministry_group">Ministry Group</Label>
+              <MultiSelect
+                options={ministryGroups.map((g) => ({ value: g, label: g }))}
+                value={formData.ministry_group}
+                onValueChange={(value) => setFormData({ ...formData, ministry_group: value as MinistryGroups[] })}
+                placeholder="Select ministry group(s)"
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
