@@ -697,6 +697,19 @@ function ClergyPageContent() {
           </div>
           {session?.user?.role === "admin" && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => await exportPastorsToExcel(filteredPastors, filteredPastors.length)}
+                className="gap-2"
+                title={
+                  filteredPastors.length < pastors.length
+                    ? "Download filtered pastors as Excel"
+                    : "Download all pastors as Excel"
+                }
+              >
+                <Download className="h-4 w-4" />
+              </Button>
               <PastorBulkUpload onSuccess={fetchPastors} />
               <PastorFormDialog onSuccess={fetchPastors} />
             </>
