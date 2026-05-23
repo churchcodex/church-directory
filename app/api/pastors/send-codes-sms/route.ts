@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/error";
 import Pastor from "@/models/Pastor";
 import { sendPastorCodeSms, buildPastorDisplayName } from "@/lib/codeslaw-bms";
@@ -10,35 +9,10 @@ type SendCodesPayload = {
   pastorIds?: string[] | null;
 };
 
-function isAdmin(session: Awaited<ReturnType<typeof getServerSession>>) {
-  if (!session || typeof session !== "object") {
-    return false;
-  }
-
-  const user = (session as { user?: unknown }).user;
-
-  if (!user || typeof user !== "object") {
-    return false;
-  }
-
-  const role = (user as { role?: unknown }).role;
-
-  return role === "admin";
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!isAdmin(session)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
 

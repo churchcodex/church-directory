@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
@@ -51,14 +50,8 @@ function parseDate(value: any): Date | undefined {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized. Admin access required to bulk upload pastors." },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
 

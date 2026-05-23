@@ -28,23 +28,34 @@ Made `serializePastor` the single Pastor adapter at the DB→API seam (arrays-al
 
 ---
 
-## 2. `requireAdmin` route-handler adapter
+## 2. `requireAdmin` route-handler adapter ✅ DONE (server side)
 
-**Files**
-- Server routes (15): `app/api/pastors/route.ts`, `pastors/[id]/route.ts`, `pastors/bulk-upload/route.ts`, `pastors/migrate/route.ts`, `pastors/send-codes-sms/route.ts`, `churches/route.ts`, `churches/[id]/route.ts`, `auth/invite/route.ts`, `users/route.ts`, `users/[id]/route.ts`, `pastor-fields/route.ts`, `sms/route.ts`, `sms/send/route.ts`, `sms/balance/route.ts`, `sms/status/[messageId]/route.ts`, `attendance/route.ts`, `attendance/bulk-upload/route.ts`
-- Client admin pages: `app/admin/users/page.tsx`, `app/admin/tithe-tracking/page.tsx`, `app/admin/pastor-fields/page.tsx`
+**Status:** `requireAdmin()` shipped in `lib/auth.ts`; 18 server handlers migrated; 3 admin tests in `lib/auth.test.ts`.
 
-**Problem**
-The same admin gate is re-implemented in 15 handlers, with three signatures: `(session.user as any).role !== "admin"`, a local `requireAdminSession()` (attendance), and a local `isAdmin()` helper (SMS routes). Status codes drift (403 mostly, 401 in `pastor-fields`); response shapes drift; messages drift. Admin client pages repeat a near-identical redirect-if-not-admin block.
+**Shipped**
+- `lib/auth.ts` — `requireAdmin(): Promise<Session | NextResponse>` returns the session for admins, 401 `{ success: false, error: "Authentication required" }` for unauthenticated, 403 `{ success: false, error: "Admin access required" }` for non-admins.
+- `lib/auth.test.ts` — 3 tests covering the three branches (mocks `getServerSession` and `@/lib/mongodb` so auth.ts can import cleanly under vitest).
+- 18 server handlers migrated:
+  - Pastors: `pastors/route.ts` (POST), `pastors/[id]/route.ts` (PUT, DELETE), `pastors/bulk-upload/route.ts`, `pastors/migrate/route.ts`, `pastors/send-codes-sms/route.ts`
+  - Churches: `churches/route.ts` (POST), `churches/[id]/route.ts` (PUT, DELETE)
+  - Auth/users: `auth/invite/route.ts` (POST, GET), `users/route.ts` (GET), `users/[id]/route.ts` (PATCH, DELETE)
+  - Pastor fields: `pastor-fields/route.ts` (PUT, DELETE) — note: status code was 401, now matches the 403 policy for authenticated-but-non-admin
+  - SMS: `sms/route.ts`, `sms/send/route.ts`, `sms/balance/route.ts`, `sms/status/[messageId]/route.ts`
+  - Attendance: `attendance/route.ts` (GET, POST, DELETE), `attendance/bulk-upload/route.ts`
+- Local `requireAdminSession()` (attendance) and 4 local `isAdmin()` helpers (sms × 4 + send-codes) deleted.
+- ~10 `(session.user as any).id`/`.role` casts removed from migrated routes (the rest live in client pages and are tracked under "Smaller items" → `next-auth` type casts).
 
-**Solution**
-- `requireAdmin(): Promise<Session | NextResponse>` in `lib/auth.ts`.
-- `useRequireAdmin()` hook for admin client pages.
+**Behavior changes**
+- Status codes are now consistent: 401 for no session, 403 for non-admin session. Previously every route returned 403 in both cases; `pastor-fields` returned 401 in both cases. Both extremes are now harmonized.
+- Response envelope is consistently `{ success: false, error }`. Routes that previously returned bare `{ error }` (invite, users, pastor-fields) now include `success: false`. This is ahead of #3's full envelope unification but harmless for those clients.
+- Error messages are now consistent ("Authentication required" / "Admin access required") instead of the per-route variants.
 
-**Payoff**
-- One place for authorization policy.
-- Gate becomes a tested function instead of inlined branches.
-- Adds the missing role guard in `app/admin/inactive-pastors/page.tsx` for free.
+**Deferred**
+- `useRequireAdmin()` hook for admin client pages (`app/admin/users/page.tsx`, `app/admin/tithe-tracking/page.tsx`, `app/admin/pastor-fields/page.tsx`, and the still-unguarded `app/admin/inactive-pastors/page.tsx`). Picked up separately — server-side gate is the security boundary; the client check is UX.
+
+**Original notes (kept for context)**
+
+The same admin gate was re-implemented in 18 handlers with three signatures: inline `(session.user as any).role !== "admin"`, a local `requireAdminSession()` (attendance), and a local `isAdmin()` helper (SMS routes). Status codes drifted (403 mostly, 401 in `pastor-fields`); response shapes drifted (`{ success, error }` vs bare `{ error }`); messages drifted ("Unauthorized. Admin access required to create pastors." etc).
 
 ---
 
@@ -170,9 +181,9 @@ Excel template, parser, and exporter each hand-maintain their own column list. A
 ## Suggested execution order
 
 1. ~~**#3** API envelope~~ — _deferred (originally proposed first; #1 was done first instead)._
-2. **#2** `requireAdmin` — **next up.** Mechanical; 15 server routes + 3 client admin pages. Use `lib/pastor.test.ts` as the testing pattern.
+2. ~~**#2** `requireAdmin`~~ — ✅ done (server-side; `useRequireAdmin()` client hook deferred).
 3. ~~**#1** Canonical Pastor shape~~ — ✅ done (see above; bulk-upload + reader cleanup deferred).
-4. **#5** `PastorFieldOptions` — small, removes a self-fetch loop; unblocks #4's defaults extraction.
+4. **#5** `PastorFieldOptions` — **next up.** Small, removes a self-fetch loop; unblocks #4's defaults extraction.
 5. **#4** `PastorIntake` — the big refactor; needs #1, #3, #5 in place. Folds in the deferred reader-side `Array.isArray` cleanup automatically (PastorFormDialog gets rewritten).
 6. **#6** `PastorExcelSchema` — last; needs #1's canonical shape and #4's normalizer. Folds in the deferred bulk-upload refactor.
 
@@ -183,4 +194,7 @@ Each step keeps every existing behaviour; the refactors concentrate rather than 
 - Vitest is configured at `vitest.config.ts` with `@/*` path alias and `node` environment.
 - Pattern: pure-function adapters (`serializePastor`, `parsePastorInput`) tested directly. No mocks needed.
 - Run with `npm test` (single pass) or `npm run test:watch`.
-- For #2 specifically: `requireAdmin()` returns either a session or a `NextResponse` — test the branching directly with a mocked `getServerSession`. Keep route handlers themselves untested for now (they need a DB, out of scope).
+
+### Updates from #2
+
+- `lib/auth.ts` transitively imports `lib/mongodb.ts`, which throws at module load when `MONGODB_URI` is unset. To test anything in `auth.ts` under vitest, mock both `next-auth` and `@/lib/mongodb` (+ `@/models/User`) at the top of the test file — see `lib/auth.test.ts` for the pattern. Route handlers themselves remain untested (they need a DB).

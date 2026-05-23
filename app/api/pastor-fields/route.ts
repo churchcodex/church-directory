@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import PastorFieldOptions from "@/models/PastorFieldOptions";
 import User from "@/models/User";
@@ -270,11 +269,9 @@ export async function GET(req: NextRequest) {
 // PUT - Update field options
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
+    const session = adminCheck;
 
     const { fieldName, options } = await req.json();
 
@@ -318,11 +315,8 @@ export async function PUT(req: NextRequest) {
 // DELETE - Reset field options to defaults
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     const { searchParams } = new URL(req.url);
     const fieldName = searchParams.get("fieldName");

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
 import { serializePastor, parsePastorInput } from "@/lib/pastor";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
@@ -30,18 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    // Only admins can update pastors
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required to update pastors.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
     const { id } = await params;
@@ -150,18 +139,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    // Only admins can delete pastors
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required to delete pastors.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
     const { id } = await params;

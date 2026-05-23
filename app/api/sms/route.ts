@@ -1,26 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/error";
 import { getSmsHistory, SmsHistoryQuery } from "@/lib/codeslaw-bms";
 
 const ALLOWED_STATUS = new Set(["PENDING", "SENT", "DELIVERED", "FAILED"]);
-
-function isAdmin(session: Awaited<ReturnType<typeof getServerSession>>) {
-  if (!session || typeof session !== "object") {
-    return false;
-  }
-
-  const user = (session as { user?: unknown }).user;
-
-  if (!user || typeof user !== "object") {
-    return false;
-  }
-
-  const role = (user as { role?: unknown }).role;
-
-  return role === "admin";
-}
 
 function parseNumber(value: string | null, fallback: number) {
   if (!value) {
@@ -34,17 +17,8 @@ function parseNumber(value: string | null, fallback: number) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!isAdmin(session)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     const page = Math.max(1, parseNumber(request.nextUrl.searchParams.get("page"), 1));
     const limit = Math.min(100, Math.max(1, parseNumber(request.nextUrl.searchParams.get("limit"), 20)));

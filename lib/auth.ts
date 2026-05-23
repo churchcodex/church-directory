@@ -1,4 +1,5 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, Session, getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import dbConnect from "@/lib/mongodb";
@@ -77,3 +78,14 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+export async function requireAdmin(): Promise<Session | NextResponse> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
+  }
+  if (session.user?.role !== "admin") {
+    return NextResponse.json({ success: false, error: "Admin access required" }, { status: 403 });
+  }
+  return session;
+}

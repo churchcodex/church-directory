@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import { serializePastor, parsePastorInput } from "@/lib/pastor";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
@@ -28,18 +27,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    // Only admins can create pastors
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required to create pastors.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
     const body = await request.json();
