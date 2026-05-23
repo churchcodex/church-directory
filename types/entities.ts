@@ -188,7 +188,7 @@ export interface Pastor {
   date_of_birth?: string;
   date_of_appointment?: string;
   profile_image?: string;
-  clergy_type?: ClergyType[];
+  clergy_type: ClergyType[];
   marital_status?: MaritalStatus;
   church?: string;
   gender?: Gender;
@@ -201,7 +201,7 @@ export interface Pastor {
   personal_code?: string;
   status?: Status;
   function: PastorFunction[];
-  ministry_group?: MinistryGroups[];
+  ministry_group: MinistryGroups[];
 }
 
 export interface AttendanceRecord {

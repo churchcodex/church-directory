@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
-import { serializePastor } from "@/lib/pastor";
+import { serializePastor, parsePastorInput } from "@/lib/pastor";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -46,91 +46,27 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
+    const sanitizedData: Record<string, any> = { ...parsePastorInput(body), personal_code: undefined };
 
-    const normalizedClergyType =
-      body.clergy_type !== undefined
-        ? Array.isArray(body.clergy_type)
-          ? body.clergy_type
-          : body.clergy_type
-            ? [body.clergy_type]
-            : []
-        : undefined;
-
-    const governorSelectedAsTitle = Array.isArray(normalizedClergyType) && normalizedClergyType.includes("Governor");
-    const clergyTypeValues =
-      normalizedClergyType !== undefined
-        ? Array.from(new Set(normalizedClergyType.filter((value: string) => Boolean(value) && value !== "Governor")))
-        : undefined;
-
-    const normalizedFunction =
-      body.function !== undefined
-        ? Array.isArray(body.function)
-          ? body.function
-          : body.function
-            ? [body.function]
-            : []
-        : undefined;
-
-    const normalizedCouncil =
-      body.council !== undefined
-        ? Array.isArray(body.council)
-          ? body.council
-          : body.council
-            ? [body.council]
-            : []
-        : undefined;
-
-    if (normalizedFunction !== undefined) {
-      const functionValues = Array.from(
-        new Set([
-          ...((normalizedFunction as string[]).filter(Boolean) as string[]),
-          ...(governorSelectedAsTitle ? ["Governor"] : []),
-        ]),
-      ) as string[];
-      body.function = functionValues;
-    } else if (governorSelectedAsTitle) {
-      body.function = ["Governor"];
+    if (sanitizedData.council !== undefined && (!Array.isArray(sanitizedData.council) || sanitizedData.council.length === 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Please select at least one council",
+        },
+        { status: 400 },
+      );
     }
 
-    if (clergyTypeValues !== undefined) {
-      body.clergy_type = clergyTypeValues;
+    if (sanitizedData.clergy_type !== undefined && (!Array.isArray(sanitizedData.clergy_type) || sanitizedData.clergy_type.length === 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Please select at least one title",
+        },
+        { status: 400 },
+      );
     }
-
-    if (normalizedCouncil !== undefined) {
-      const councilValues = Array.from(new Set((normalizedCouncil as string[]).filter(Boolean))) as string[];
-      body.council = councilValues;
-
-      if (councilValues.length === 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Please select at least one council",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // Validate clergy_type only if it's being updated
-    if (body.clergy_type !== undefined) {
-      if (!Array.isArray(body.clergy_type) || body.clergy_type.length === 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Please select at least one title",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // Sanitize empty strings to undefined for optional enum fields only
-    const sanitizedData = {
-      ...body,
-      church: body.church === "" ? undefined : body.church,
-      personal_code: undefined,
-      // Council and Area are now required, so don't sanitize them
-    };
 
     // Build duplicate check query only if name or DOB is being updated
     if (body.first_name !== undefined || body.last_name !== undefined || body.date_of_birth !== undefined) {

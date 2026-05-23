@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { authOptions } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
-import { serializePastor } from "@/lib/pastor";
+import { serializePastor, parsePastorInput } from "@/lib/pastor";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest) {
@@ -43,25 +43,9 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
     const body = await request.json();
+    const sanitizedData: Record<string, any> = { ...parsePastorInput(body), personal_code: undefined };
 
-    const normalizedClergyType = Array.isArray(body.clergy_type)
-      ? body.clergy_type
-      : body.clergy_type
-        ? [body.clergy_type]
-        : [];
-    const governorSelectedAsTitle = normalizedClergyType.includes("Governor");
-    const clergyTypeValues = Array.from(
-      new Set(normalizedClergyType.filter((value: string) => Boolean(value) && value !== "Governor")),
-    );
-
-    const normalizedFunction = Array.isArray(body.function) ? body.function : body.function ? [body.function] : [];
-    const functionValues = Array.from(
-      new Set([...(normalizedFunction.filter(Boolean) as string[]), ...(governorSelectedAsTitle ? ["Governor"] : [])]),
-    );
-    const normalizedCouncil = Array.isArray(body.council) ? body.council : body.council ? [body.council] : [];
-    const councilValues = Array.from(new Set(normalizedCouncil.filter(Boolean))) as string[];
-
-    if (councilValues.length === 0) {
+    if (!Array.isArray(sanitizedData.council) || sanitizedData.council.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -71,8 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate clergy_type
-    if (clergyTypeValues.length === 0) {
+    if (!Array.isArray(sanitizedData.clergy_type) || sanitizedData.clergy_type.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -81,17 +64,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
-    // Sanitize empty strings to undefined for optional enum fields only
-    const sanitizedData = {
-      ...body,
-      clergy_type: clergyTypeValues,
-      function: functionValues,
-      council: councilValues,
-      church: body.church === "" ? undefined : body.church,
-      personal_code: undefined,
-      // Council and Area are now required, so don't sanitize them
-    };
 
     // Build duplicate check query - always check first name and last name
     const duplicateQuery: any = {
