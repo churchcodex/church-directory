@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import * as XLSX from "xlsx";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getWeekRange, toIsoDateString } from "@/lib/attendance";
 import { getErrorMessage } from "@/lib/error";
 import dbConnect from "@/lib/mongodb";
@@ -71,14 +70,9 @@ function extractCodesFromWorksheet(worksheet: XLSX.WorkSheet) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== "admin") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized. Admin access required to bulk upload attendance." },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
+    const session = adminCheck;
 
     await dbConnect();
 

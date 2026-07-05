@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import crypto from "crypto";
 import dbConnect from "@/lib/mongodb";
 import InviteToken from "@/models/InviteToken";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
+    const session = adminCheck;
 
     const { email, council, role = "user", expiresInDays = 7 } = await request.json();
 
@@ -61,7 +58,7 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase(),
       role,
       council,
-      createdBy: (session.user as any).id,
+      createdBy: session.user.id,
       expiresAt,
     });
 
@@ -88,11 +85,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
 

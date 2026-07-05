@@ -1,6 +1,5 @@
-import { Session, getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getTodayIsoDate, getWeekDates, getWeekRange, toIsoDateString } from "@/lib/attendance";
 import { getErrorMessage } from "@/lib/error";
 import dbConnect from "@/lib/mongodb";
@@ -34,23 +33,10 @@ function getPastorName(pastor: PastorWeekRecord) {
   return [pastor.first_name, pastor.middle_name, pastor.last_name].filter(Boolean).join(" ");
 }
 
-async function requireAdminSession(): Promise<Session | null> {
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "admin") {
-    return null;
-  }
-
-  return session;
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAdminSession();
-
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized. Admin access required." }, { status: 403 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
 
@@ -131,11 +117,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAdminSession();
-
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized. Admin access required." }, { status: 403 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
+    const session = adminCheck;
 
     await dbConnect();
 
@@ -220,11 +204,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await requireAdminSession();
-
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized. Admin access required." }, { status: 403 });
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
 

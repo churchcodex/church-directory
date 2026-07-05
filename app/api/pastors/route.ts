@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import { serializePastor } from "@/lib/pastor";
+import { normalizePastorDraft } from "@/lib/pastor-intake";
+import { getFieldOptions } from "@/lib/pastor-field-options";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    // Exclude pastors with status 'Inactive'
     const pastors = await Pastor.find({ status: { $ne: "Inactive" } }).lean();
     const transformedPastors = pastors.map((pastor: any) => serializePastor(pastor));
     return NextResponse.json({ success: true, data: transformedPastors });
   } catch (error: any) {
     console.error("Error fetching pastors:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Failed to fetch pastors",
-      },
+      { success: false, error: error.message || "Failed to fetch pastors" },
       { status: 500 },
     );
   }
@@ -28,97 +25,43 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    // Only admins can create pastors
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required to create pastors.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
     const body = await request.json();
 
-    const normalizedClergyType = Array.isArray(body.clergy_type)
-      ? body.clergy_type
-      : body.clergy_type
-        ? [body.clergy_type]
-        : [];
-    const governorSelectedAsTitle = normalizedClergyType.includes("Governor");
-    const clergyTypeValues = Array.from(
-      new Set(normalizedClergyType.filter((value: string) => Boolean(value) && value !== "Governor")),
-    );
+    const fieldOptions = await getFieldOptions();
+    const { payload, errors } = normalizePastorDraft(body, {
+      mode: "create",
+      allowed: {
+        councils: fieldOptions.councils.options,
+        areas: fieldOptions.areas.options,
+        pastorFunctions: fieldOptions.pastorFunctions.options,
+        ministryGroups: fieldOptions.ministryGroups.options,
+      },
+    });
 
-    const normalizedFunction = Array.isArray(body.function) ? body.function : body.function ? [body.function] : [];
-    const functionValues = Array.from(
-      new Set([...(normalizedFunction.filter(Boolean) as string[]), ...(governorSelectedAsTitle ? ["Governor"] : [])]),
-    );
-    const normalizedCouncil = Array.isArray(body.council) ? body.council : body.council ? [body.council] : [];
-    const councilValues = Array.from(new Set(normalizedCouncil.filter(Boolean))) as string[];
-
-    if (councilValues.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Please select at least one council",
-        },
-        { status: 400 },
-      );
+    if (errors.length > 0) {
+      return NextResponse.json({ success: false, error: errors[0].message }, { status: 400 });
     }
 
-    // Validate clergy_type
-    if (clergyTypeValues.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Please select at least one title",
-        },
-        { status: 400 },
-      );
-    }
+    const sanitizedData: Record<string, any> = { ...payload, personal_code: undefined };
 
-    // Sanitize empty strings to undefined for optional enum fields only
-    const sanitizedData = {
-      ...body,
-      clergy_type: clergyTypeValues,
-      function: functionValues,
-      council: councilValues,
-      church: body.church === "" ? undefined : body.church,
-      personal_code: undefined,
-      // Council and Area are now required, so don't sanitize them
-    };
-
-    // Build duplicate check query - always check first name and last name
     const duplicateQuery: any = {
       first_name: sanitizedData.first_name,
       last_name: sanitizedData.last_name,
     };
-
-    // Add date of birth to query if provided
     if (sanitizedData.date_of_birth) {
       duplicateQuery.date_of_birth = new Date(sanitizedData.date_of_birth);
     }
 
-    // Check for duplicate pastor
     const existingPastor = await Pastor.findOne(duplicateQuery);
-
     if (existingPastor) {
       const errorMessage = sanitizedData.date_of_birth
         ? "A pastor with the same first name, last name, and date of birth already exists"
         : "A pastor with the same first name and last name already exists";
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: errorMessage,
-        },
-        { status: 409 },
-      );
+      return NextResponse.json({ success: false, error: errorMessage }, { status: 409 });
     }
 
     const personalCode = await generateUniquePastorCode();
@@ -137,20 +80,13 @@ export async function POST(request: NextRequest) {
     const transformedPastor = serializePastor(pastor.toObject());
 
     return NextResponse.json(
-      {
-        success: true,
-        data: transformedPastor,
-        sms,
-      },
+      { success: true, data: transformedPastor, sms },
       { status: 201 },
     );
   } catch (error: any) {
     console.error("Error creating pastor:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Failed to create pastor",
-      },
+      { success: false, error: error.message || "Failed to create pastor" },
       { status: 400 },
     );
   }

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-code";
 import { serializePastor } from "@/lib/pastor";
+import { normalizePastorDraft } from "@/lib/pastor-intake";
+import { getFieldOptions } from "@/lib/pastor-field-options";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -30,115 +31,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    // Only admins can update pastors
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required to update pastors.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
 
-    const normalizedClergyType =
-      body.clergy_type !== undefined
-        ? Array.isArray(body.clergy_type)
-          ? body.clergy_type
-          : body.clergy_type
-            ? [body.clergy_type]
-            : []
-        : undefined;
+    const fieldOptions = await getFieldOptions();
+    const { payload, errors } = normalizePastorDraft(body, {
+      mode: "update",
+      allowed: {
+        councils: fieldOptions.councils.options,
+        areas: fieldOptions.areas.options,
+        pastorFunctions: fieldOptions.pastorFunctions.options,
+        ministryGroups: fieldOptions.ministryGroups.options,
+      },
+    });
 
-    const governorSelectedAsTitle = Array.isArray(normalizedClergyType) && normalizedClergyType.includes("Governor");
-    const clergyTypeValues =
-      normalizedClergyType !== undefined
-        ? Array.from(new Set(normalizedClergyType.filter((value: string) => Boolean(value) && value !== "Governor")))
-        : undefined;
-
-    const normalizedFunction =
-      body.function !== undefined
-        ? Array.isArray(body.function)
-          ? body.function
-          : body.function
-            ? [body.function]
-            : []
-        : undefined;
-
-    const normalizedCouncil =
-      body.council !== undefined
-        ? Array.isArray(body.council)
-          ? body.council
-          : body.council
-            ? [body.council]
-            : []
-        : undefined;
-
-    if (normalizedFunction !== undefined) {
-      const functionValues = Array.from(
-        new Set([
-          ...((normalizedFunction as string[]).filter(Boolean) as string[]),
-          ...(governorSelectedAsTitle ? ["Governor"] : []),
-        ]),
-      ) as string[];
-      body.function = functionValues;
-    } else if (governorSelectedAsTitle) {
-      body.function = ["Governor"];
+    if (errors.length > 0) {
+      return NextResponse.json({ success: false, error: errors[0].message }, { status: 400 });
     }
 
-    if (clergyTypeValues !== undefined) {
-      body.clergy_type = clergyTypeValues;
-    }
+    const sanitizedData: Record<string, any> = { ...payload, personal_code: undefined };
 
-    if (normalizedCouncil !== undefined) {
-      const councilValues = Array.from(new Set((normalizedCouncil as string[]).filter(Boolean))) as string[];
-      body.council = councilValues;
-
-      if (councilValues.length === 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Please select at least one council",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // Validate clergy_type only if it's being updated
-    if (body.clergy_type !== undefined) {
-      if (!Array.isArray(body.clergy_type) || body.clergy_type.length === 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Please select at least one title",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // Sanitize empty strings to undefined for optional enum fields only
-    const sanitizedData = {
-      ...body,
-      church: body.church === "" ? undefined : body.church,
-      personal_code: undefined,
-      // Council and Area are now required, so don't sanitize them
-    };
-
-    // Build duplicate check query only if name or DOB is being updated
     if (body.first_name !== undefined || body.last_name !== undefined || body.date_of_birth !== undefined) {
-      const duplicateQuery: any = {
-        _id: { $ne: id },
-      };
+      const duplicateQuery: any = { _id: { $ne: id } };
 
-      // Add fields that are being updated or fetch current values
       const currentPastor = await Pastor.findById(id);
       if (!currentPastor) {
         return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
@@ -147,33 +66,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       duplicateQuery.first_name = body.first_name !== undefined ? sanitizedData.first_name : currentPastor.first_name;
       duplicateQuery.last_name = body.last_name !== undefined ? sanitizedData.last_name : currentPastor.last_name;
 
-      // Add date of birth to query if provided in update or exists in current record
       if (sanitizedData.date_of_birth) {
         duplicateQuery.date_of_birth = new Date(sanitizedData.date_of_birth);
       } else if (currentPastor.date_of_birth) {
         duplicateQuery.date_of_birth = currentPastor.date_of_birth;
       }
 
-      // Check for duplicate pastor (excluding the current pastor being updated)
       const existingPastor = await Pastor.findOne(duplicateQuery);
-
       if (existingPastor) {
         const errorMessage = duplicateQuery.date_of_birth
           ? "A pastor with the same first name, last name, and date of birth already exists"
           : "A pastor with the same first name and last name already exists";
-
-        return NextResponse.json(
-          {
-            success: false,
-            error: errorMessage,
-          },
-          { status: 409 },
-        );
+        return NextResponse.json({ success: false, error: errorMessage }, { status: 409 });
       }
     }
 
     const currentPastor = await Pastor.findById(id);
-
     if (!currentPastor) {
       return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
     }
@@ -186,10 +94,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         ...sanitizedData,
         ...(generatedCode ? { personal_code: generatedCode } : {}),
       },
-      {
-        new: true,
-        runValidators: true,
-      },
+      { new: true, runValidators: true },
     ).lean();
 
     if (!pastor) {
@@ -214,18 +119,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    // Only admins can delete pastors
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Admin access required to delete pastors.",
-        },
-        { status: 403 },
-      );
-    }
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
     const { id } = await params;
