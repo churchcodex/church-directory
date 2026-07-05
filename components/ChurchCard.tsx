@@ -36,7 +36,12 @@ export default function ChurchCard({ church, pastorName }: ChurchCardProps) {
           )}
         </div>
         <CardHeader>
-          <CardTitle className="text-xl">{church.name}</CardTitle>
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-xl">{church.name}</CardTitle>
+            <Badge variant="outline" className="shrink-0">
+              {church.region || "Accra"}
+            </Badge>
+          </div>
           <CardDescription className="flex items-center gap-1">
             <MapPin className="h-4 w-4" />
             {church.location}

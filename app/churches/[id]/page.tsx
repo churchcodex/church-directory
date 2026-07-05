@@ -194,6 +194,9 @@ export default function ChurchDetailsPage() {
                 <MapPin className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                 {church.location}
               </p>
+              <div className="flex justify-center mt-2">
+                <Badge variant="secondary">{church.region || "Accra"}</Badge>
+              </div>
             </div>
           </div>
           <div className="relative w-full h-full max-w-2xl max-h-full rounded-2xl overflow-hidden shadow-2xl">

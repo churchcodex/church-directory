@@ -1,7 +1,14 @@
+// Extensible list of geographic regions a church can belong to.
+// Not to be confused with Area, which is an internal grouping (see CONTEXT.md).
+export const REGIONS = ["Accra", "Outside Accra"] as const;
+
+export type Region = string;
+
 export interface Church {
   id: string;
   name: string;
   location: string;
+  region: Region;
   images: string[];
   head_pastor: string;
   members: number;

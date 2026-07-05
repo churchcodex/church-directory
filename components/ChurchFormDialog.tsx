@@ -17,8 +17,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
-import { Church, Pastor } from "@/types/entities";
+import { Church, Pastor, REGIONS } from "@/types/entities";
 
 interface ChurchFormDialogProps {
   church?: Church;
@@ -35,6 +36,7 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
   const [formData, setFormData] = useState({
     name: church?.name || "",
     location: church?.location || "",
+    region: church?.region || "Accra",
     head_pastor: church?.head_pastor || "",
     members: church?.members || 0,
     income: church?.income || 0,
@@ -92,6 +94,7 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
           setFormData({
             name: "",
             location: "",
+            region: "Accra",
             head_pastor: "",
             members: 0,
             income: 0,
@@ -155,6 +158,25 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="Los Angeles, CA"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="region">Region *</Label>
+              <Select
+                value={formData.region}
+                onValueChange={(value) => setFormData({ ...formData, region: value })}
+              >
+                <SelectTrigger id="region" className="w-full">
+                  <SelectValue placeholder="Select a region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REGIONS.map((region) => (
+                    <SelectItem key={region} value={region}>
+                      {region}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

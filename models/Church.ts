@@ -1,4 +1,5 @@
 import mongoose, { Schema, model, models } from "mongoose";
+import { REGIONS } from "@/types/entities";
 
 const ChurchSchema = new Schema(
   {
@@ -11,6 +12,15 @@ const ChurchSchema = new Schema(
       type: String,
       required: [true, "Please provide a location"],
       maxlength: [200, "Location cannot be more than 200 characters"],
+    },
+    region: {
+      type: String,
+      enum: {
+        values: [...REGIONS],
+        message: `Region must be one of: ${REGIONS.join(", ")}`,
+      },
+      default: "Accra",
+      trim: true,
     },
     images: {
       type: [String],

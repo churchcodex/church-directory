@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Church from "@/models/Church";
 import { requireAdmin } from "@/lib/auth";
+import { serializeChurch } from "@/lib/church";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,10 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: "Church not found" }, { status: 404 });
     }
 
-    const transformedChurch = {
-      ...church,
-      id: church._id.toString(),
-    };
+    const transformedChurch = serializeChurch(church);
 
     return NextResponse.json({ success: true, data: transformedChurch });
   } catch (error) {
@@ -41,10 +39,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: "Church not found" }, { status: 404 });
     }
 
-    const transformedChurch = {
-      ...church,
-      id: church._id.toString(),
-    };
+    const transformedChurch = serializeChurch(church);
 
     return NextResponse.json({ success: true, data: transformedChurch });
   } catch (error: any) {
