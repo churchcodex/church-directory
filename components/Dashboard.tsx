@@ -97,6 +97,14 @@ export default function Dashboard() {
         return types.includes(type);
       }).length;
 
+    // Governor is a function, not a title: serializePastor relocates it from
+    // clergy_type into function, so it must be counted there.
+    const countByFunction = (fn: string) =>
+      clergy.filter((p) => {
+        const functions = Array.isArray(p.function) ? p.function : p.function ? [p.function] : [];
+        return functions.includes(fn);
+      }).length;
+
     return {
       totalChurches: churches.length,
       totalClergy: countByType("Pastor"),
@@ -104,7 +112,7 @@ export default function Dashboard() {
       totalMothers: countByType("Mother"),
       totalSisters: countByType("Sister"),
       totalReverends: countByType("Reverend"),
-      totalGovernors: countByType("Governor"),
+      totalGovernors: countByFunction("Governor"),
       totalMembers,
       totalIncome,
       inactiveClergy: 0,
@@ -180,7 +188,7 @@ export default function Dashboard() {
       value: formatNumber(stats.totalGovernors),
       icon: Users,
       gradient: "from-emerald-500 to-emerald-700",
-      href: "/clergy?clergyType=Governor",
+      href: "/clergy?function=Governor",
     },
     ...(canSeeAdminData
       ? [
