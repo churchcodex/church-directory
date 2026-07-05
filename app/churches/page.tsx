@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Church } from "@/types/entities";
 import ChurchCard from "@/components/ChurchCard";
 import ChurchFormDialog from "@/components/ChurchFormDialog";
+import RegionSwitcher from "@/components/RegionSwitcher";
+import { useRegion } from "@/contexts/RegionContext";
+import { filterChurchesByRegion } from "@/lib/region";
 import { X, LayoutGrid, List, MapPin, User, Search } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +35,14 @@ export default function ChurchesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [pastorNames, setPastorNames] = useState<Record<string, string>>({});
   const canManage = session?.user?.role === "admin";
+  const canSeeRegionSwitcher = canManage || session?.user?.role === "viewer";
+  const { region } = useRegion();
+
+  // Council-scoped `user` accounts see no region switcher and no region filter.
+  const regionChurches = useMemo(
+    () => (canSeeRegionSwitcher ? filterChurchesByRegion(churches, region) : churches),
+    [churches, region, canSeeRegionSwitcher],
+  );
 
   const fetchChurches = useCallback(async () => {
     try {
@@ -90,6 +101,7 @@ export default function ChurchesPage() {
   useEffect(() => {
     setAddButton(
       <>
+        {canSeeRegionSwitcher && <RegionSwitcher />}
         <div className="flex gap-1 border rounded-md">
           <Button
             variant={viewMode === "grid" ? "default" : "ghost"}
@@ -111,11 +123,11 @@ export default function ChurchesPage() {
         {canManage && <ChurchFormDialog onSuccess={fetchChurches} />}
       </>,
     );
-  }, [setAddButton, viewMode, fetchChurches, canManage]);
+  }, [setAddButton, viewMode, fetchChurches, canManage, canSeeRegionSwitcher]);
 
   useEffect(() => {
     if (searchQuery) {
-      const filtered = churches.filter(
+      const filtered = regionChurches.filter(
         (church) =>
           church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           church.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -123,13 +135,13 @@ export default function ChurchesPage() {
       );
       setFilteredChurches(filtered);
       setResultsCount(filtered.length);
-      setTotalCount(churches.length);
+      setTotalCount(regionChurches.length);
     } else {
-      setFilteredChurches(churches);
-      setResultsCount(churches.length);
-      setTotalCount(churches.length);
+      setFilteredChurches(regionChurches);
+      setResultsCount(regionChurches.length);
+      setTotalCount(regionChurches.length);
     }
-  }, [searchQuery, churches, pastorNames, setResultsCount, setTotalCount]);
+  }, [searchQuery, regionChurches, pastorNames, setResultsCount, setTotalCount]);
 
   if (loading) {
     return (
@@ -154,7 +166,8 @@ export default function ChurchesPage() {
               className="pl-9 h-10"
             />
           </div>
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-2 justify-end flex-wrap">
+            {canSeeRegionSwitcher && <RegionSwitcher />}
             <div className="flex gap-1 border rounded-md">
               <Button
                 variant={viewMode === "grid" ? "default" : "ghost"}

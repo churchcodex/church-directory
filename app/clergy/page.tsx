@@ -3,10 +3,13 @@
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Pastor, ClergyType, MinistryGroups } from "@/types/entities";
+import { Church, Pastor, ClergyType, MinistryGroups } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
+import RegionSwitcher from "@/components/RegionSwitcher";
+import { useRegion } from "@/contexts/RegionContext";
+import { buildRegionByChurchId, filterPastorsByRegion } from "@/lib/region";
 import * as XLSX from "xlsx";
 import { Search, LayoutGrid, List, Award, Download } from "lucide-react";
 import Link from "next/link";
@@ -189,8 +192,11 @@ function ClergyPageContent() {
     clearActions,
   } = usePageActions();
   const [pastors, setPastors] = useState<Pastor[]>([]);
+  const [churches, setChurches] = useState<Church[]>([]);
   const [filteredPastors, setFilteredPastors] = useState<Pastor[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { region } = useRegion();
+  const canSeeRegionSwitcher = session?.user?.role === "admin" || session?.user?.role === "viewer";
 
   // Initialize filters and search query from URL
   const [filters, setFilters] = useState<FilterState>({
@@ -264,6 +270,18 @@ function ClergyPageContent() {
     }
   }, [session]);
 
+  const fetchChurchesForRegion = useCallback(async () => {
+    try {
+      const response = await fetch("/api/churches");
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setChurches(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch churches:", error);
+    }
+  }, []);
+
   const fetchFieldOptions = useCallback(async () => {
     try {
       const response = await fetch("/api/pastor-fields");
@@ -285,12 +303,13 @@ function ClergyPageContent() {
     setTitle("Directory");
     setSearchPlaceholder("Search by name or type...");
     fetchPastors();
+    fetchChurchesForRegion();
     fetchFieldOptions();
 
     return () => {
       clearActions();
     };
-  }, [setTitle, setSearchPlaceholder, fetchPastors, fetchFieldOptions, clearActions]);
+  }, [setTitle, setSearchPlaceholder, fetchPastors, fetchChurchesForRegion, fetchFieldOptions, clearActions]);
 
   // Hydrate filters/searchQuery from URL on client once, then mark initialized
   useEffect(() => {
@@ -303,10 +322,18 @@ function ClergyPageContent() {
     setIsInitialized(true);
   }, [setSearchQuery]);
 
+  // Region-scoped base list: all downstream filters, counts, and the Excel
+  // export operate within the selected region. Council-scoped `user` accounts
+  // see no switcher and no region filter.
+  const regionPastors = useMemo(() => {
+    if (!canSeeRegionSwitcher) return pastors;
+    return filterPastorsByRegion(pastors, region, buildRegionByChurchId(churches));
+  }, [pastors, churches, region, canSeeRegionSwitcher]);
+
   // Set total count when no filters are applied to show badge in navbar
   useEffect(() => {
     if (
-      pastors.length > 0 &&
+      regionPastors.length > 0 &&
       !searchQuery &&
       filters.clergyType.length === 0 &&
       filters.maritalStatus.length === 0 &&
@@ -321,12 +348,12 @@ function ClergyPageContent() {
       !filters.maxAge
     ) {
       setTitle("Directory");
-      setResultsCount(pastors.length);
-      setTotalCount(pastors.length);
+      setResultsCount(regionPastors.length);
+      setTotalCount(regionPastors.length);
     } else {
       setTitle("Directory");
     }
-  }, [pastors.length, searchQuery, filters, setTitle, setResultsCount, setTotalCount]);
+  }, [regionPastors.length, searchQuery, filters, setTitle, setResultsCount, setTotalCount]);
 
   // Update URL parameters when filters or search query change
   useEffect(() => {
@@ -441,6 +468,7 @@ function ClergyPageContent() {
   useEffect(() => {
     setAddButton(
       <>
+        {canSeeRegionSwitcher && <RegionSwitcher />}
         <div className="flex gap-1 border rounded-md">
           <Button
             variant={viewMode === "grid" ? "default" : "ghost"}
@@ -467,7 +495,7 @@ function ClergyPageContent() {
               onClick={async () => await exportPastorsToExcel(filteredPastors, filteredPastors.length)}
               className="gap-2"
               title={
-                filteredPastors.length < pastors.length
+                filteredPastors.length < regionPastors.length
                   ? "Download filtered pastors as Excel"
                   : "Download all pastors as Excel"
               }
@@ -480,14 +508,14 @@ function ClergyPageContent() {
         )}
       </>,
     );
-  }, [setAddButton, viewMode, fetchPastors, session, filteredPastors, pastors]);
+  }, [setAddButton, viewMode, fetchPastors, session, filteredPastors, regionPastors, canSeeRegionSwitcher]);
 
   const applyFilters = useCallback(() => {
     setIsFiltering(true);
 
     // Add a small delay to show skeleton
     setTimeout(() => {
-      let filtered = pastors;
+      let filtered = regionPastors;
 
       // Filter by search query
       if (searchQuery) {
@@ -595,7 +623,7 @@ function ClergyPageContent() {
 
       setFilteredPastors(filtered);
       setResultsCount(filtered.length);
-      setTotalCount(pastors.length);
+      setTotalCount(regionPastors.length);
 
       // Build active filters list
       const activeFiltersList: string[] = [];
@@ -635,7 +663,7 @@ function ClergyPageContent() {
       setActiveFilters(activeFiltersList);
       setIsFiltering(false);
     }, 200); // 200ms delay
-  }, [searchQuery, filters, pastors, setResultsCount, setTotalCount, setActiveFilters]);
+  }, [searchQuery, filters, regionPastors, setResultsCount, setTotalCount, setActiveFilters]);
 
   useEffect(() => {
     applyFilters();
@@ -665,7 +693,8 @@ function ClergyPageContent() {
             className="pl-9 h-10"
           />
         </div>
-        <div className="flex items-center gap-2 justify-end">
+        <div className="flex items-center gap-2 justify-end flex-wrap">
+          {canSeeRegionSwitcher && <RegionSwitcher />}
           <PastorFilterDialog
             onApplyFilters={setFilters}
             initialFilters={filters}
@@ -703,7 +732,7 @@ function ClergyPageContent() {
                 onClick={async () => await exportPastorsToExcel(filteredPastors, filteredPastors.length)}
                 className="gap-2"
                 title={
-                  filteredPastors.length < pastors.length
+                  filteredPastors.length < regionPastors.length
                     ? "Download filtered pastors as Excel"
                     : "Download all pastors as Excel"
                 }
