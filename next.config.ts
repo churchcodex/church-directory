@@ -2,26 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "fl-admin-apps.s3.eu-west-2.amazonaws.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "drive.google.com",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+    loader: "custom",
+    // Root-level on purpose — see the note in cloudinary-image-loader.ts.
+    loaderFile: "./cloudinary-image-loader.ts",
+    qualities: [60, 75],
   },
   experimental: {
     serverActions: {
