@@ -478,11 +478,38 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
     }
   }, [open, pastor]);
 
+  // Council and Area are Accra-only structures: required when the selected
+  // church is in Accra, optional otherwise. No church counts as Accra (ADR 0001).
+  const selectedChurch = churches.find((c) => (c._id || c.id) === formData.church);
+  const isAccraChurch = (selectedChurch?.region || "Accra") === "Accra";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.council || formData.council.length === 0) {
+    if (!pastor && !formData.church) {
+      toast.error("Please select a campus", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
+      return;
+    }
+
+    if (isAccraChurch && (!formData.council || formData.council.length === 0)) {
       toast.error("Please select at least one council", {
+        style: {
+          background: "#7f1d1d",
+          border: "1px solid #991b1b",
+          color: "#fef2f2",
+        },
+      });
+      return;
+    }
+
+    if (!pastor && isAccraChurch && !formData.area) {
+      toast.error("Please select an area", {
         style: {
           background: "#7f1d1d",
           border: "1px solid #991b1b",
@@ -825,7 +852,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="council">Council(s) *</Label>
+                <Label htmlFor="council">Council(s) {isAccraChurch ? "*" : "(optional)"}</Label>
                 <MultiSelect
                   options={councils.map((c) => ({ value: c, label: c }))}
                   value={formData.council}
@@ -867,7 +894,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="area">Area *</Label>
+                <Label htmlFor="area">Area {isAccraChurch ? "*" : "(optional)"}</Label>
                 <SearchableSelect
                   options={areas.map((a) => ({ value: a, label: a }))}
                   value={formData.area}
@@ -924,7 +951,7 @@ export default function PastorFormDialog({ pastor, onSuccess }: PastorFormDialog
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="church">Campus</Label>
+              <Label htmlFor="church">Campus {pastor ? "" : "*"}</Label>
               {loadingChurches ? (
                 <div className="flex items-center justify-center h-10 border rounded-md">
                   <Loader2 className="h-4 w-4 animate-spin" />

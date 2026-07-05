@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Church from "@/models/Church";
 import { requireAdmin } from "@/lib/auth";
-import { serializeChurch } from "@/lib/church";
+import { normalizeChurchInput, serializeChurch } from "@/lib/church";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (adminCheck instanceof NextResponse) return adminCheck;
 
     await dbConnect();
-    const body = await request.json();
+    const body = normalizeChurchInput(await request.json());
     const church: any = await Church.create(body);
     const transformedChurch = serializeChurch(church.toObject());
     return NextResponse.json({ success: true, data: transformedChurch }, { status: 201 });

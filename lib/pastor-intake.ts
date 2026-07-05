@@ -18,6 +18,12 @@ export interface PastorAllowedOptions {
 export interface PastorIntakeConfig {
   mode: "create" | "update";
   allowed?: PastorAllowedOptions;
+  /**
+   * Region of the pastor's church. Defaults to "Accra" — a pastor with no
+   * church counts as Accra (ADR 0001). Council and Area are Accra-only
+   * structures: required for Accra pastors, optional for Outside-Accra ones.
+   */
+  churchRegion?: string;
 }
 
 function toStringArray(value: unknown): string[] {
@@ -46,6 +52,13 @@ export function normalizePastorDraft(
 
   if (input.church === "") {
     payload.church = undefined;
+  }
+
+  // Creating a pastor requires selecting their church — the pastor's region is
+  // derived from it (ADR 0001). Enforced at intake for new creates only, so
+  // legacy church-less pastors remain editable in update mode.
+  if (config.mode === "create" && (typeof payload.church !== "string" || payload.church.length === 0)) {
+    errors.push({ field: "church", message: "Please select a church" });
   }
 
   // Collapse occupation === "Other" + customOccupation into a single occupation string.
@@ -83,11 +96,24 @@ export function normalizePastorDraft(
   }
 
   // council/clergy_type required: always in create; in update only when provided.
+  // Council and Area are Accra-only structures — Outside-Accra pastors may omit both.
+  const councilAndAreaRequired = (config.churchRegion || "Accra") === "Accra";
   const councilProvided = input.council !== undefined;
   const clergyProvided = input.clergy_type !== undefined;
 
-  if ((config.mode === "create" || councilProvided) && (!Array.isArray(payload.council) || payload.council.length === 0)) {
+  if (
+    councilAndAreaRequired &&
+    (config.mode === "create" || councilProvided) &&
+    (!Array.isArray(payload.council) || payload.council.length === 0)
+  ) {
     errors.push({ field: "council", message: "Please select at least one council" });
+  }
+  if (
+    councilAndAreaRequired &&
+    config.mode === "create" &&
+    (typeof payload.area !== "string" || payload.area.length === 0)
+  ) {
+    errors.push({ field: "area", message: "Please select an area" });
   }
   if (
     (config.mode === "create" || clergyProvided) &&

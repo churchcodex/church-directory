@@ -6,6 +6,7 @@ import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-c
 import { serializePastor } from "@/lib/pastor";
 import { normalizePastorDraft } from "@/lib/pastor-intake";
 import { getFieldOptions } from "@/lib/pastor-field-options";
+import { findChurchRegion } from "@/lib/church-region";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -38,9 +39,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     const body = await request.json();
 
+    const currentPastor = await Pastor.findById(id);
+    if (!currentPastor) {
+      return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
+    }
+
+    // Council/Area requiredness depends on the effective church's region:
+    // the newly chosen church if one is submitted, else the pastor's current
+    // church; a church-less pastor counts as Accra (ADR 0001).
+    let churchRegion = "Accra";
+    if (typeof body.church === "string" && body.church.length > 0) {
+      const region = await findChurchRegion(body.church);
+      if (!region) {
+        return NextResponse.json({ success: false, error: "Selected church not found" }, { status: 400 });
+      }
+      churchRegion = region;
+    } else if (currentPastor.church) {
+      churchRegion = (await findChurchRegion(currentPastor.church.toString())) || "Accra";
+    }
+
     const fieldOptions = await getFieldOptions();
     const { payload, errors } = normalizePastorDraft(body, {
       mode: "update",
+      churchRegion,
       allowed: {
         councils: fieldOptions.councils.options,
         areas: fieldOptions.areas.options,
@@ -58,11 +79,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.first_name !== undefined || body.last_name !== undefined || body.date_of_birth !== undefined) {
       const duplicateQuery: any = { _id: { $ne: id } };
 
-      const currentPastor = await Pastor.findById(id);
-      if (!currentPastor) {
-        return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
-      }
-
       duplicateQuery.first_name = body.first_name !== undefined ? sanitizedData.first_name : currentPastor.first_name;
       duplicateQuery.last_name = body.last_name !== undefined ? sanitizedData.last_name : currentPastor.last_name;
 
@@ -79,11 +95,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           : "A pastor with the same first name and last name already exists";
         return NextResponse.json({ success: false, error: errorMessage }, { status: 409 });
       }
-    }
-
-    const currentPastor = await Pastor.findById(id);
-    if (!currentPastor) {
-      return NextResponse.json({ success: false, error: "Pastor not found" }, { status: 404 });
     }
 
     const generatedCode = isSequentialPastorCode(currentPastor.personal_code) ? null : await generateUniquePastorCode();

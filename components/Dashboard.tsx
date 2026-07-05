@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,9 @@ import { Church as ChurchType, ClergyType, Pastor } from "@/types/entities";
 import { Church, Users, DollarSign, TrendingUp } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import Link from "next/link";
+import RegionSwitcher from "@/components/RegionSwitcher";
+import { useRegion } from "@/contexts/RegionContext";
+import { buildRegionByChurchId, filterChurchesByRegion, filterPastorsByRegion } from "@/lib/region";
 
 interface DashboardStats {
   totalChurches: number;
@@ -29,32 +32,27 @@ export default function Dashboard() {
   const role = session?.user?.role;
   const isAdmin = role === "admin";
   const canSeeAdminData = isAdmin || role === "viewer";
-  const [stats, setStats] = useState<DashboardStats>({
-    totalChurches: 0,
-    totalClergy: 0,
-    totalBishops: 0,
-    totalMothers: 0,
-    totalSisters: 0,
-    totalReverends: 0,
-    totalGovernors: 0,
-    totalMembers: 0,
-    totalIncome: 0,
-    inactiveClergy: 0,
-    recentChurches: [],
-    recentClergy: [],
-  });
+  const { region } = useRegion();
+  const [allChurches, setAllChurches] = useState<ChurchType[]>([]);
+  const [allClergy, setAllClergy] = useState<Pastor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [churchesRes, clergyRes] = await Promise.all([fetch("/api/churches"), fetch("/api/pastors")]);
+        // Project only what the stat cards, council scoping, region split,
+        // and recent-pastors list consume.
+        const [churchesRes, clergyRes] = await Promise.all([
+          fetch("/api/churches"),
+          fetch("/api/pastors?fields=first_name,middle_name,last_name,clergy_type,council,church,function"),
+        ]);
 
         const churchesData = await churchesRes.json();
         const clergyData = await clergyRes.json();
 
         // Extract data from the success response structure
-        let churches: ChurchType[] = churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
+        const churches: ChurchType[] =
+          churchesData.success && Array.isArray(churchesData.data) ? churchesData.data : [];
         let clergy: Pastor[] = clergyData.success && Array.isArray(clergyData.data) ? clergyData.data : [];
 
         // Filter by council if user is not admin
@@ -69,54 +67,8 @@ export default function Dashboard() {
           });
         }
 
-        const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
-        const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
-
-        // Count clergy by type
-        const totalBishops = clergy.filter((p) => {
-          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
-          return types.includes("Bishop");
-        }).length;
-
-        const totalMothers = clergy.filter((p) => {
-          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
-          return types.includes("Mother");
-        }).length;
-
-        const totalSisters = clergy.filter((p) => {
-          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
-          return types.includes("Sister");
-        }).length;
-
-        const totalReverends = clergy.filter((p) => {
-          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
-          return types.includes("Reverend");
-        }).length;
-
-        const totalGovernors = clergy.filter((p) => {
-          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
-          return types.includes("Governor");
-        }).length;
-
-        const totalPastors = clergy.filter((p) => {
-          const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
-          return types.includes("Pastor");
-        }).length;
-
-        setStats({
-          totalChurches: churches.length,
-          totalClergy: totalPastors,
-          totalBishops,
-          totalMothers,
-          totalSisters,
-          totalReverends,
-          totalGovernors,
-          totalMembers,
-          totalIncome,
-          inactiveClergy: 0,
-          recentChurches: churches.slice(-5).reverse(),
-          recentClergy: clergy.slice(-5).reverse(),
-        });
+        setAllChurches(churches);
+        setAllClergy(clergy);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -126,6 +78,48 @@ export default function Dashboard() {
 
     fetchData();
   }, [session]);
+
+  // Council-scoped `user` accounts see no region switcher and unfiltered
+  // (council-scoped) data — their world is Accra-only by construction.
+  const applyRegionFilter = canSeeAdminData;
+
+  const stats: DashboardStats = useMemo(() => {
+    const regionByChurchId = buildRegionByChurchId(allChurches);
+    const churches = applyRegionFilter ? filterChurchesByRegion(allChurches, region) : allChurches;
+    const clergy = applyRegionFilter ? filterPastorsByRegion(allClergy, region, regionByChurchId) : allClergy;
+
+    const totalMembers = churches.reduce((sum, church) => sum + (church.members || 0), 0);
+    const totalIncome = churches.reduce((sum, church) => sum + (church.income || 0), 0);
+
+    const countByType = (type: string) =>
+      clergy.filter((p) => {
+        const types = Array.isArray(p.clergy_type) ? p.clergy_type : p.clergy_type ? [p.clergy_type] : [];
+        return types.includes(type);
+      }).length;
+
+    // Governor is a function, not a title: serializePastor relocates it from
+    // clergy_type into function, so it must be counted there.
+    const countByFunction = (fn: string) =>
+      clergy.filter((p) => {
+        const functions = Array.isArray(p.function) ? p.function : p.function ? [p.function] : [];
+        return functions.includes(fn);
+      }).length;
+
+    return {
+      totalChurches: churches.length,
+      totalClergy: countByType("Pastor"),
+      totalBishops: countByType("Bishop"),
+      totalMothers: countByType("Mother"),
+      totalSisters: countByType("Sister"),
+      totalReverends: countByType("Reverend"),
+      totalGovernors: countByFunction("Governor"),
+      totalMembers,
+      totalIncome,
+      inactiveClergy: 0,
+      recentChurches: churches.slice(-5).reverse(),
+      recentClergy: clergy.slice(-5).reverse(),
+    };
+  }, [allChurches, allClergy, region, applyRegionFilter]);
 
   if (loading) {
     return (
@@ -194,7 +188,7 @@ export default function Dashboard() {
       value: formatNumber(stats.totalGovernors),
       icon: Users,
       gradient: "from-emerald-500 to-emerald-700",
-      href: "/clergy?clergyType=Governor",
+      href: "/clergy?function=Governor",
     },
     ...(canSeeAdminData
       ? [
@@ -234,12 +228,13 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Dashboard Title */}
-      <div className="mb-8">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-300">
           {canSeeAdminData
             ? ""
             : `${session?.user?.council || (session?.user?.council && session?.user?.council[0])} Council`}
         </h1>
+        {canSeeAdminData && <RegionSwitcher />}
       </div>
 
       {/* Stats Cards */}

@@ -25,6 +25,7 @@ interface AttendanceUploadResult {
   duplicateCodesInFile: number;
   alreadyMarkedCodes: string[];
   unmatchedCodes: string[];
+  outsideAccraCodes: string[];
 }
 
 interface AttendanceBulkUploadProps {
@@ -190,6 +191,12 @@ export default function AttendanceBulkUpload({ attendanceDate, disabled, onSucce
                     <p>Already marked for that date: {result.alreadyMarkedCodes.join(", ")}</p>
                   )}
                   {result.unmatchedCodes.length > 0 && <p>Unmatched codes: {result.unmatchedCodes.join(", ")}</p>}
+                  {(result.outsideAccraCodes?.length ?? 0) > 0 && (
+                    <p>
+                      Skipped — Outside Accra pastors (attendance is Accra-only):{" "}
+                      {result.outsideAccraCodes.join(", ")}
+                    </p>
+                  )}
                 </div>
               </AlertDescription>
             </Alert>

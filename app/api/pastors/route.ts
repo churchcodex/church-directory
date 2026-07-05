@@ -3,15 +3,22 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
-import { serializePastor } from "@/lib/pastor";
+import { parsePastorFieldsParam, serializePastor } from "@/lib/pastor";
 import { normalizePastorDraft } from "@/lib/pastor-intake";
 import { getFieldOptions } from "@/lib/pastor-field-options";
+import { findChurchRegion } from "@/lib/church-region";
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    const pastors = await Pastor.find({ status: { $ne: "Inactive" } }).lean();
+    // Optional projection for list views, e.g. ?fields=first_name,last_name.
+    const fields = parsePastorFieldsParam(request.nextUrl.searchParams.get("fields"));
+    let query = Pastor.find({ status: { $ne: "Inactive" } });
+    if (fields) {
+      query = query.select(fields.join(" "));
+    }
+    const pastors = await query.lean();
     const transformedPastors = pastors.map((pastor: any) => serializePastor(pastor));
     return NextResponse.json({ success: true, data: transformedPastors });
   } catch (error: any) {
@@ -31,9 +38,20 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
 
+    // Council/Area requiredness depends on the chosen church's region (ADR 0001).
+    let churchRegion = "Accra";
+    if (typeof body.church === "string" && body.church.length > 0) {
+      const region = await findChurchRegion(body.church);
+      if (!region) {
+        return NextResponse.json({ success: false, error: "Selected church not found" }, { status: 400 });
+      }
+      churchRegion = region;
+    }
+
     const fieldOptions = await getFieldOptions();
     const { payload, errors } = normalizePastorDraft(body, {
       mode: "create",
+      churchRegion,
       allowed: {
         councils: fieldOptions.councils.options,
         areas: fieldOptions.areas.options,

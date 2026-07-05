@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/lib/error";
 import dbConnect from "@/lib/mongodb";
 import Attendance from "@/models/Attendance";
 import Pastor from "@/models/Pastor";
+import { findChurchRegion, getNonAccraChurchIds, isAccraPastor } from "@/lib/church-region";
 
 type IdLike = {
   toString(): string;
@@ -20,6 +21,7 @@ type PastorWeekRecord = {
   personal_code?: string;
   council?: string[] | string;
   area?: string;
+  church?: IdLike | null;
 };
 
 type AttendanceWeekRecord = {
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
     const weekStartIso = toIsoDateString(weekStart);
     const weekEndIso = toIsoDateString(weekEnd);
 
-    const [pastors, attendanceRecords] = await Promise.all([
+    const [allPastors, attendanceRecords, nonAccraChurchIds] = await Promise.all([
       Pastor.find({ status: { $ne: "Inactive" } })
         .sort({ first_name: 1, last_name: 1 })
         .lean<PastorWeekRecord[]>(),
@@ -55,7 +57,12 @@ export async function GET(request: NextRequest) {
           $lte: weekEnd,
         },
       }).lean<AttendanceWeekRecord[]>(),
+      getNonAccraChurchIds(),
     ]);
+
+    // Attendance & tithe tracking are Accra-only: Outside-Accra pastors are
+    // never rows and never counted (CONTEXT.md).
+    const pastors = allPastors.filter((pastor) => isAccraPastor(pastor, nonAccraChurchIds));
 
     const days = getWeekDates(weekStart).map((day) => ({ ...day, marked: false }));
     const attendanceByPastorDate = new Map<string, AttendanceWeekRecord>();
@@ -139,6 +146,20 @@ export async function POST(request: NextRequest) {
 
     if (!pastor) {
       return NextResponse.json({ success: false, error: `No active pastor found for code ${code}.` }, { status: 404 });
+    }
+
+    // Attendance & tithe tracking are Accra-only (CONTEXT.md).
+    if (pastor.church) {
+      const region = await findChurchRegion(pastor.church.toString());
+      if (region && region !== "Accra") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `${code} belongs to an ${region} pastor. Attendance is tracked for Accra only.`,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const existingRecord = await Attendance.findOne({

@@ -6,6 +6,7 @@ import { getErrorMessage } from "@/lib/error";
 import dbConnect from "@/lib/mongodb";
 import Attendance from "@/models/Attendance";
 import Pastor from "@/models/Pastor";
+import { getNonAccraChurchIds, isAccraPastor } from "@/lib/church-region";
 
 type IdLike = {
   toString(): string;
@@ -14,6 +15,7 @@ type IdLike = {
 type MatchedPastorRecord = {
   _id: IdLike;
   personal_code?: string;
+  church?: IdLike | null;
 };
 
 type ExistingAttendanceRecord = {
@@ -104,10 +106,13 @@ export async function POST(request: NextRequest) {
 
     const uniqueCodes = Array.from(new Set(codes));
     const duplicateCodesInFile = uniqueCodes.length < codes.length ? codes.length - uniqueCodes.length : 0;
-    const pastors = await Pastor.find({
-      personal_code: { $in: uniqueCodes },
-      status: { $ne: "Inactive" },
-    }).lean<MatchedPastorRecord[]>();
+    const [pastors, nonAccraChurchIds] = await Promise.all([
+      Pastor.find({
+        personal_code: { $in: uniqueCodes },
+        status: { $ne: "Inactive" },
+      }).lean<MatchedPastorRecord[]>(),
+      getNonAccraChurchIds(),
+    ]);
     const pastorByCode = new Map(
       pastors.filter((pastor) => pastor.personal_code).map((pastor) => [pastor.personal_code as string, pastor]),
     );
@@ -121,6 +126,7 @@ export async function POST(request: NextRequest) {
 
     const unmatchedCodes: string[] = [];
     const alreadyMarkedCodes: string[] = [];
+    const outsideAccraCodes: string[] = [];
     const recordsToInsert: AttendanceInsertRecord[] = [];
 
     for (const code of uniqueCodes) {
@@ -128,6 +134,13 @@ export async function POST(request: NextRequest) {
 
       if (!pastor) {
         unmatchedCodes.push(code);
+        continue;
+      }
+
+      // Attendance & tithe tracking are Accra-only: skip and report codes of
+      // Outside-Accra pastors (CONTEXT.md).
+      if (!isAccraPastor(pastor, nonAccraChurchIds)) {
+        outsideAccraCodes.push(code);
         continue;
       }
 
@@ -163,6 +176,7 @@ export async function POST(request: NextRequest) {
         duplicateCodesInFile,
         alreadyMarkedCodes,
         unmatchedCodes,
+        outsideAccraCodes,
       },
     });
   } catch (error: unknown) {

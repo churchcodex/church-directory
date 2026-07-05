@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { serializePastor } from "./pastor";
+import { parsePastorFieldsParam, serializePastor } from "./pastor";
 
 describe("serializePastor", () => {
   const baseDoc = () => ({
@@ -115,6 +115,37 @@ describe("serializePastor", () => {
     expect(result.council).toEqual(["Council A"]);
     expect(result.function).toEqual(["Overseer"]);
     expect(result.ministry_group).toEqual(["Spiders"]);
+  });
+});
+
+describe("parsePastorFieldsParam", () => {
+  it("returns null when the param is absent or empty", () => {
+    expect(parsePastorFieldsParam(null)).toBeNull();
+    expect(parsePastorFieldsParam("")).toBeNull();
+  });
+
+  it("parses a comma-separated list of known fields", () => {
+    expect(parsePastorFieldsParam("first_name,last_name,church")).toEqual([
+      "first_name",
+      "last_name",
+      "church",
+    ]);
+  });
+
+  it("trims whitespace around field names", () => {
+    expect(parsePastorFieldsParam(" first_name , last_name ")).toEqual(["first_name", "last_name"]);
+  });
+
+  it("drops unknown fields so a bad param cannot widen the query", () => {
+    expect(parsePastorFieldsParam("first_name,password,-status,__proto__")).toEqual(["first_name"]);
+  });
+
+  it("returns null when nothing valid remains", () => {
+    expect(parsePastorFieldsParam("nope,also-nope")).toBeNull();
+  });
+
+  it("dedupes repeated fields", () => {
+    expect(parsePastorFieldsParam("church,church,council")).toEqual(["church", "council"]);
   });
 });
 

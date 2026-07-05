@@ -52,7 +52,8 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
   const fetchPastors = async () => {
     setPastorsLoading(true);
     try {
-      const response = await fetch("/api/pastors");
+      // Only names are needed to build the head-pastor options.
+      const response = await fetch("/api/pastors?fields=first_name,middle_name,last_name");
       const data = await response.json();
       if (data.success) {
         setPastors(data.data);
@@ -72,6 +73,8 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
     try {
       const payload = {
         ...formData,
+        // No selection means no head pastor yet; null (not "") so the API can cast/clear it.
+        head_pastor: formData.head_pastor || null,
       };
 
       const url = church ? `/api/churches/${church.id}` : "/api/churches";
@@ -180,13 +183,14 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="head_pastor">Head Pastor *</Label>
+              <Label htmlFor="head_pastor">Head Pastor</Label>
               <SearchableSelect
-                placeholder={pastorsLoading ? "Loading pastors..." : "Select a pastor"}
+                placeholder={pastorsLoading ? "Loading pastors..." : "Select a pastor (optional)"}
                 options={pastorOptions}
                 value={formData.head_pastor}
                 onValueChange={(value) => setFormData({ ...formData, head_pastor: value })}
                 isDisabled={pastorsLoading}
+                isClearable
               />
             </div>
 

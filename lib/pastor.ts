@@ -1,5 +1,41 @@
 import { Pastor } from "@/types/entities";
 
+// Fields a client may project via GET /api/pastors?fields=a,b,c. Matches the
+// Pastor schema; _id always comes back. Unknown names are dropped, and an
+// empty result means "no projection" — a bad param can never widen the query.
+export const SELECTABLE_PASTOR_FIELDS = [
+  "first_name",
+  "middle_name",
+  "last_name",
+  "date_of_birth",
+  "date_of_appointment",
+  "profile_image",
+  "clergy_type",
+  "marital_status",
+  "church",
+  "gender",
+  "council",
+  "area",
+  "occupation",
+  "country",
+  "email",
+  "contact_number",
+  "personal_code",
+  "status",
+  "function",
+  "ministry_group",
+] as const;
+
+export function parsePastorFieldsParam(param: string | null): string[] | null {
+  if (!param) return null;
+  const allowed = new Set<string>(SELECTABLE_PASTOR_FIELDS);
+  const fields = param
+    .split(",")
+    .map((field) => field.trim())
+    .filter((field) => allowed.has(field));
+  return fields.length > 0 ? Array.from(new Set(fields)) : null;
+}
+
 function toStringArray(value: unknown): string[] {
   const raw = Array.isArray(value)
     ? value.filter((v): v is string => typeof v === "string" && v.length > 0)

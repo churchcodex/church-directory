@@ -6,6 +6,7 @@ import { generateUniquePastorCode, isSequentialPastorCode } from "@/lib/pastor-c
 import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
 import { getFieldOptions } from "@/lib/pastor-field-options";
 import { normalizePastorDraft } from "@/lib/pastor-intake";
+import { findChurchRegion } from "@/lib/church-region";
 import * as XLSX from "xlsx";
 
 function normalizePhone(raw: any): string | undefined {
@@ -55,9 +56,25 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const churchIdInput = formData.get("churchId");
 
     if (!file) {
       return NextResponse.json({ success: false, error: "No file uploaded" }, { status: 400 });
+    }
+
+    // Every batch targets one admin-chosen church; each row attaches to it and
+    // inherits its region's validation ("church first, then its pastors").
+    const churchId = typeof churchIdInput === "string" ? churchIdInput.trim() : "";
+    if (!churchId) {
+      return NextResponse.json(
+        { success: false, error: "A target church is required for bulk upload" },
+        { status: 400 },
+      );
+    }
+
+    const churchRegion = await findChurchRegion(churchId);
+    if (!churchRegion) {
+      return NextResponse.json({ success: false, error: "Selected church not found" }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -116,7 +133,7 @@ export async function POST(request: NextRequest) {
           date_of_appointment: parseDate(row["Date of Appointment"] || row["date_of_appointment"]),
           profile_image: row["Profile Image URL"] || row["profile_image"] || undefined,
           marital_status: row["Marital Status"] || row["marital_status"] || undefined,
-          church: row["Church ID"] || row["church"] || undefined,
+          church: churchId,
           gender: row["Gender"] || row["gender"] || undefined,
           council: splitCsvCell(row["Council"] || row["council"]),
           area: typeof rawArea === "string" && rawArea.trim() === "" ? undefined : rawArea || undefined,
@@ -141,7 +158,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const { payload, errors } = normalizePastorDraft(draft, { mode: "create", allowed });
+        const { payload, errors } = normalizePastorDraft(draft, { mode: "create", churchRegion, allowed });
 
         if (errors.length > 0) {
           results.failed++;

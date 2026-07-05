@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, Download, AlertCircle, CheckCircle2, FileSpreadsheet, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import SearchableSelect from "@/components/ui/searchable-select";
+import { Church } from "@/types/entities";
+import { churchRegion } from "@/lib/region";
 import * as XLSX from "xlsx";
 
 interface UploadResult {
@@ -33,12 +37,34 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fieldOptions, setFieldOptions] = useState<any>(null);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [churches, setChurches] = useState<Church[]>([]);
+  const [loadingChurches, setLoadingChurches] = useState(false);
+  const [targetChurchId, setTargetChurchId] = useState("");
 
   useEffect(() => {
     if (open) {
       fetchFieldOptions();
+      fetchChurches();
     }
   }, [open]);
+
+  const fetchChurches = async () => {
+    try {
+      setLoadingChurches(true);
+      const response = await fetch("/api/churches");
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setChurches(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch churches:", error);
+    } finally {
+      setLoadingChurches(false);
+    }
+  };
+
+  const targetChurch = churches.find((church) => church.id === targetChurchId);
+  const targetRegion = targetChurch ? churchRegion(targetChurch) : "";
 
   const fetchFieldOptions = async () => {
     try {
@@ -74,7 +100,6 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
         Country: "Ghana",
         Email: "john.doe@example.com",
         "Contact Number": "+233244000000",
-        "Church ID": "",
         "Profile Image URL": "",
         // Use comma-separated values for multiple functions (e.g., "Governor,Overseer")
         Function: "Governor",
@@ -213,7 +238,6 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
       { wch: 15 }, // Country
       { wch: 25 }, // Email
       { wch: 18 }, // Contact Number
-      { wch: 25 }, // Church ID
       { wch: 30 }, // Profile Image URL
       { wch: 12 }, // Function
       { wch: 30 }, // Ministry Group
@@ -283,7 +307,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !targetChurchId) return;
 
     setUploading(true);
     setResult(null);
@@ -291,6 +315,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("churchId", targetChurchId);
 
       const response = await fetch("/api/pastors/bulk-upload", {
         method: "POST",
@@ -328,6 +353,7 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
     // Reset after dialog closes
     setTimeout(() => {
       resetUpload();
+      setTargetChurchId("");
     }, 300);
   };
 
@@ -361,6 +387,27 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
               </div>
             </div>
           </div>
+          {/* Target Church */}
+          <div className="space-y-2">
+            <Label htmlFor="target-church">Target Church *</Label>
+            <SearchableSelect
+              placeholder={loadingChurches ? "Loading churches..." : "Select the church for this batch"}
+              options={churches.map((church) => ({
+                value: church.id,
+                label: `${church.name} - ${church.location}`,
+              }))}
+              value={targetChurchId}
+              onValueChange={setTargetChurchId}
+              isDisabled={loadingChurches}
+            />
+            <p className="text-xs text-muted-foreground">
+              Every pastor in the file will be attached to this church
+              {targetRegion ? ` (${targetRegion} region)` : ""}.
+              {targetRegion && targetRegion !== "Accra"
+                ? " Council and Area are optional for this batch."
+                : " Council and Area are required for Accra batches."}
+            </p>
+          </div>
           {/* Instructions */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -381,7 +428,8 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
                   "Other" will be replaced with this value.
                 </li>
                 <li>Date format: YYYY-MM-DD (e.g., 2020-06-01)</li>
-                <li>Leave Church ID blank if you don't have it yet</li>
+                <li>All rows are attached to the target church selected above</li>
+                <li>Council and Area are required for Accra churches, optional for Outside Accra</li>
                 <li>Status defaults to "Active" if not specified</li>
               </ul>
             </AlertDescription>
@@ -417,9 +465,16 @@ export default function PastorBulkUpload({ onSuccess }: PastorBulkUploadProps) {
           </div>
           {/* Upload Button */}
           {file && !result && (
-            <Button onClick={handleUpload} disabled={uploading} className="w-full">
-              {uploading ? "Uploading..." : "Upload and Process"}
-            </Button>
+            <>
+              {!targetChurchId && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Select a target church to enable the upload.
+                </p>
+              )}
+              <Button onClick={handleUpload} disabled={uploading || !targetChurchId} className="w-full">
+                {uploading ? "Uploading..." : "Upload and Process"}
+              </Button>
+            </>
           )}
           {/* Results Section */}
           {result && (
