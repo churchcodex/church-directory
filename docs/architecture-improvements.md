@@ -85,57 +85,51 @@ Every client must do bespoke `response.ok` + `data.success` + `data.error || dat
 
 ---
 
-## 4. `PastorIntake` module — make `PastorFormDialog` shallow on purpose
+## 4. `PastorIntake` module — make `PastorFormDialog` shallow on purpose ✅ DONE (server side)
 
-**Files**
-- `components/PastorFormDialog.tsx` (1020 lines)
-- Duplicated validation in `app/api/pastors/route.ts` POST, `app/api/pastors/[id]/route.ts` PUT, `app/api/pastors/bulk-upload/route.ts`
+**Status:** `normalizePastorDraft` shipped in `lib/pastor-intake.ts`; 28 tests at `lib/pastor-intake.test.ts`; all three server routes (POST, PUT, bulk-upload) now delegate to it. `parsePastorInput` deleted.
 
-**Problem**
-The dialog hides deep domain rules behind a tiny interface, and the same rules are re-implemented (divergently) in three server routes:
-- "Governor in title → move to function"
-- "Council → default area"
-- "Area 4 keeps `ministry_group`, others clear it"
-- "Occupation 'Other' uses `customOccupation`"
-- "Function 'Not Applicable' must be alone"
-- "Clergy type must be 1–2 entries"
+**Shipped**
+- `lib/pastor-intake.ts` — `normalizePastorDraft(input, { mode: "create" | "update", allowed? }): { payload, errors }`. Owns every documented rule: array dedup/coercion, Governor relocation, clergy_type 1–2 entries, function "Not Applicable" must be alone, occupation "Other" + customOccupation, Area 4 ministry_group rule, church empty-string→undefined, council/clergy_type required (always in create, when-provided in update), and optional allowed-list validation for council/area/function/ministry_group.
+- `lib/pastor-intake.test.ts` — 28 tests (15 create-mode rules, 6 allowed-list cases, 5 update-mode cases, plus 2 church cases).
+- `app/api/pastors/route.ts` POST — replaced 50+ lines of inline validation with `normalizePastorDraft(body, { mode: "create", allowed })`. Allowed lists fetched via `getFieldOptions()` (no internal HTTP).
+- `app/api/pastors/[id]/route.ts` PUT — same pattern with `mode: "update"`.
+- `app/api/pastors/bulk-upload/route.ts` — Excel cell parsing (comma-split via new `splitCsvCell` helper + `parseDate`) stays. Everything after that delegates to `normalizePastorDraft`. ~130 lines of inline validation collapsed to ~10.
+- `lib/pastor.ts` — `parsePastorInput` deleted (fully superseded by `normalizePastorDraft`). `serializePastor` kept (DB→API read seam).
+- `lib/pastor.test.ts` — `parsePastorInput` tests deleted; `serializePastor` tests retained (12 cases).
 
-The dialog blocks empty council with a toast; the API rejects with a different message; bulk-upload allows it differently.
+**Behavior changes**
+- POST/PUT routes now enforce **clergy_type ≤ 2** and **function "Not Applicable" must be alone** — previously only the dialog enforced these. API consumers (curl, scripts) that posted invalid payloads will now get a 400.
+- POST/PUT routes now enforce allowed-list checks for council/area/function/ministry_group. Stale values that were removed from `pastor-fields` after a pastor was saved will fail PUT if the affected field is in the update payload.
+- Bulk-upload now applies the same rules as POST instead of its own bespoke subset (e.g., it previously didn't enforce clergy_type max or "Not Applicable" alone).
+- Bulk-upload's `area === ""` whitespace-trim sanitization is preserved in the new `splitCsvCell` flow.
 
-**Solution**
-- New `lib/pastor-intake.ts`: pure `normalizePastorDraft(input) → { payload, errors }` owning every rule.
-- The dialog becomes "render fields, on-change update draft, on-submit normalize-and-post."
-- The three API routes call the same function on the wire body.
-- ~150 lines of hardcoded field defaults in the dialog move to a `PastorDefaults` module backed by the `pastor-fields` cache (see #5).
+**Deferred (still pending)**
+- **Dialog rewrite** — `components/PastorFormDialog.tsx` (1020 lines) was NOT rewritten in this pass per the chosen scope ("server seam only"). The dialog still has its own client-side validation (toasts for empty council, max-2 clergy_type, "Not Applicable" alone). That's now redundant with the server — the dialog can shrink to a thin draft+submit shell that lets the server be the validator, dropping ~400 lines and folding in the deferred reader-side `Array.isArray` cleanup from #1 + the client fallback arrays from #5. This is a separate PR-sized risk.
 
-**Payoff**
-- One place to add a rule like "Bishops can't be Mothers."
-- Dialog drops to ~400 lines of mostly JSX; routes drop to thin auth-and-persist.
-- `normalizePastorDraft` is the entire test surface for write-time Pastor validity.
+**Original notes (kept for context)**
+
+The dialog hid deep domain rules behind a tiny interface, and the same rules were re-implemented (divergently) in three server routes. Built `normalizePastorDraft` as the single write-time adapter; routes now drop straight from auth → normalize → persist.
 
 ---
 
-## 5. `PastorFieldOptions` direct-call seam — remove the self-fetch loop
+## 5. `PastorFieldOptions` direct-call seam — remove the self-fetch loop ✅ DONE (server side)
 
-**Files**
-- `app/api/pastor-fields/route.ts`
-- `app/api/pastors/bulk-upload/route.ts` (fetches the route over HTTP from inside the server)
-- `components/PastorFormDialog.tsx`, `components/PastorBulkUpload.tsx` (hardcoded fallback copies)
-- `app/admin/users/page.tsx`, `app/clergy/page.tsx` (consumers)
+**Status:** `getFieldOptions()` shipped in `lib/pastor-field-options.ts`; route GET is now a 3-line wrapper; bulk-upload no longer self-fetches. 5 tests at `lib/pastor-field-options.test.ts`.
 
-**Problem**
-The seeded defaults are hardcoded inside the route handler and never written to DB. Bulk-upload makes an internal HTTP fetch to read them. The form and the bulk-upload component keep their own hardcoded fallbacks. The bulk-upload template generator hardcodes a third copy of ministry groups.
+**Shipped**
+- `lib/pastor-field-options.ts` — `defaultFieldValues` dictionary (moved from route handler) and `getFieldOptions(): Promise<Record<fieldName, { fieldName, options, isDefault, updatedAt? }>>`. The Governor-stripping rule for `clergyTypes` lives only here.
+- `lib/pastor-field-options.test.ts` — 5 tests (defaults branch, DB-row branch + `updatedAt`, Governor-strip from DB, Governor-strip from defaults, all-9-field-names contract). Same vitest mock pattern as `auth.test.ts` (mocks `@/lib/mongodb` and `@/models/PastorFieldOptions`).
+- `app/api/pastor-fields/route.ts` — GET handler dropped from ~40 lines to 3 (`getFieldOptions()` + envelope). PUT/DELETE keep their validation but import `defaultFieldValues` from the new lib instead of redefining it. The 224-line constants block is gone from the route file.
+- `app/api/pastors/bulk-upload/route.ts` — removed the internal `fetch("/api/pastor-fields")` self-call (~22 lines including try/catch + fallback constants). Now calls `getFieldOptions()` directly, so `allowedFunctions`/`allowedCouncils`/`allowedAreas`/`allowedMinistryGroups` are always populated.
 
-**Solution**
-- `lib/pastor-field-options.ts` exporting `getFieldOptions()` (DB + seeded defaults merge).
-- Route becomes a thin JSON wrapper.
-- Bulk-upload imports the function directly (no HTTP).
-- Client components fetch the route normally and drop their hardcoded fallbacks.
-- Governor-stripping rule lives only here.
+**Deferred (pick up alongside #4)**
+- `components/PastorBulkUpload.tsx` — keeps ~50 lines of hardcoded fallback arrays (`fieldOptions?.councils?.options || [...]`). Harmless now that the API always returns data; fold into #4's defaults extraction.
+- `components/PastorFormDialog.tsx` — `defaultClergyTypes`/`defaultAreas`/etc. constants still live in-file. They're typed as `ClergyType[]`/`Area[]` (used as initial useState values), so removing them needs the typed `PastorDefaults` module from #4. Cosmetic for now.
 
-**Payoff**
-- No internal HTTP round-trip.
-- Admins edit options and every surface (form, filter, bulk-upload template, bulk-upload validation) sees the same values.
+**Original notes (kept for context)**
+
+The seeded defaults were hardcoded inside the route handler and never written to DB. Bulk-upload made an internal HTTP fetch to read them. Built `getFieldOptions()` as the single DB→options adapter; route handler becomes a thin JSON wrapper; bulk-upload imports the function directly.
 
 ---
 
@@ -183,9 +177,9 @@ Excel template, parser, and exporter each hand-maintain their own column list. A
 1. ~~**#3** API envelope~~ — _deferred (originally proposed first; #1 was done first instead)._
 2. ~~**#2** `requireAdmin`~~ — ✅ done (server-side; `useRequireAdmin()` client hook deferred).
 3. ~~**#1** Canonical Pastor shape~~ — ✅ done (see above; bulk-upload + reader cleanup deferred).
-4. **#5** `PastorFieldOptions` — **next up.** Small, removes a self-fetch loop; unblocks #4's defaults extraction.
-5. **#4** `PastorIntake` — the big refactor; needs #1, #3, #5 in place. Folds in the deferred reader-side `Array.isArray` cleanup automatically (PastorFormDialog gets rewritten).
-6. **#6** `PastorExcelSchema` — last; needs #1's canonical shape and #4's normalizer. Folds in the deferred bulk-upload refactor.
+4. ~~**#5** `PastorFieldOptions`~~ — ✅ done (server side; client fallback arrays deferred to dialog rewrite).
+5. ~~**#4** `PastorIntake`~~ — ✅ done (server side; dialog rewrite deferred — see #4 status block).
+6. **#6** `PastorExcelSchema` — **next up.** Needs #1's canonical shape and #4's normalizer (both done). Folds in the deferred bulk-upload refactor (mostly done — only the template-generation side still hand-maintains its column list).
 
 Each step keeps every existing behaviour; the refactors concentrate rather than change them.
 

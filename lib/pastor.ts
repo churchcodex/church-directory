@@ -9,39 +9,6 @@ function toStringArray(value: unknown): string[] {
   return Array.from(new Set(raw));
 }
 
-export function parsePastorInput(body: Record<string, any>): Record<string, any> {
-  const { clergy_type, function: functionField, council, ministry_group, church, ...rest } = body;
-  const out: Record<string, any> = { ...rest };
-
-  const hasClergy = clergy_type !== undefined;
-  const rawClergy = hasClergy ? toStringArray(clergy_type) : [];
-  const governorInClergy = rawClergy.includes("Governor");
-  if (hasClergy) {
-    out.clergy_type = rawClergy.filter((v) => v !== "Governor");
-  }
-
-  const hasFunction = functionField !== undefined;
-  if (hasFunction || governorInClergy) {
-    const rawFunction = hasFunction ? toStringArray(functionField) : [];
-    out.function =
-      governorInClergy && !rawFunction.includes("Governor") ? [...rawFunction, "Governor"] : rawFunction;
-  }
-
-  if (council !== undefined) {
-    out.council = toStringArray(council);
-  }
-
-  if (ministry_group !== undefined) {
-    out.ministry_group = toStringArray(ministry_group);
-  }
-
-  if (church !== undefined) {
-    out.church = church === "" ? undefined : church;
-  }
-
-  return out;
-}
-
 export function serializePastor(pastor: any): Pastor {
   const rawClergy = toStringArray(pastor.clergy_type);
   const governorInClergy = rawClergy.includes("Governor");

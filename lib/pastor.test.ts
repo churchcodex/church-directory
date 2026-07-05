@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { serializePastor, parsePastorInput } from "./pastor";
+import { serializePastor } from "./pastor";
 
 describe("serializePastor", () => {
   const baseDoc = () => ({
@@ -118,69 +118,3 @@ describe("serializePastor", () => {
   });
 });
 
-describe("parsePastorInput", () => {
-  it("coerces a scalar function value into a deduped array", () => {
-    const result = parsePastorInput({ function: "Overseer" });
-    expect(result.function).toEqual(["Overseer"]);
-  });
-
-  it("coerces and dedups clergy_type, council, function, and ministry_group", () => {
-    const result = parsePastorInput({
-      clergy_type: ["Bishop", "Bishop"],
-      council: "Council A",
-      function: ["Overseer", "Overseer"],
-      ministry_group: ["Spiders", "Spiders"],
-    });
-    expect(result.clergy_type).toEqual(["Bishop"]);
-    expect(result.council).toEqual(["Council A"]);
-    expect(result.function).toEqual(["Overseer"]);
-    expect(result.ministry_group).toEqual(["Spiders"]);
-  });
-
-  it("relocates Governor from clergy_type to function on write", () => {
-    const result = parsePastorInput({
-      clergy_type: ["Bishop", "Governor"],
-      function: ["Overseer"],
-    });
-    expect(result.clergy_type).toEqual(["Bishop"]);
-    expect(result.function).toEqual(["Overseer", "Governor"]);
-  });
-
-  it("relocates Governor even when function is not in the payload", () => {
-    const result = parsePastorInput({ clergy_type: ["Governor"] });
-    expect(result.clergy_type).toEqual([]);
-    expect(result.function).toEqual(["Governor"]);
-  });
-
-  it("turns an empty-string church into undefined", () => {
-    const result = parsePastorInput({ church: "" });
-    expect(result.church).toBeUndefined();
-    expect("church" in result).toBe(true);
-  });
-
-  it("preserves a non-empty church id", () => {
-    const result = parsePastorInput({ church: "65a1f2b3c4d5e6f7a8b9c0d1" });
-    expect(result.church).toBe("65a1f2b3c4d5e6f7a8b9c0d1");
-  });
-
-  it("omits list-field keys that were not present in the input (PUT partial)", () => {
-    const result = parsePastorInput({ first_name: "Jane" });
-    expect("clergy_type" in result).toBe(false);
-    expect("function" in result).toBe(false);
-    expect("council" in result).toBe(false);
-    expect("ministry_group" in result).toBe(false);
-  });
-
-  it("passes scalar fields through unchanged", () => {
-    const result = parsePastorInput({
-      first_name: "Jane",
-      last_name: "Doe",
-      area: "Area 4",
-      email: "jane@example.com",
-    });
-    expect(result.first_name).toBe("Jane");
-    expect(result.last_name).toBe("Doe");
-    expect(result.area).toBe("Area 4");
-    expect(result.email).toBe("jane@example.com");
-  });
-});
