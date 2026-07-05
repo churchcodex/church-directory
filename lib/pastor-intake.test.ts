@@ -8,6 +8,8 @@ describe("normalizePastorDraft (create mode)", () => {
     const fields = errors.map((e) => e.field);
     expect(fields).toContain("council");
     expect(fields).toContain("clergy_type");
+    expect(fields).toContain("church");
+    expect(fields).toContain("area");
   });
 
   it("accepts valid minimal input and normalizes scalar arrays-fields to arrays", () => {
@@ -17,6 +19,8 @@ describe("normalizePastorDraft (create mode)", () => {
         last_name: "Doe",
         clergy_type: "Pastor",
         council: "Philippians",
+        area: "Experience Area 2",
+        church: "507f1f77bcf86cd799439011",
       },
       { mode: "create" },
     );
@@ -274,6 +278,79 @@ describe("normalizePastorDraft (allowed-list validation)", () => {
 
     expect(errors.find((e) => e.field === "ministry_group")).toBeUndefined();
     expect(payload.ministry_group).toEqual([]);
+  });
+});
+
+describe("normalizePastorDraft (region rules)", () => {
+  it("requires a church on create", () => {
+    const { errors } = normalizePastorDraft(
+      { clergy_type: ["Pastor"], council: ["X"], area: "HGE Area 1" },
+      { mode: "create" },
+    );
+
+    expect(errors.find((e) => e.field === "church")?.message).toMatch(/select a church/i);
+  });
+
+  it("treats church='' as no church on create", () => {
+    const { errors } = normalizePastorDraft(
+      { clergy_type: ["Pastor"], council: ["X"], area: "HGE Area 1", church: "" },
+      { mode: "create" },
+    );
+
+    expect(errors.find((e) => e.field === "church")).toBeDefined();
+  });
+
+  it("does not require a church in update mode (legacy church-less pastors stay editable)", () => {
+    const { errors } = normalizePastorDraft({ first_name: "Updated" }, { mode: "update" });
+
+    expect(errors).toEqual([]);
+  });
+
+  it("still requires council and area on create for an Accra church", () => {
+    const { errors } = normalizePastorDraft(
+      { clergy_type: ["Pastor"], church: "abc123" },
+      { mode: "create", churchRegion: "Accra" },
+    );
+
+    const fields = errors.map((e) => e.field);
+    expect(fields).toContain("council");
+    expect(fields).toContain("area");
+  });
+
+  it("makes council and area optional on create for an Outside Accra church", () => {
+    const { errors } = normalizePastorDraft(
+      { clergy_type: ["Pastor"], church: "abc123", council: [] },
+      { mode: "create", churchRegion: "Outside Accra" },
+    );
+
+    expect(errors).toEqual([]);
+  });
+
+  it("allows clearing council in update mode for an Outside Accra church", () => {
+    const { errors } = normalizePastorDraft(
+      { council: [] },
+      { mode: "update", churchRegion: "Outside Accra" },
+    );
+
+    expect(errors).toEqual([]);
+  });
+
+  it("still rejects an explicit empty council in update mode for an Accra church", () => {
+    const { errors } = normalizePastorDraft(
+      { council: [] },
+      { mode: "update", churchRegion: "Accra" },
+    );
+
+    expect(errors.find((e) => e.field === "council")).toBeDefined();
+  });
+
+  it("does not require area in update mode even for Accra (legacy pastors may lack one)", () => {
+    const { errors } = normalizePastorDraft(
+      { first_name: "Updated" },
+      { mode: "update", churchRegion: "Accra" },
+    );
+
+    expect(errors).toEqual([]);
   });
 });
 
