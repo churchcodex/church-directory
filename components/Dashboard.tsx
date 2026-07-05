@@ -40,7 +40,12 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [churchesRes, clergyRes] = await Promise.all([fetch("/api/churches"), fetch("/api/pastors")]);
+        // Project only what the stat cards, council scoping, region split,
+        // and recent-pastors list consume.
+        const [churchesRes, clergyRes] = await Promise.all([
+          fetch("/api/churches"),
+          fetch("/api/pastors?fields=first_name,middle_name,last_name,clergy_type,council,church,function"),
+        ]);
 
         const churchesData = await churchesRes.json();
         const clergyData = await clergyRes.json();

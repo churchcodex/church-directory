@@ -52,7 +52,8 @@ export default function ChurchFormDialog({ church, onSuccess, children }: Church
   const fetchPastors = async () => {
     setPastorsLoading(true);
     try {
-      const response = await fetch("/api/pastors");
+      // Only names are needed to build the head-pastor options.
+      const response = await fetch("/api/pastors?fields=first_name,middle_name,last_name");
       const data = await response.json();
       if (data.success) {
         setPastors(data.data);
