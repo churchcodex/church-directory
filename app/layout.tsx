@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
 import { PageActionsProvider } from "@/contexts/PageActionsContext";
+import { RegionProvider } from "@/contexts/RegionContext";
 import ConditionalNavBar from "@/components/ConditionalNavBar";
 import AuthProvider from "@/components/AuthProvider";
 
@@ -31,13 +32,15 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <PageTitleProvider>
-            <PageActionsProvider>
-              <ConditionalNavBar />
-              {children}
-              <Toaster />
-            </PageActionsProvider>
-          </PageTitleProvider>
+          <RegionProvider>
+            <PageTitleProvider>
+              <PageActionsProvider>
+                <ConditionalNavBar />
+                {children}
+                <Toaster />
+              </PageActionsProvider>
+            </PageTitleProvider>
+          </RegionProvider>
         </AuthProvider>
       </body>
     </html>
