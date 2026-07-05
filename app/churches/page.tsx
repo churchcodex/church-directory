@@ -219,6 +219,9 @@ export default function ChurchesPage() {
                 <div className="flex-1 flex min-w-0">
                   <h3 className="font-semibold text-base mb-1">{church.name}</h3>
                   <div className="space-y-0.5 flex ml-4 gap-4 text-sm text-muted-foreground">
+                    <Badge variant="outline" className="shrink-0">
+                      {church.region || "Accra"}
+                    </Badge>
                     <div className="flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       <p className="truncate">{church.location}</p>
