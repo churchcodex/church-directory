@@ -47,6 +47,9 @@ export default function ChurchDetailsPage() {
         // Fetch pastor name if head_pastor is a reference ID
         if (data.data.head_pastor) {
           fetchPastorName(data.data.head_pastor);
+        } else {
+          setPastorName("");
+          setPastorImage("");
         }
       }
     } catch (error) {
@@ -226,7 +229,7 @@ export default function ChurchDetailsPage() {
                 </div>
               )}
               <Badge variant="default" className="text-lg px-4 py-2">
-                {pastorName || "No pastor assigned"}
+                {pastorName || "No head pastor yet"}
               </Badge>
             </div>
 

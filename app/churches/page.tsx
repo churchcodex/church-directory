@@ -228,7 +228,11 @@ export default function ChurchesPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 shrink-0" />
-                      <p className="truncate">{pastorNames[church.head_pastor] || "Unknown Pastor"}</p>
+                      <p className="truncate">
+                        {church.head_pastor
+                          ? pastorNames[church.head_pastor] || "Unknown Pastor"
+                          : "No head pastor yet"}
+                      </p>
                     </div>
                   </div>
                 </div>

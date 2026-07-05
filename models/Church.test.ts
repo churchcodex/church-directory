@@ -26,3 +26,40 @@ describe("Church model region validation", () => {
     await expect(church.validate()).rejects.toThrow(/Region must be one of/);
   });
 });
+
+describe("Church model head pastor", () => {
+  it("validates without a head pastor (church-first workflow, ADR 0001)", async () => {
+    const church = new Church({
+      name: "New Region Campus",
+      location: "Kumasi",
+      members: 0,
+      income: 0,
+    });
+    await expect(church.validate()).resolves.toBeUndefined();
+    expect(church.head_pastor).toBeNull();
+  });
+
+  it("accepts null explicitly", async () => {
+    const church = new Church({
+      name: "Test Campus",
+      location: "Somewhere",
+      head_pastor: null,
+      members: 0,
+      income: 0,
+    });
+    await expect(church.validate()).resolves.toBeUndefined();
+  });
+
+  it("still accepts a head pastor when provided", async () => {
+    const id = new mongoose.Types.ObjectId();
+    const church = new Church({
+      name: "Test Campus",
+      location: "Somewhere",
+      head_pastor: id,
+      members: 0,
+      income: 0,
+    });
+    await expect(church.validate()).resolves.toBeUndefined();
+    expect(church.head_pastor).toEqual(id);
+  });
+});

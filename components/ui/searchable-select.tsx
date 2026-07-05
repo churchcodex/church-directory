@@ -174,16 +174,16 @@ export default function SearchableSelect({
       options={options}
       value={selectedOption}
       onChange={(option) => {
-        if (option && onValueChange) {
-          onValueChange(option.value);
+        if (onValueChange) {
+          onValueChange(option ? option.value : "");
         }
       }}
       placeholder={placeholder}
       className={cn("react-select-container", className)}
       classNamePrefix="react-select"
-      styles={customStyles}
       isSearchable
-      isClearable={false}
+      isClearable={props.isClearable ?? false}
+      styles={customStyles}
       menuPlacement={menuPlacement}
     />
   );

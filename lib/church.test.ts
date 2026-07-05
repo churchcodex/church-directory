@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { serializeChurch } from "./church";
+import { normalizeChurchInput, serializeChurch } from "./church";
 
 describe("serializeChurch", () => {
   const baseDoc = () => ({
@@ -47,5 +47,22 @@ describe("serializeChurch", () => {
     delete (doc as any).images;
     const result = serializeChurch(doc);
     expect(result.images).toEqual([]);
+  });
+});
+
+describe("normalizeChurchInput", () => {
+  it("coerces an empty head_pastor to null so Mongoose can cast it", () => {
+    const result = normalizeChurchInput({ name: "Test", head_pastor: "" });
+    expect(result.head_pastor).toBeNull();
+  });
+
+  it("leaves a real head_pastor id untouched", () => {
+    const result = normalizeChurchInput({ head_pastor: "507f191e810c19729de860ea" });
+    expect(result.head_pastor).toBe("507f191e810c19729de860ea");
+  });
+
+  it("leaves null and absent head_pastor untouched", () => {
+    expect(normalizeChurchInput({ head_pastor: null }).head_pastor).toBeNull();
+    expect("head_pastor" in normalizeChurchInput({ name: "Test" } as any)).toBe(false);
   });
 });

@@ -26,10 +26,11 @@ const ChurchSchema = new Schema(
       type: [String],
       default: [],
     },
+    // Optional: a church may be created before its head pastor exists (see ADR 0001).
     head_pastor: {
       type: Schema.Types.ObjectId,
       ref: "Pastor",
-      required: [true, "Please provide the head pastor"],
+      default: null,
     },
     members: {
       type: Number,

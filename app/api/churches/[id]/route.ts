@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Church from "@/models/Church";
 import { requireAdmin } from "@/lib/auth";
-import { serializeChurch } from "@/lib/church";
+import { normalizeChurchInput, serializeChurch } from "@/lib/church";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     await dbConnect();
     const { id } = await params;
-    const body = await request.json();
+    const body = normalizeChurchInput(await request.json());
     const church: any = await Church.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
