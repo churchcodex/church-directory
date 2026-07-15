@@ -392,6 +392,3 @@ export async function sendPastorCodeSms({
   };
 }
 
-export function buildPastorDisplayName(firstName?: string, middleName?: string, lastName?: string): string {
-  return [firstName, middleName, lastName].filter(Boolean).join(" ").trim() || "Pastor";
-}

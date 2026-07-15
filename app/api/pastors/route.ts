@@ -3,11 +3,11 @@ import dbConnect from "@/lib/mongodb";
 import Pastor from "@/models/Pastor";
 import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
-import { parsePastorFieldsParam, serializePastor } from "@/lib/pastor";
+import { buildPastorDisplayName, parsePastorFieldsParam, serializePastor } from "@/lib/pastor";
 import { normalizePastorDraft } from "@/lib/pastor-intake";
 import { getFieldOptions } from "@/lib/pastor-field-options";
 import { findChurchRegion } from "@/lib/church-region";
-import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
+import { sendPastorCodeSms } from "@/lib/codeslaw-bms";
 
 export async function GET(request: NextRequest) {
   try {

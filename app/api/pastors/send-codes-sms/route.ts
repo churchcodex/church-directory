@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/error";
 import Pastor from "@/models/Pastor";
-import { sendPastorCodeSms, buildPastorDisplayName } from "@/lib/codeslaw-bms";
+import { sendPastorCodeSms } from "@/lib/codeslaw-bms";
+import { buildPastorDisplayName } from "@/lib/pastor";
 import dbConnect from "@/lib/mongodb";
 
 type SendCodesPayload = {

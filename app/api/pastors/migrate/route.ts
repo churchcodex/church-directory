@@ -3,7 +3,8 @@ import dbConnect from "@/lib/mongodb";
 import { requireAdmin } from "@/lib/auth";
 import { generateUniquePastorCode } from "@/lib/pastor-code";
 import Pastor from "@/models/Pastor";
-import { buildPastorDisplayName, sendPastorCodeSms } from "@/lib/codeslaw-bms";
+import { sendPastorCodeSms } from "@/lib/codeslaw-bms";
+import { buildPastorDisplayName } from "@/lib/pastor";
 
 export async function POST(request: NextRequest) {
   try {

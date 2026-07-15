@@ -26,6 +26,12 @@ export const SELECTABLE_PASTOR_FIELDS = [
   "ministry_group",
 ] as const;
 
+// The canonical way to render a pastor's name. Lives here rather than with the
+// SMS client so client components can use it without pulling that module in.
+export function buildPastorDisplayName(firstName?: string, middleName?: string, lastName?: string): string {
+  return [firstName, middleName, lastName].filter(Boolean).join(" ").trim() || "Pastor";
+}
+
 export function parsePastorFieldsParam(param: string | null): string[] | null {
   if (!param) return null;
   const allowed = new Set<string>(SELECTABLE_PASTOR_FIELDS);
