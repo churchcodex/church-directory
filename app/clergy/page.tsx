@@ -7,6 +7,7 @@ import { Church, Pastor, ClergyType, MinistryGroups } from "@/types/entities";
 import PastorFormDialog from "@/components/PastorFormDialog";
 import PastorFilterDialog, { FilterState } from "@/components/PastorFilterDialog";
 import PastorBulkUpload from "@/components/PastorBulkUpload";
+import PastorPhotoDownload from "@/components/PastorPhotoDownload";
 import RegionSwitcher from "@/components/RegionSwitcher";
 import { useRegion } from "@/contexts/RegionContext";
 import { buildRegionByChurchId, filterPastorsByRegion } from "@/lib/region";
@@ -502,6 +503,7 @@ function ClergyPageContent() {
             >
               <Download className="h-4 w-4" />
             </Button>
+            <PastorPhotoDownload pastors={filteredPastors} />
             <PastorBulkUpload onSuccess={fetchPastors} />
             <PastorFormDialog onSuccess={fetchPastors} />
           </>
@@ -739,6 +741,7 @@ function ClergyPageContent() {
               >
                 <Download className="h-4 w-4" />
               </Button>
+              <PastorPhotoDownload pastors={filteredPastors} />
               <PastorBulkUpload onSuccess={fetchPastors} />
               <PastorFormDialog onSuccess={fetchPastors} />
             </>
