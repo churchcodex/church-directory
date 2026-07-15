@@ -22,11 +22,19 @@ An internal organizational grouping of Pastors (e.g. "HGE Area 1", "Experience A
 **Council**:
 An internal ministry grouping a Pastor serves in (e.g. "Philippians", "Dancing Stars"). `user`-role accounts are scoped to a Council. An Accra-only structure.
 
+**Title**:
+A Pastor's clergy rank — Bishop, Reverend, Mother, Sister, or Pastor. A Pastor holds one or two.
+_Avoid_: clergy type (the field name is `clergy_type`, but the domain word is Title), position, role (that means an app login account's permission level)
+
+**Primary Title**:
+The single most senior of a Pastor's Titles, used wherever a Pastor must be filed under exactly one. Seniority runs **Bishop > Reverend > Mother > Sister > Pastor**. A Pastor with no real Title ("Not Applicable") has no Primary Title.
+
 ## Relationships
 
 - A **Church** belongs to exactly one **Region**
 - A **Pastor** belongs to at most one **Church** (required at creation going forward; legacy Pastors may lack one)
 - A **Pastor**'s **Region** = their **Church**'s Region; a Pastor with no Church defaults to **Accra**
+- A **Pastor** holds one or two **Titles**; their **Primary Title** is the more senior of the two
 
 ## Business rules
 
@@ -51,3 +59,5 @@ An internal ministry grouping a Pastor serves in (e.g. "Philippians", "Dancing S
 
 - "Area" sounds geographic but is an internal grouping — geography is **Region** (on the Church), never Area.
 - The UI says "Campuses" for Churches and "Clergy" for Pastors; code and domain language use **Church** and **Pastor**.
+- **Governor is not a Title** — it is a `function`, alongside Overseer. It was once a clergy type; `serializePastor` and `normalizePastorDraft` still relocate it out of `clergy_type` into `function`, and `getFieldOptions` filters it out of the Title list.
+- Two Pastors may legitimately share a full name — Pastors are distinguished by **Personal Code** (G-####), never by name. The duplicate check is first + last + date of birth, so same-name Pastors with different birthdays are an expected state, not bad data.
